@@ -1,0 +1,41 @@
+[project]
+name = "rag-backend"
+version = "0.1.0"
+description = "Local RAG pipeline — backend"
+authors = [
+    { name = "Ali-Wassouf", email = "ali.wassouf93@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "aiofiles>=25.1.0",
+    "alembic>=1.19.2",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.141.1",
+    "pgvector>=0.5.0",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "python-multipart>=0.0.32",
+    "sqlalchemy[asyncio]>=2.0",
+    "uvicorn[standard]>=0.52.4",
+]
+
+[tool.uv]
+package = false
+
+[tool.mypy]
+strict = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=2.3.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "types-aiofiles>=25.1.0.20260518",
+]

@@ -6,9 +6,14 @@
 set -euo pipefail
 
 echo "==> Homebrew packages"
-brew install ollama postgresql@16 pgvector uv pnpm just
+# Postgres is NOT here — it runs in Docker Compose (see docker-compose.yml).
+# Ollama must be native: Docker on macOS has no Metal access, so a
+# containerised Ollama would run CPU-only.
+# node@22 is required alongside the system node: brew's pnpm needs Node >=22.13
+# to run at all, so pnpm is invoked against this keg-only install (see justfile)
+# rather than replacing whatever node the system already has.
+brew install ollama uv pnpm just node@22
 brew services start ollama
-brew services start postgresql@16
 
 echo "==> Waiting for Ollama"
 for i in {1..30}; do
@@ -39,10 +44,29 @@ launchctl setenv OLLAMA_MAX_LOADED_MODELS 1
 launchctl setenv OLLAMA_KEEP_ALIVE 60s
 brew services restart ollama
 
+echo "==> Waiting for Ollama to come back up"
+for i in {1..30}; do
+  curl -sf http://localhost:11434/api/tags >/dev/null && break
+  sleep 1
+done
+
 echo "==> Verifying embedding dimension"
-DIM=$(curl -sf http://localhost:11434/api/embed \
-  -d '{"model":"qwen3-embedding:0.6b","input":"dimension probe"}' \
-  | python3 -c 'import sys,json; print(len(json.load(sys.stdin)["embeddings"][0]))')
+RESP=$(curl -s http://localhost:11434/api/embed \
+  -d '{"model":"qwen3-embedding:0.6b","input":"dimension probe"}')
+
+DIM=$(printf '%s' "$RESP" | python3 -c '
+import sys, json
+try:
+    print(len(json.load(sys.stdin)["embeddings"][0]))
+except Exception:
+    print("0")
+')
+
+if [ "$DIM" = "0" ]; then
+  echo "!!! Could not read an embedding. Raw response:"
+  echo "$RESP"
+  exit 1
+fi
 
 echo "    embedder returns ${DIM} dimensions"
 if [ "$DIM" != "1024" ]; then
@@ -63,4 +87,7 @@ echo
 echo "Done. Sanity check:"
 echo "  ollama list"
 echo "  ollama run rag-gen 'reply with just: ok'"
-echo "  psql postgres -c 'SELECT 1'"
+echo
+echo "Postgres runs in Docker, not here:"
+echo "  docker compose up -d"
+echo "  psql postgresql://rag:rag@localhost:5432/rag -c 'SELECT 1'"
