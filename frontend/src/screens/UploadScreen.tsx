@@ -4,7 +4,11 @@ import { useJob, useUploadDocument } from '../api/hooks'
 
 const STAGES = ['extract', 'structure', 'chunk', 'embed', 'summarise', 'done']
 
-export function UploadScreen() {
+interface UploadScreenProps {
+  onReviewDocument: (documentId: number) => void
+}
+
+export function UploadScreen({ onReviewDocument }: UploadScreenProps) {
   const [jobId, setJobId] = useState<number | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -74,8 +78,17 @@ export function UploadScreen() {
             />
           </div>
           {job.data.error && <p className="mt-2 text-sm text-red-600">{job.data.error}</p>}
-          {job.data.stage === 'done' && (
-            <p className="mt-2 text-sm text-green-600">Done.</p>
+          {job.data.stage === 'done' && upload.data && (
+            <div className="mt-2 flex items-center gap-3">
+              <p className="text-sm text-green-600">Done.</p>
+              <button
+                type="button"
+                onClick={() => onReviewDocument(upload.data.document.id)}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                Review structure
+              </button>
+            </div>
           )}
         </div>
       )}

@@ -34,3 +34,20 @@ export interface JobRead {
   started_at: string | null
   finished_at: string | null
 }
+
+export type StructureSource = 'detected' | 'manual'
+
+export interface SectionRead {
+  id: number
+  document_id: number
+  path: string
+  title: string
+  display_path: string
+  depth: number
+  ordinal: number
+  char_start: number
+  char_end: number
+  source: StructureSource
+  preview: string
+  estimated_chunks: number
+}

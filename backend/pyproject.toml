@@ -14,7 +14,10 @@ dependencies = [
     "pgvector>=0.5.0",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
+    "pymupdf>=1.28.2",
+    "python-docx>=1.2.0",
     "python-multipart>=0.0.32",
+    "python-pptx>=1.0.2",
     "sqlalchemy[asyncio]>=2.0",
     "uvicorn[standard]>=0.52.4",
 ]
@@ -25,6 +28,12 @@ package = false
 [tool.mypy]
 strict = true
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# PyMuPDF is a C-extension library whose stubs don't fully annotate call
+# signatures — disallow_untyped_calls fires on essentially every API call.
+module = "app.extract.pdf"
+disallow_untyped_calls = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
