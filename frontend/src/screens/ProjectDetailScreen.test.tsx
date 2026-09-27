@@ -56,6 +56,7 @@ describe('ProjectDetailScreen', () => {
         projectId={1}
         onReviewDocument={vi.fn()}
         onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
         onBack={vi.fn()}
       />,
     )
@@ -78,6 +79,7 @@ describe('ProjectDetailScreen', () => {
         projectId={1}
         onReviewDocument={vi.fn()}
         onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
         onBack={vi.fn()}
       />,
     )
@@ -101,6 +103,7 @@ describe('ProjectDetailScreen', () => {
         projectId={1}
         onReviewDocument={vi.fn()}
         onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
         onBack={vi.fn()}
       />,
     )

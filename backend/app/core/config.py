@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     worker_poll_interval_seconds: float = 1.0
     ollama_base_url: str = "http://localhost:11434"
     embedding_model: str = "qwen3-embedding:0.6b"
+    generation_model: str = "rag-gen"
 
 
 @lru_cache

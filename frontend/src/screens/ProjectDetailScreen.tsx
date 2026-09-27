@@ -12,6 +12,7 @@ interface ProjectDetailScreenProps {
   projectId: number
   onReviewDocument: (documentId: number) => void
   onUploadHere: () => void
+  onOpenChat: () => void
   onBack: () => void
 }
 
@@ -19,6 +20,7 @@ export function ProjectDetailScreen({
   projectId,
   onReviewDocument,
   onUploadHere,
+  onOpenChat,
   onBack,
 }: ProjectDetailScreenProps) {
   const project = useProject(projectId)
@@ -44,9 +46,18 @@ export function ProjectDetailScreen({
         &larr; Back to projects
       </button>
 
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-        {project.data?.name ?? '…'}
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          {project.data?.name ?? '…'}
+        </h1>
+        <button
+          type="button"
+          onClick={onOpenChat}
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Chat
+        </button>
+      </div>
 
       <div className="mt-6 flex items-center gap-2">
         <label htmlFor="attach-document-select" className="sr-only">

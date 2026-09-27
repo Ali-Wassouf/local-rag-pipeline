@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 
+import { ChatScreen } from './screens/ChatScreen'
 import { ProjectDetailScreen } from './screens/ProjectDetailScreen'
 import { ProjectsListScreen } from './screens/ProjectsListScreen'
 import { ReviewScreen } from './screens/ReviewScreen'
@@ -11,6 +12,7 @@ const queryClient = new QueryClient()
 type View =
   | { screen: 'projects' }
   | { screen: 'project-detail'; projectId: number }
+  | { screen: 'chat'; projectId: number; returnTo: View }
   | { screen: 'upload'; projectId?: number; returnTo: View }
   | { screen: 'review'; documentId: number; returnTo: View }
 
@@ -37,9 +39,15 @@ function App() {
         onUploadHere={() =>
           setView({ screen: 'upload', projectId: detailView.projectId, returnTo: detailView })
         }
+        onOpenChat={() =>
+          setView({ screen: 'chat', projectId: detailView.projectId, returnTo: detailView })
+        }
         onBack={() => setView({ screen: 'projects' })}
       />
     )
+  } else if (view.screen === 'chat') {
+    const chatView = view
+    content = <ChatScreen projectId={chatView.projectId} onBack={() => setView(chatView.returnTo)} />
   } else if (view.screen === 'upload') {
     const uploadView = view
     content = (

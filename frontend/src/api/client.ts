@@ -1,4 +1,13 @@
-import type { DocumentRead, DocumentUploadResponse, JobRead, ProjectRead, SectionRead } from './types'
+import type {
+  CitationRead,
+  ConversationRead,
+  DocumentRead,
+  DocumentUploadResponse,
+  JobRead,
+  MessageRead,
+  ProjectRead,
+  SectionRead,
+} from './types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
@@ -101,4 +110,75 @@ export async function detachDocumentFromProject(
     method: 'DELETE',
   })
   await okOrThrow(response)
+}
+
+export async function createConversation(projectId: number): Promise<ConversationRead> {
+  const response = await fetch(`${API_BASE_URL}/projects/${projectId}/conversations`, {
+    method: 'POST',
+  })
+  return parseOrThrow<ConversationRead>(response)
+}
+
+export async function listConversations(projectId: number): Promise<ConversationRead[]> {
+  const response = await fetch(`${API_BASE_URL}/projects/${projectId}/conversations`)
+  return parseOrThrow<ConversationRead[]>(response)
+}
+
+export async function listMessages(conversationId: number): Promise<MessageRead[]> {
+  const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`)
+  return parseOrThrow<MessageRead[]>(response)
+}
+
+export interface SendMessageCallbacks {
+  onToken: (token: string) => void
+  onDone: (citations: CitationRead[]) => void
+  onError: (message: string) => void
+}
+
+// The backend streams Server-Sent Events, but EventSource can't POST a
+// body, so this parses the "data: {...}\n\n" wire format by hand over a
+// plain fetch() ReadableStream.
+export async function sendMessage(
+  conversationId: number,
+  content: string,
+  callbacks: SendMessageCallbacks,
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content }),
+  })
+
+  if (!response.ok || !response.body) {
+    callbacks.onError(`${response.status} ${response.statusText}`)
+    return
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+
+    let boundary = buffer.indexOf('\n\n')
+    while (boundary !== -1) {
+      const rawEvent = buffer.slice(0, boundary).trim()
+      buffer = buffer.slice(boundary + 2)
+
+      if (rawEvent.startsWith('data: ')) {
+        const payload = JSON.parse(rawEvent.slice('data: '.length))
+        if (payload.error) {
+          callbacks.onError(payload.error)
+        } else if (payload.done) {
+          callbacks.onDone(payload.citations ?? [])
+        } else if (typeof payload.token === 'string') {
+          callbacks.onToken(payload.token)
+        }
+      }
+      boundary = buffer.indexOf('\n\n')
+    }
+  }
 }

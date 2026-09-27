@@ -58,3 +58,28 @@ export interface ProjectRead {
   description: string | null
   created_at: string
 }
+
+export interface ConversationRead {
+  id: number
+  project_id: number
+  title: string | null
+  created_at: string
+}
+
+export interface CitationRead {
+  chunk_id: number
+  rank: number
+  document_title: string
+  display_path: string
+}
+
+export type MessageRole = 'user' | 'assistant'
+
+export interface MessageRead {
+  id: number
+  conversation_id: number
+  role: MessageRole
+  content: string
+  created_at: string
+  citations: CitationRead[]
+}

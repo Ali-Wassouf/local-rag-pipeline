@@ -2,12 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   attachDocumentToProject,
+  createConversation,
   createProject,
   detachDocumentFromProject,
   getJob,
   getProject,
   getSections,
   listAllDocuments,
+  listConversations,
+  listMessages,
   listProjectDocuments,
   listProjects,
   updateSectionTitle,
@@ -115,5 +118,31 @@ export function useDetachDocument(projectId: number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-documents', projectId] })
     },
+  })
+}
+
+export function useConversations(projectId: number | null) {
+  return useQuery({
+    queryKey: ['conversations', projectId],
+    queryFn: () => listConversations(projectId as number),
+    enabled: projectId !== null,
+  })
+}
+
+export function useCreateConversation(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => createConversation(projectId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', projectId] })
+    },
+  })
+}
+
+export function useMessages(conversationId: number | null) {
+  return useQuery({
+    queryKey: ['messages', conversationId],
+    queryFn: () => listMessages(conversationId as number),
+    enabled: conversationId !== null,
   })
 }
