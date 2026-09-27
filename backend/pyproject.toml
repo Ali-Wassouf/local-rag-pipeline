@@ -19,6 +19,7 @@ dependencies = [
     "python-multipart>=0.0.32",
     "python-pptx>=1.0.2",
     "sqlalchemy[asyncio]>=2.0",
+    "tokenizers>=0.23.2",
     "uvicorn[standard]>=0.52.4",
 ]
 

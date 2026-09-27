@@ -1,5 +1,5 @@
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import BigInteger, ForeignKey, Integer, Text
+from sqlalchemy import BigInteger, Computed, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -28,4 +28,8 @@ class Chunk(Base):
     embedding_run_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("embedding_runs.id")
     )
-    tsv: Mapped[str | None] = mapped_column(TSVECTOR)
+    # GENERATED ALWAYS in Postgres (see the migration) — Computed() tells
+    # SQLAlchemy to never include this column in INSERT/UPDATE statements.
+    tsv: Mapped[str | None] = mapped_column(
+        TSVECTOR, Computed("to_tsvector('english', text)")
+    )

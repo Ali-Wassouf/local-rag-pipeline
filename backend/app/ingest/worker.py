@@ -1,33 +1,50 @@
-"""Worker process skeleton.
+"""Ingest worker.
 
-Phase 0 proves the plumbing only: no extraction happens here yet. Each job
-is walked through the real stage sequence (extract -> structure -> chunk ->
-embed -> summarise -> done) in small steps so progress visibly advances in
-the UI. Phase 1+ replaces the stub work inside each stage with real logic.
+Wires extract -> structure -> chunk -> embed for real (Phase 2). `summarise`
+remains a stub — section summaries are Phase 5. Extraction and structure
+building happen as one atomic unit of work (Block is deliberately never
+persisted — see app/extract/base.py — so there's no checkpoint to resume
+from between them without re-parsing the file, which docs/plan.md explicitly
+wants to avoid); the job still passes through the "structure" stage value
+on its way to "chunk" so the stage name stays meaningful in `ingest_jobs`.
+
+A bad document must not kill the worker: any exception during a stage marks
+that job failed with the error message and moves on, rather than crashing
+the polling loop.
 """
 
 import asyncio
 import logging
 from datetime import UTC, datetime
+from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.db.session import async_session_maker
-from app.models.document import DocStatus, Document
+from app.extract import docx as docx_extractor
+from app.extract import pdf as pdf_extractor
+from app.extract import pptx as pptx_extractor
+from app.extract import text as text_extractor
+from app.extract.base import ExtractFn
+from app.ingest.chunk import persist_chunks
+from app.ingest.embed import EMBEDDING_DIMENSION, embed_batch, get_or_create_embedding_run
+from app.ingest.structure import build_structure, persist_structure
+from app.models.chunk import Chunk
+from app.models.document import DocFormat, DocStatus, Document
 from app.models.job import IngestJob, JobStage
+from app.models.section import Section
 
 logger = logging.getLogger(__name__)
 
-STAGE_SEQUENCE: list[JobStage] = [
-    JobStage.extract,
-    JobStage.structure,
-    JobStage.chunk,
-    JobStage.embed,
-    JobStage.summarise,
-]
-STEPS_PER_STAGE = 4
+_EXTRACTORS: dict[DocFormat, ExtractFn] = {
+    DocFormat.pdf: pdf_extractor.extract,
+    DocFormat.docx: docx_extractor.extract,
+    DocFormat.pptx: pptx_extractor.extract,
+    DocFormat.txt: text_extractor.extract,
+    DocFormat.md: text_extractor.extract,
+}
 
 
 def _status_for_stage(stage: JobStage) -> DocStatus:
@@ -49,38 +66,76 @@ async def _claim_next_job(db: AsyncSession) -> IngestJob | None:
     return result.scalar_one_or_none()
 
 
+async def _run_extract_and_structure(db: AsyncSession, document: Document) -> None:
+    extractor = _EXTRACTORS[document.format]
+    blocks = extractor(Path(document.storage_path))
+    result = build_structure(blocks, document_title=document.title)
+    await persist_structure(db, document, result)
+
+
+async def _run_chunk(db: AsyncSession, document: Document) -> None:
+    result = await db.execute(select(Section).where(Section.document_id == document.id))
+    sections = list(result.scalars().all())
+    await persist_chunks(db, document, sections)
+
+
+async def _run_embed(db: AsyncSession, document: Document) -> None:
+    result = await db.execute(
+        select(Chunk).where(Chunk.document_id == document.id, Chunk.embedding.is_(None))
+    )
+    chunks = list(result.scalars().all())
+    if not chunks:
+        return
+
+    settings = get_settings()
+    run = await get_or_create_embedding_run(
+        db, model=settings.embedding_model, dimension=EMBEDDING_DIMENSION
+    )
+    vectors = await embed_batch([chunk.embed_text for chunk in chunks])
+    for chunk, vector in zip(chunks, vectors, strict=True):
+        chunk.embedding = vector
+        chunk.embedding_run_id = run.id
+
+
 async def _advance(db: AsyncSession, job: IngestJob) -> None:
     document = await db.get(Document, job.document_id)
     if document is None:
         job.error = "document not found"
+        job.finished_at = datetime.now(UTC)
         return
 
     if job.started_at is None:
         job.started_at = datetime.now(UTC)
 
-    current_stage = JobStage(job.stage)
-    stage_index = STAGE_SEQUENCE.index(current_stage)
-    step = round(job.progress * STEPS_PER_STAGE) + 1
-
-    if step >= STEPS_PER_STAGE:
-        if stage_index + 1 < len(STAGE_SEQUENCE):
-            new_stage = STAGE_SEQUENCE[stage_index + 1]
-            job.stage = new_stage.value
-            job.progress = 0.0
-        else:
-            new_stage = JobStage.done
-            job.stage = new_stage.value
-            job.progress = 1.0
+    stage = JobStage(job.stage)
+    try:
+        if stage is JobStage.extract:
+            await _run_extract_and_structure(db, document)
+            job.stage = JobStage.structure.value
+        elif stage is JobStage.structure:
+            job.stage = JobStage.chunk.value
+        elif stage is JobStage.chunk:
+            await _run_chunk(db, document)
+            job.stage = JobStage.embed.value
+        elif stage is JobStage.embed:
+            await _run_embed(db, document)
+            job.stage = JobStage.summarise.value
+        elif stage is JobStage.summarise:
+            # Stub — section summaries are Phase 5.
+            job.stage = JobStage.done.value
             job.finished_at = datetime.now(UTC)
-    else:
-        new_stage = current_stage
-        job.progress = step / STEPS_PER_STAGE
+    except Exception as exc:
+        job.error = str(exc)
+        job.finished_at = datetime.now(UTC)
+        document.status = DocStatus.failed
+        return
 
-    document.status = _status_for_stage(new_stage)
+    job.progress = 1.0
+    document.status = _status_for_stage(JobStage(job.stage))
 
 
 async def run_worker_iteration() -> bool:
-    """Claim and advance one job by one step. Returns True if work was done."""
+    """Claim and advance one job by one stage. Returns True if work was done."""
     async with async_session_maker() as db, db.begin():
         job = await _claim_next_job(db)
         if job is None:
