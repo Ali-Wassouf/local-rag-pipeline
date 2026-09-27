@@ -6,9 +6,11 @@ const STAGES = ['extract', 'structure', 'chunk', 'embed', 'summarise', 'done']
 
 interface UploadScreenProps {
   onReviewDocument: (documentId: number) => void
+  projectId?: number
+  onBack?: () => void
 }
 
-export function UploadScreen({ onReviewDocument }: UploadScreenProps) {
+export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScreenProps) {
   const [jobId, setJobId] = useState<number | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -19,15 +21,27 @@ export function UploadScreen({ onReviewDocument }: UploadScreenProps) {
     const file = event.target.files?.[0]
     if (!file) return
     setFileName(file.name)
-    upload.mutate(file, {
-      onSuccess: (data) => setJobId(data.job_id),
-    })
+    upload.mutate(
+      { file, projectId },
+      {
+        onSuccess: (data) => setJobId(data.job_id),
+      },
+    )
   }
 
   const stageIndex = job.data ? STAGES.indexOf(job.data.stage) : -1
 
   return (
     <div className="mx-auto max-w-xl p-8">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="mb-4 text-sm text-blue-600 hover:underline"
+        >
+          &larr; Back
+        </button>
+      )}
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Upload a document</h1>
 
       <input

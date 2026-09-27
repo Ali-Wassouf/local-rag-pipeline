@@ -1,14 +1,30 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { getJob, getSections, updateSectionTitle, uploadDocument } from './client'
+import {
+  attachDocumentToProject,
+  createProject,
+  detachDocumentFromProject,
+  getJob,
+  getProject,
+  getSections,
+  listAllDocuments,
+  listProjectDocuments,
+  listProjects,
+  updateSectionTitle,
+  uploadDocument,
+} from './client'
 
 export function useUploadDocument() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: uploadDocument,
-    onSuccess: (data) => {
+    mutationFn: ({ file, projectId }: { file: File; projectId?: number }) =>
+      uploadDocument(file, projectId),
+    onSuccess: (data, variables) => {
       if (data.job_id !== null) {
         queryClient.invalidateQueries({ queryKey: ['job', data.job_id] })
+      }
+      if (variables.projectId !== undefined) {
+        queryClient.invalidateQueries({ queryKey: ['project-documents', variables.projectId] })
       }
     },
   })
@@ -44,6 +60,60 @@ export function useUpdateSectionTitle(documentId: number) {
       updateSectionTitle(sectionId, title),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', documentId] })
+    },
+  })
+}
+
+export function useProjects() {
+  return useQuery({ queryKey: ['projects'], queryFn: listProjects })
+}
+
+export function useCreateProject() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (name: string) => createProject(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+export function useProject(projectId: number | null) {
+  return useQuery({
+    queryKey: ['project', projectId],
+    queryFn: () => getProject(projectId as number),
+    enabled: projectId !== null,
+  })
+}
+
+export function useProjectDocuments(projectId: number | null) {
+  return useQuery({
+    queryKey: ['project-documents', projectId],
+    queryFn: () => listProjectDocuments(projectId as number),
+    enabled: projectId !== null,
+  })
+}
+
+export function useAllDocuments() {
+  return useQuery({ queryKey: ['all-documents'], queryFn: listAllDocuments })
+}
+
+export function useAttachDocument(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (documentId: number) => attachDocumentToProject(projectId, documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-documents', projectId] })
+    },
+  })
+}
+
+export function useDetachDocument(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (documentId: number) => detachDocumentFromProject(projectId, documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-documents', projectId] })
     },
   })
 }

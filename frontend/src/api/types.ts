@@ -51,3 +51,10 @@ export interface SectionRead {
   preview: string
   estimated_chunks: number
 }
+
+export interface ProjectRead {
+  id: number
+  name: string
+  description: string | null
+  created_at: string
+}

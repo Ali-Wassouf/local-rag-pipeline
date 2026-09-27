@@ -52,3 +52,11 @@ async def test_upload_rejects_unsupported_format(client: AsyncClient) -> None:
 async def test_get_document_not_found(client: AsyncClient) -> None:
     response = await client.get("/documents/999999")
     assert response.status_code == 404
+
+
+async def test_list_all_documents(client: AsyncClient) -> None:
+    await client.post("/documents", files={"file": ("x.txt", b"content x", "text/plain")})
+    response = await client.get("/documents")
+    assert response.status_code == 200
+    titles = [d["title"] for d in response.json()]
+    assert "x" in titles

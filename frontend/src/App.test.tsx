@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('App', () => {
-  it('renders the upload screen', () => {
+  it('renders the projects list by default', () => {
     render(<App />)
-    expect(screen.getByText('Upload a document')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Projects' })).toBeInTheDocument()
   })
 })

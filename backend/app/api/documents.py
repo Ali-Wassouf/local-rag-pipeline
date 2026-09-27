@@ -104,6 +104,12 @@ async def upload_document(
     )
 
 
+@router.get("", response_model=list[DocumentRead])
+async def list_documents(db: DbSession) -> list[Document]:
+    result = await db.execute(select(Document).order_by(Document.created_at.desc()))
+    return list(result.scalars().all())
+
+
 @router.get("/{document_id}", response_model=DocumentRead)
 async def get_document(document_id: int, db: DbSession) -> Document:
     document = await db.get(Document, document_id)

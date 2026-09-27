@@ -15,3 +15,7 @@ class ProjectRead(BaseModel):
     name: str
     description: str | None
     created_at: datetime
+
+
+class ProjectDocumentAttach(BaseModel):
+    document_id: int
