@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 
+import { Shell } from './components/Shell'
 import { ChatScreen } from './screens/ChatScreen'
 import { ProjectDetailScreen } from './screens/ProjectDetailScreen'
 import { ProjectsListScreen } from './screens/ProjectsListScreen'
@@ -77,7 +78,11 @@ function App() {
     )
   }
 
-  return <QueryClientProvider client={queryClient}>{content}</QueryClientProvider>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Shell>{content}</Shell>
+    </QueryClientProvider>
+  )
 }
 
 export default App

@@ -78,11 +78,14 @@ describe('ChatScreen', () => {
 
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
 
-    const conversationButton = await screen.findByText('Old chat about forces')
+    // The chapter row's own preview is fetched from the conversation's real
+    // first question, so it can legitimately duplicate transcript text once
+    // selected — the folio number is what's unique, so select by that.
+    const conversationButton = await screen.findByRole('button', { name: /No\. 1/ })
     fireEvent.click(conversationButton)
 
-    expect(await screen.findByText(/Newton's first law/)).toBeInTheDocument()
     expect(await screen.findByText(/object in motion stays in motion/)).toBeInTheDocument()
+    expect(await screen.findAllByText(/Newton's first law/)).toHaveLength(2)
   })
 
   it('starting a new conversation calls the create mutation', async () => {
@@ -96,9 +99,20 @@ describe('ChatScreen', () => {
 
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'New conversation' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'New chapter' }))
 
     await waitFor(() => expect(createSpy).toHaveBeenCalledWith(1))
+  })
+
+  it("a chapter row previews its own first question, not a bare title", async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(oldMessages)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    const row = await screen.findByRole('button', { name: /No\. 1/ })
+    await waitFor(() => expect(row).toHaveTextContent("What is Newton's first law?"))
+    expect(row).not.toHaveTextContent('Old chat about forces')
   })
 
   it('sending a message streams tokens and shows the final answer with sources', async () => {
@@ -132,5 +146,135 @@ describe('ChatScreen', () => {
       ),
     ).toBeInTheDocument()
     expect(await screen.findByText(/Ch\. 2/)).toBeInTheDocument()
+  })
+
+  it('renders Markdown formatting instead of literal syntax characters', async () => {
+    const markdownMessages: MessageRead[] = [
+      {
+        id: 1,
+        conversation_id: 5,
+        role: 'assistant',
+        content: '**ACID** stands for:\n\n1. Atomicity\n2. Consistency',
+        created_at: '2026-01-01T00:00:00Z',
+        citations: [],
+      },
+    ]
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(markdownMessages)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const bold = await screen.findByText('ACID')
+    expect(bold.tagName).toBe('STRONG')
+
+    // The raw list markers ("1.", "2.") must not appear as literal text —
+    // they should have become an actual <ol>/<li> structure.
+    expect(await screen.findByText('Atomicity')).toBeInTheDocument()
+    expect(screen.getByText('Atomicity').closest('li')).not.toBeNull()
+    expect(screen.queryByText(/^1\.\s*Atomicity/)).not.toBeInTheDocument()
+  })
+
+  it('switching conversations resets sending state so the new one is not stuck disabled', async () => {
+    const anotherConversation: ConversationRead = {
+      id: 6,
+      project_id: 1,
+      title: 'Another chat',
+      created_at: '2026-01-01T00:00:00Z',
+    }
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation, anotherConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+
+    // Simulate a request that never resolves — the in-flight generation
+    // the user was mid-way through when they switched conversations.
+    vi.spyOn(client, 'sendMessage').mockImplementation(() => new Promise(() => {}))
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+    const input = await screen.findByPlaceholderText('Ask a question…')
+    fireEvent.change(input, { target: { value: 'A question' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    expect(screen.getByPlaceholderText('Ask a question…')).toBeDisabled()
+
+    fireEvent.click(screen.getByText('Another chat'))
+
+    expect(await screen.findByPlaceholderText('Ask a question…')).not.toBeDisabled()
+  })
+
+  it('still styles citation markers distinctly inside Markdown output', async () => {
+    const markdownMessages: MessageRead[] = [
+      {
+        id: 1,
+        conversation_id: 5,
+        role: 'assistant',
+        content: 'Answers should be **grounded** in sources [1] and [2].',
+        created_at: '2026-01-01T00:00:00Z',
+        citations: [
+          { chunk_id: 1, rank: 1, document_title: 'Doc A', display_path: 'Ch. 1' },
+          { chunk_id: 2, rank: 2, document_title: 'Doc B', display_path: 'Ch. 2' },
+        ],
+      },
+    ]
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(markdownMessages)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    expect((await screen.findByText('grounded')).tagName).toBe('STRONG')
+
+    // The inline markers in the prose are real same-page links inside a
+    // <sup>; the always-visible footnote block beneath the answer repeats
+    // the same ranks as its own <span> entries — both are expected now that
+    // sources are never collapsed.
+    const markers = await screen.findAllByText(/^[12]$/)
+    expect(markers.map((el) => el.tagName).sort()).toEqual(['A', 'A', 'SPAN', 'SPAN'])
+
+    expect(await screen.findByText(/Doc A/)).toBeInTheDocument()
+    expect(await screen.findByText(/Doc B/)).toBeInTheDocument()
+  })
+
+  it('clicking a citation marker links to its own footnote line', async () => {
+    const markdownMessages: MessageRead[] = [
+      {
+        id: 42,
+        conversation_id: 5,
+        role: 'assistant',
+        content: 'A transaction groups operations into one unit [1].',
+        created_at: '2026-01-01T00:00:00Z',
+        citations: [
+          { chunk_id: 1, rank: 1, document_title: 'DDIA', display_path: 'Ch. 7' },
+        ],
+      },
+    ]
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(markdownMessages)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const marker = await screen.findByRole('link', { name: '1' })
+    expect(marker).toHaveAttribute('href', '#fn-42-1')
+
+    const footnoteLine = await screen.findByText(/DDIA/)
+    expect(footnoteLine.closest('li')).toHaveAttribute('id', 'fn-42-1')
+    expect(footnoteLine.closest('li')).toHaveClass('footnote-entry')
+  })
+
+  it('shows a moving indicator next to Reply while the answer is still generating', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+    vi.spyOn(client, 'sendMessage').mockImplementation(() => new Promise(() => {}))
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const input = await screen.findByPlaceholderText('Ask a question…')
+    fireEvent.change(input, { target: { value: 'A question' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/composing/i)
   })
 })
