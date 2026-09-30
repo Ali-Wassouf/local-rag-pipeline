@@ -1,1 +1,15 @@
 .DS_Store
+
+# Vendored/downloaded tool payload for the impeccable skill (compiled
+# binaries, downloaded JS/data) — not project source, regenerated on install.
+.claude/skills/*/scripts/
+
+# Local-only impeccable cache/session state (documented by the tool itself
+# as gitignored — per-machine, not durable project context).
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+
+# graphify's own regenerable AST/semantic cache and dated auto-backups —
+# not the graph output itself (graph.json, graph.html, GRAPH_REPORT.md stay).
+graphify-out/cache/
+graphify-out/20*/
