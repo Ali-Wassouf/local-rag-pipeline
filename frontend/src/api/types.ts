@@ -17,6 +17,8 @@ export interface DocumentRead {
   original_name: string
   status: DocStatus
   generate_summary: boolean
+  section_count: number
+  summary_count: number
   created_at: string
 }
 

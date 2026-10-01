@@ -23,6 +23,8 @@ const attachedDoc: DocumentRead = {
   original_name: 'mechanics.pdf',
   status: 'ready',
   generate_summary: true,
+  section_count: 0,
+  summary_count: 0,
   created_at: '2026-01-01T00:00:00Z',
 }
 
@@ -35,6 +37,8 @@ const unattachedDoc: DocumentRead = {
   original_name: 'thermo.pdf',
   status: 'ready',
   generate_summary: true,
+  section_count: 0,
+  summary_count: 0,
   created_at: '2026-01-01T00:00:00Z',
 }
 
@@ -182,5 +186,132 @@ describe('ProjectDetailScreen', () => {
 
     await screen.findByText('Mechanics 101')
     expect(screen.queryByRole('button', { name: 'Generate summary' })).not.toBeInTheDocument()
+  })
+
+  it('shows the real summary count for a document with real summaries', async () => {
+    const summarized: DocumentRead = { ...attachedDoc, section_count: 5, summary_count: 2 }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([summarized])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([summarized])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('2 of 5 sections summarized')).toBeInTheDocument()
+  })
+
+  it('distinguishes "opted in but nothing qualified" from having real summaries', async () => {
+    // generate_summary=true alone doesn't mean anything was produced — a
+    // deck whose sections are all too short to meet the threshold ends up
+    // with zero real summaries despite being opted in.
+    const nothingQualified: DocumentRead = {
+      ...attachedDoc,
+      generate_summary: true,
+      section_count: 56,
+      summary_count: 0,
+    }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([nothingQualified])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([nothingQualified])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(
+      await screen.findByText('0 of 56 sections summarized — none were long enough to qualify'),
+    ).toBeInTheDocument()
+    // Re-running summarization wouldn't change this outcome, so no button.
+    expect(screen.queryByRole('button', { name: 'Generate summary' })).not.toBeInTheDocument()
+  })
+
+  it('shows "Not summarized" for an opted-out document that has sections', async () => {
+    const optedOutWithSections: DocumentRead = {
+      ...attachedDoc,
+      generate_summary: false,
+      section_count: 10,
+      summary_count: 0,
+    }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([optedOutWithSections])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([optedOutWithSections])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('Not summarized')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Generate summary' })).toBeInTheDocument()
+  })
+
+  it('renames a project', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([])
+    const renameSpy = vi
+      .spyOn(client, 'renameProject')
+      .mockResolvedValue({ ...project, name: 'Quantum Physics' })
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    await screen.findByText('Physics')
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+
+    const input = screen.getByLabelText('Project name')
+    fireEvent.change(input, { target: { value: 'Quantum Physics' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(renameSpy).toHaveBeenCalledWith(1, 'Quantum Physics'))
+  })
+
+  it('cancels a rename without saving', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([])
+    const renameSpy = vi.spyOn(client, 'renameProject')
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    await screen.findByText('Physics')
+    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.getByText('Physics')).toBeInTheDocument()
+    expect(renameSpy).not.toHaveBeenCalled()
   })
 })

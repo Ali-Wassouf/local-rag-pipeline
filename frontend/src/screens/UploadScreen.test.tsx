@@ -16,6 +16,8 @@ const uploadedDocument: DocumentRead = {
   original_name: 'report.txt',
   status: 'uploaded',
   generate_summary: true,
+  section_count: 0,
+  summary_count: 0,
   created_at: '2026-01-01T00:00:00Z',
 }
 

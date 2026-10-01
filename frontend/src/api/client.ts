@@ -90,6 +90,15 @@ export async function getProject(projectId: number): Promise<ProjectRead> {
   return parseOrThrow<ProjectRead>(response)
 }
 
+export async function renameProject(projectId: number, name: string): Promise<ProjectRead> {
+  const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  return parseOrThrow<ProjectRead>(response)
+}
+
 export async function listProjectDocuments(projectId: number): Promise<DocumentRead[]> {
   const response = await fetch(`${API_BASE_URL}/projects/${projectId}/documents`)
   return parseOrThrow<DocumentRead[]>(response)

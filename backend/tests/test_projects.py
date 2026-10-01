@@ -24,6 +24,31 @@ async def test_get_project_not_found(client: AsyncClient) -> None:
     assert response.status_code == 404
 
 
+async def test_rename_project(client: AsyncClient) -> None:
+    created = await client.post("/projects", json={"name": "Physics"})
+    project_id = created.json()["id"]
+
+    response = await client.patch(f"/projects/{project_id}", json={"name": "Quantum Physics"})
+    assert response.status_code == 200
+    assert response.json()["name"] == "Quantum Physics"
+
+    fetched = await client.get(f"/projects/{project_id}")
+    assert fetched.json()["name"] == "Quantum Physics"
+
+
+async def test_rename_project_404s_for_unknown_project(client: AsyncClient) -> None:
+    response = await client.patch("/projects/999999", json={"name": "Whatever"})
+    assert response.status_code == 404
+
+
+async def test_rename_project_rejects_an_empty_name(client: AsyncClient) -> None:
+    created = await client.post("/projects", json={"name": "Physics"})
+    project_id = created.json()["id"]
+
+    response = await client.patch(f"/projects/{project_id}", json={"name": "   "})
+    assert response.status_code == 422
+
+
 async def test_delete_project(client: AsyncClient) -> None:
     created = await client.post("/projects", json={"name": "Temp"})
     project_id = created.json()["id"]

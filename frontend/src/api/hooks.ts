@@ -15,6 +15,7 @@ import {
   listMessages,
   listProjectDocuments,
   listProjects,
+  renameProject,
   restoreConversation,
   summarizeDocument,
   updateSectionTitle,
@@ -107,6 +108,17 @@ export function useProject(projectId: number | null) {
     queryKey: ['project', projectId],
     queryFn: () => getProject(projectId as number),
     enabled: projectId !== null,
+  })
+}
+
+export function useRenameProject(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (name: string) => renameProject(projectId, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
   })
 }
 
