@@ -26,6 +26,23 @@ it — see below).
 Everything else (Ollama, `uv`, `pnpm`, `just`, `node@22`) is installed by the
 setup script below.
 
+### Why isn't Ollama containerized too?
+
+Only Postgres runs in Docker on purpose. Docker Desktop on macOS runs
+containers inside a Linux VM with no Metal/GPU passthrough, so a
+containerized Ollama would fall back to CPU-only inference. For an 8B
+generation model on a 16GB Apple Silicon Mac, that's the difference between
+usable interactive chat and a multi-second-per-token crawl — running Ollama
+natively is what makes local generation viable on this hardware at all.
+
+If you're moving this to a machine without that constraint (a Linux box with
+an NVIDIA GPU passed through to Docker, for instance), containerizing Ollama
+is fine there — it's a deployment-environment tradeoff, not a hard
+architectural requirement. The backend and worker aren't containerized
+either, for a different reason: at single-user scale with `just dev` already
+giving hot-reload, containerizing them would trade away that simplicity for
+isolation this project doesn't need.
+
 ## 1. One-time environment setup
 
 ```bash
