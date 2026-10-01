@@ -209,7 +209,7 @@ export function ProjectDetailScreen({
         onClick={onUploadHere}
         className="mt-3 text-sm text-blue-600 hover:underline"
       >
-        Upload a new document into this project
+        Upload new documents into this project
       </button>
 
       {projectDocuments.isLoading && <p className="mt-4 text-sm text-gray-500">Loading…</p>}

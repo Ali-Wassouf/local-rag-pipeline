@@ -76,7 +76,7 @@ export function ProjectsListScreen({
         onClick={onUploadStandalone}
         className="mt-6 text-sm text-blue-600 hover:underline"
       >
-        Upload a document without a project
+        Upload documents without a project
       </button>
     </div>
   )
