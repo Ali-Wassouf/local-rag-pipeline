@@ -291,6 +291,110 @@ describe('ProjectDetailScreen', () => {
     await waitFor(() => expect(renameSpy).toHaveBeenCalledWith(1, 'Quantum Physics'))
   })
 
+  it('reindexes a document', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([attachedDoc])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([attachedDoc])
+    const reindexSpy = vi
+      .spyOn(client, 'reindexDocument')
+      .mockResolvedValue({ ...attachedDoc, status: 'uploaded' })
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    const reindexButton = await screen.findByRole('button', { name: 'Re-index' })
+    fireEvent.click(reindexButton)
+
+    await waitFor(() => expect(reindexSpy).toHaveBeenCalledWith(10))
+  })
+
+  it('does not allow reindexing a document that is already mid-pipeline', async () => {
+    const stillIndexing: DocumentRead = { ...attachedDoc, status: 'indexing' }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([stillIndexing])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([stillIndexing])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    const reindexButton = await screen.findByRole('button', { name: 'Re-index' })
+    expect(reindexButton).toBeDisabled()
+  })
+
+  it('requires typing the exact title before permanently deleting a document', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([attachedDoc])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([attachedDoc])
+    const deleteSpy = vi.spyOn(client, 'deleteDocument').mockResolvedValue(undefined)
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete…' }))
+
+    const confirmButton = screen.getByRole('button', { name: 'Delete permanently' })
+    const input = screen.getByLabelText('Type the document title to confirm deletion')
+
+    // Wrong text — stays disabled, nothing is called.
+    fireEvent.change(input, { target: { value: 'wrong title' } })
+    expect(confirmButton).toBeDisabled()
+    fireEvent.click(confirmButton)
+    expect(deleteSpy).not.toHaveBeenCalled()
+
+    // Exact title — enables the button.
+    fireEvent.change(input, { target: { value: 'Mechanics 101' } })
+    expect(confirmButton).not.toBeDisabled()
+    fireEvent.click(confirmButton)
+
+    await waitFor(() => expect(deleteSpy).toHaveBeenCalledWith(10))
+  })
+
+  it('cancels a delete confirmation without deleting', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([attachedDoc])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([attachedDoc])
+    const deleteSpy = vi.spyOn(client, 'deleteDocument')
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete…' }))
+    expect(screen.getByRole('button', { name: 'Delete permanently' })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByRole('button', { name: 'Delete permanently' })).not.toBeInTheDocument()
+    expect(deleteSpy).not.toHaveBeenCalled()
+  })
+
   it('cancels a rename without saving', async () => {
     vi.spyOn(client, 'getProject').mockResolvedValue(project)
     vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([])

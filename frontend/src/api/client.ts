@@ -52,6 +52,20 @@ export async function summarizeDocument(documentId: number): Promise<DocumentRea
   return parseOrThrow<DocumentRead>(response)
 }
 
+export async function deleteDocument(documentId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+    method: 'DELETE',
+  })
+  return okOrThrow(response)
+}
+
+export async function reindexDocument(documentId: number): Promise<DocumentRead> {
+  const response = await fetch(`${API_BASE_URL}/documents/${documentId}/reindex`, {
+    method: 'POST',
+  })
+  return parseOrThrow<DocumentRead>(response)
+}
+
 export async function getJob(jobId: number): Promise<JobRead> {
   const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`)
   return parseOrThrow<JobRead>(response)

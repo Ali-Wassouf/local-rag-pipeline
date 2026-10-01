@@ -2,14 +2,15 @@ import hashlib
 from pathlib import Path
 
 import aiofiles
-from fastapi import APIRouter, Form, HTTPException, UploadFile
-from sqlalchemy import select
+from fastapi import APIRouter, Form, HTTPException, Response, UploadFile
+from sqlalchemy import delete, select
 
 from app.api.deps import DbSession
 from app.core.config import get_settings
 from app.models.document import DocFormat, DocStatus, Document, ProjectDocument
 from app.models.job import IngestJob, JobStage
 from app.models.project import Project
+from app.models.section import Section
 from app.schemas.document import DocumentRead, DocumentUploadResponse
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -146,6 +147,51 @@ async def summarize_document(document_id: int, db: DbSession) -> Document:
 
     document.generate_summary = True
     db.add(IngestJob(document_id=document_id, stage=JobStage.summarise.value, progress=0.0))
+    await db.commit()
+    await db.refresh(document)
+    return document
+
+
+@router.delete("/{document_id}", status_code=204)
+async def delete_document(document_id: int, db: DbSession) -> Response:
+    """Permanently removes a document: sections/chunks/summaries/jobs and its
+    project attachments all cascade at the DB level. Any message_citations
+    pointing at its chunks or summaries cascade away too — old answers just
+    end up with fewer sources, which is an accepted tradeoff, not a bug."""
+    document = await db.get(Document, document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    storage_path = Path(document.storage_path)
+    await db.delete(document)
+    await db.commit()
+    storage_path.unlink(missing_ok=True)
+    return Response(status_code=204)
+
+
+@router.post("/{document_id}/reindex", response_model=DocumentRead)
+async def reindex_document(document_id: int, db: DbSession) -> Document:
+    """Redoes the whole ingest pipeline from the file already on disk — no
+    re-upload needed. Wipes the current sections (cascades to their chunks
+    and summaries) and queues a fresh extract-stage job."""
+    document = await db.get(Document, document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    existing_job = await db.execute(
+        select(IngestJob).where(
+            IngestJob.document_id == document_id,
+            IngestJob.stage != JobStage.done.value,
+            IngestJob.error.is_(None),
+        )
+    )
+    if existing_job.scalar_one_or_none() is not None:
+        raise HTTPException(status_code=409, detail="This document is already being processed")
+
+    await db.execute(delete(Section).where(Section.document_id == document_id))
+    document.raw_text = None
+    document.status = DocStatus.uploaded
+    db.add(IngestJob(document_id=document_id, stage=JobStage.extract.value, progress=0.0))
     await db.commit()
     await db.refresh(document)
     return document

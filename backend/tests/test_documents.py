@@ -1,9 +1,14 @@
+from pathlib import Path
+
 from httpx import AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.chunk import Chunk
 from app.models.document import DocStatus, Document
 from app.models.job import IngestJob, JobStage
+from app.models.section import Section
+from app.models.summary import SectionSummary
 
 
 async def test_upload_returns_job_and_creates_document(client: AsyncClient) -> None:
@@ -154,3 +159,137 @@ async def test_summarize_endpoint_409s_if_already_in_progress(
 
     second = await client.post(f"/documents/{document_id}/summarize")
     assert second.status_code == 409
+
+
+async def test_delete_document_removes_everything(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    upload = await client.post(
+        "/documents",
+        files={"file": ("remove-me.txt", b"some content", "text/plain")},
+    )
+    document_id = upload.json()["document"]["id"]
+    document = await db_session.get(Document, document_id)
+    assert document is not None
+    storage_path = Path(document.storage_path)
+    assert storage_path.exists()
+
+    section = Section(
+        document_id=document_id,
+        path="n1",
+        title="T",
+        display_path="T",
+        depth=1,
+        ordinal=1,
+        char_start=0,
+        char_end=12,
+    )
+    db_session.add(section)
+    await db_session.flush()
+    chunk = Chunk(
+        document_id=document_id,
+        section_id=section.id,
+        ordinal=1,
+        text="some content",
+        embed_text="some content",
+        char_start=0,
+        char_end=12,
+        token_count=2,
+    )
+    summary = SectionSummary(
+        section_id=section.id, document_id=document_id, summary="A summary.", model="test"
+    )
+    db_session.add_all([chunk, summary])
+    await db_session.commit()
+    chunk_id, summary_id = chunk.id, summary.id
+
+    section_id = section.id
+
+    response = await client.delete(f"/documents/{document_id}")
+    assert response.status_code == 204
+
+    # The delete happened through the API's own session — force this
+    # session's identity map to forget its cached (now stale) objects
+    # rather than silently reusing them.
+    db_session.expire_all()
+    assert await db_session.get(Document, document_id) is None
+    assert await db_session.get(Section, section_id) is None
+    assert await db_session.get(Chunk, chunk_id) is None
+    assert await db_session.get(SectionSummary, summary_id) is None
+    assert not storage_path.exists()
+
+    assert (await client.get(f"/documents/{document_id}")).status_code == 404
+
+
+async def test_delete_unknown_document_404s(client: AsyncClient) -> None:
+    response = await client.delete("/documents/999999")
+    assert response.status_code == 404
+
+
+async def test_reindex_wipes_sections_and_queues_extract_job(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    upload = await client.post(
+        "/documents",
+        files={"file": ("reindex-me.txt", b"original content", "text/plain")},
+    )
+    document_id = upload.json()["document"]["id"]
+    document = await db_session.get(Document, document_id)
+    assert document is not None
+    document.status = DocStatus.ready
+    document.raw_text = "original content"
+    await db_session.flush()
+
+    section = Section(
+        document_id=document_id,
+        path="n1",
+        title="T",
+        display_path="T",
+        depth=1,
+        ordinal=1,
+        char_start=0,
+        char_end=16,
+    )
+    db_session.add(section)
+    await db_session.commit()
+
+    # Clear the job the upload itself queued, so reindex sees a clean slate.
+    existing_jobs = (
+        await db_session.execute(select(IngestJob).where(IngestJob.document_id == document_id))
+    ).scalars()
+    for job in existing_jobs:
+        await db_session.delete(job)
+    await db_session.commit()
+
+    section_id = section.id
+
+    response = await client.post(f"/documents/{document_id}/reindex")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in ("uploaded", "extracting")
+
+    db_session.expire_all()
+    assert await db_session.get(Section, section_id) is None
+
+    jobs = (
+        await db_session.execute(select(IngestJob).where(IngestJob.document_id == document_id))
+    ).scalars().all()
+    assert len(jobs) == 1
+    assert jobs[0].stage == JobStage.extract.value
+
+
+async def test_reindex_409s_if_a_job_is_already_in_progress(client: AsyncClient) -> None:
+    upload = await client.post(
+        "/documents",
+        files={"file": ("busy.txt", b"content", "text/plain")},
+    )
+    document_id = upload.json()["document"]["id"]
+    # Upload itself queues an extract job — still unfinished.
+
+    response = await client.post(f"/documents/{document_id}/reindex")
+    assert response.status_code == 409
+
+
+async def test_reindex_unknown_document_404s(client: AsyncClient) -> None:
+    response = await client.post("/documents/999999/reindex")
+    assert response.status_code == 404

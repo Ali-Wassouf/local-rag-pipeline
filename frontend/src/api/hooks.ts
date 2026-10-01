@@ -5,6 +5,7 @@ import {
   createConversation,
   createProject,
   deleteConversation,
+  deleteDocument,
   detachDocumentFromProject,
   getJob,
   getProject,
@@ -15,6 +16,7 @@ import {
   listMessages,
   listProjectDocuments,
   listProjects,
+  reindexDocument,
   renameProject,
   restoreConversation,
   summarizeDocument,
@@ -150,6 +152,28 @@ export function useDetachDocument(projectId: number) {
     mutationFn: (documentId: number) => detachDocumentFromProject(projectId, documentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['project-documents', projectId] })
+    },
+  })
+}
+
+export function useDeleteDocument(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (documentId: number) => deleteDocument(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-documents', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['all-documents'] })
+    },
+  })
+}
+
+export function useReindexDocument(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (documentId: number) => reindexDocument(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-documents', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['all-documents'] })
     },
   })
 }
