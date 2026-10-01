@@ -26,7 +26,7 @@ interface ChatScreenProps {
 // shape: a bordered, tinted badge that inverts to solid fill on hover/focus,
 // the same "struck vs. dormant" logic a real stamped reference tab would use.
 const CITATION_MARKER_CLASSES =
-  'inline-flex min-w-[1.1em] items-center justify-center rounded-full border border-accent/50 bg-accent/10 px-1 font-mono text-[10px] leading-[1.4] font-semibold text-accent no-underline tabular-nums transition-colors hover:border-accent hover:bg-accent hover:text-paper focus-visible:border-accent focus-visible:bg-accent focus-visible:text-paper dark:border-accent-dark/50 dark:bg-accent-dark/10 dark:text-accent-dark dark:hover:border-accent-dark dark:hover:bg-accent-dark dark:hover:text-paper-dark dark:focus-visible:border-accent-dark dark:focus-visible:bg-accent-dark dark:focus-visible:text-paper-dark'
+  'inline-flex min-w-[1.1em] items-center justify-center rounded-full border border-accent/50 bg-accent/10 px-1 font-mono text-[11px] leading-[1.4] font-semibold text-accent no-underline tabular-nums transition-colors hover:border-accent hover:bg-accent hover:text-paper focus-visible:border-accent focus-visible:bg-accent focus-visible:text-paper dark:border-accent-dark/50 dark:bg-accent-dark/10 dark:text-accent-dark dark:hover:border-accent-dark dark:hover:bg-accent-dark dark:hover:text-paper-dark dark:focus-visible:border-accent-dark dark:focus-visible:bg-accent-dark dark:focus-visible:text-paper-dark'
 
 function footnoteAnchorId(messageId: number | string, rank: string | number) {
   return `fn-${messageId}-${rank}`
@@ -95,7 +95,7 @@ function Footnotes({
       }
     >
       {pending ? (
-        <p className="font-mono text-[11px] tracking-wide text-ink-muted italic dark:text-ink-muted-dark">
+        <p className="font-mono text-[12px] tracking-wide text-ink-muted italic dark:text-ink-muted-dark">
           assembling sources…
         </p>
       ) : (
@@ -106,7 +106,7 @@ function Footnotes({
               <li
                 key={citation.chunk_id}
                 id={footnoteAnchorId(messageId, citation.rank)}
-                className={`footnote-entry flex scroll-mt-6 gap-2 px-1 font-mono text-[11px] ${
+                className={`footnote-entry flex scroll-mt-6 gap-2 px-1 font-mono text-[12px] ${
                   wasCited
                     ? 'text-ink-muted dark:text-ink-muted-dark'
                     : 'text-ink-muted/55 italic dark:text-ink-muted-dark/55'
@@ -163,7 +163,7 @@ function ChapterRow({ conversation, folio, isActive, onSelect, onRemove }: Chapt
             : 'border-transparent hover:bg-rail/60 dark:hover:bg-rail-dark/60'
         }`}
       >
-        <div className="flex items-baseline justify-between gap-2 font-mono text-[11px] text-ink-muted tabular-nums dark:text-ink-muted-dark">
+        <div className="flex items-baseline justify-between gap-2 font-mono text-[12px] text-ink-muted tabular-nums dark:text-ink-muted-dark">
           <span>No. {folio}</span>
           <span>{formatFolioDate(conversation.created_at)}</span>
         </div>
@@ -176,7 +176,7 @@ function ChapterRow({ conversation, folio, isActive, onSelect, onRemove }: Chapt
           onRemove()
         }}
         aria-label="Remove chapter"
-        className="absolute top-1.5 right-2.5 rounded-sm px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-ink-muted uppercase opacity-0 transition-opacity hover:bg-accent/10 hover:text-accent group-hover:opacity-100 group-focus-within:opacity-100 dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
+        className="absolute top-1.5 right-2.5 rounded-sm px-1.5 py-0.5 font-mono text-[11px] tracking-wide text-ink-muted uppercase opacity-0 transition-opacity hover:bg-accent/10 hover:text-accent group-hover:opacity-100 group-focus-within:opacity-100 dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
       >
         Remove
       </button>
@@ -307,14 +307,14 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
           <button
             type="button"
             onClick={onBack}
-            className="font-mono text-[11px] tracking-wide text-ink-muted uppercase hover:text-accent dark:text-ink-muted-dark dark:hover:text-accent-dark"
+            className="font-mono text-[12px] tracking-wide text-ink-muted uppercase hover:text-accent dark:text-ink-muted-dark dark:hover:text-accent-dark"
           >
             &larr; Back
           </button>
           <button
             type="button"
             onClick={handleNewConversation}
-            className="border border-rule px-2 py-1 font-mono text-[11px] tracking-wide text-ink uppercase hover:border-accent hover:text-accent dark:border-rule-dark dark:text-ink-dark dark:hover:border-accent-dark dark:hover:text-accent-dark"
+            className="border border-rule px-2 py-1 font-mono text-[12px] tracking-wide text-ink uppercase hover:border-accent hover:text-accent dark:border-rule-dark dark:text-ink-dark dark:hover:border-accent-dark dark:hover:text-accent-dark"
           >
             New chapter
           </button>
@@ -334,7 +334,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
 
         {(deletedConversations.data?.length ?? 0) > 0 && (
           <details className="shrink-0 border-t border-rule dark:border-rule-dark">
-            <summary className="cursor-pointer px-4 py-2 font-mono text-[11px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
+            <summary className="cursor-pointer px-4 py-2 font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
               Deleted ({deletedConversations.data?.length})
             </summary>
             <ul className="max-h-40 overflow-y-auto">
@@ -349,7 +349,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
                   <button
                     type="button"
                     onClick={() => restoreConversation.mutate(conversation.id)}
-                    className="shrink-0 rounded-sm px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-ink-muted uppercase hover:bg-accent/10 hover:text-accent dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
+                    className="shrink-0 rounded-sm px-1.5 py-0.5 font-mono text-[11px] tracking-wide text-ink-muted uppercase hover:bg-accent/10 hover:text-accent dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
                   >
                     Restore
                   </button>
@@ -365,7 +365,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
           <h1 className="font-serif text-lg text-ink italic dark:text-ink-dark">
             {project.data?.name ?? '…'}
           </h1>
-          <p className="font-mono text-[11px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
+          <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
             {documentCount} document{documentCount === 1 ? '' : 's'}
           </p>
         </div>
@@ -379,7 +379,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
             <div className="min-h-0 max-w-[75ch] flex-1 space-y-6 overflow-y-auto px-6 py-6">
               {messages.map((message) => (
                 <div key={message.id}>
-                  <p className="font-mono text-[11px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
+                  <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
                     {message.role === 'user' ? 'You asked' : 'Reply'}
                   </p>
                   {message.role === 'user' ? (
@@ -403,7 +403,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
               {isSending && (
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-mono text-[11px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
+                    <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
                       Reply
                     </p>
                     <span
@@ -442,7 +442,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
                 type="button"
                 onClick={handleSend}
                 disabled={isSending || !draft.trim()}
-                className="border border-ink px-4 py-2 font-mono text-[11px] tracking-wide text-ink uppercase hover:border-accent hover:text-accent disabled:opacity-40 dark:border-ink-dark dark:text-ink-dark dark:hover:border-accent-dark dark:hover:text-accent-dark"
+                className="border border-ink px-4 py-2 font-mono text-[12px] tracking-wide text-ink uppercase hover:border-accent hover:text-accent disabled:opacity-40 dark:border-ink-dark dark:text-ink-dark dark:hover:border-accent-dark dark:hover:text-accent-dark"
               >
                 Send
               </button>

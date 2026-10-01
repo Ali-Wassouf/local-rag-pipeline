@@ -21,6 +21,9 @@
 
 :root {
   color-scheme: light dark;
+  /* Bumps every rem-based size in the app (prose, headings, inputs,
+     buttons) proportionally larger from the 16px browser default. */
+  font-size: 18px;
 }
 
 body {
