@@ -12,18 +12,43 @@ import type {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
+// FastAPI error bodies are usually {"detail": "a message"}, or, for a 422
+// validation error, {"detail": [{"msg": "...", ...}, ...]}. Surfacing just
+// that message (rather than the raw "409 Conflict: {...}" response text)
+// is what makes every error shown in the UI readable.
+async function errorMessageFromResponse(response: Response): Promise<string> {
+  const body = await response.text()
+  if (body) {
+    try {
+      const parsed = JSON.parse(body) as { detail?: unknown }
+      if (typeof parsed.detail === 'string') return parsed.detail
+      if (Array.isArray(parsed.detail)) {
+        const messages = parsed.detail
+          .map((item) =>
+            item && typeof item === 'object' && 'msg' in item
+              ? String((item as { msg: unknown }).msg)
+              : null,
+          )
+          .filter((msg): msg is string => msg !== null)
+        if (messages.length > 0) return messages.join('; ')
+      }
+    } catch {
+      // Not JSON — fall through to the raw body below.
+    }
+  }
+  return body || `${response.status} ${response.statusText}`
+}
+
 async function parseOrThrow<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`${response.status} ${response.statusText}: ${body}`)
+    throw new Error(await errorMessageFromResponse(response))
   }
   return (await response.json()) as T
 }
 
 async function okOrThrow(response: Response): Promise<void> {
   if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`${response.status} ${response.statusText}: ${body}`)
+    throw new Error(await errorMessageFromResponse(response))
   }
 }
 

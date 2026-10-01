@@ -88,6 +88,12 @@ export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScre
         <p className="mt-4 text-sm text-red-600">{(upload.error as Error).message}</p>
       )}
 
+      {jobId !== null && job.isError && (
+        <p className="mt-4 text-sm text-red-600">
+          Couldn&rsquo;t check on the job&rsquo;s progress: {(job.error as Error).message}
+        </p>
+      )}
+
       {upload.data?.deduped && (
         <p className="mt-4 text-sm text-gray-500">
           Already ingested as "{upload.data.document.title}" — no new job started.

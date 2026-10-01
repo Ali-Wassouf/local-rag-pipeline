@@ -60,6 +60,10 @@ export function ReviewScreen({ documentId }: ReviewScreenProps) {
   const updateTitle = useUpdateSectionTitle(documentId)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
+  function titleUpdateFailedFor(sectionId: number): boolean {
+    return updateTitle.isError && updateTitle.variables?.sectionId === sectionId
+  }
+
   const sections = sectionsQuery.data ?? []
   const selected = sections.find((s) => s.id === selectedId) ?? sections[0] ?? null
 
@@ -68,6 +72,9 @@ export function ReviewScreen({ documentId }: ReviewScreenProps) {
       <div className="w-1/2">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Structure</h2>
         {sectionsQuery.isLoading && <p className="text-sm text-gray-500">Loading…</p>}
+        {sectionsQuery.isError && (
+          <p className="text-sm text-red-600">{(sectionsQuery.error as Error).message}</p>
+        )}
         <ul className="mt-2 space-y-1">
           {sections.map((section, index) => {
             const next: SectionRead | undefined = sections[index + 1]
@@ -98,6 +105,14 @@ export function ReviewScreen({ documentId }: ReviewScreenProps) {
                     {section.estimated_chunks} chunk{section.estimated_chunks === 1 ? '' : 's'}
                   </span>
                 </div>
+                {titleUpdateFailedFor(section.id) && (
+                  <p
+                    style={{ paddingLeft: `${section.depth * 16}px` }}
+                    className="px-2 py-1 text-xs text-red-600"
+                  >
+                    Couldn&rsquo;t save: {(updateTitle.error as Error).message}
+                  </p>
+                )}
                 {hasGapAfter && (
                   <div
                     style={{ paddingLeft: `${section.depth * 16}px` }}

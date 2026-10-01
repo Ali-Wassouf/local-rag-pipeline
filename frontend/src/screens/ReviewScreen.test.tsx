@@ -23,7 +23,9 @@ const baseSection: SectionRead = {
 }
 
 function renderWithClient(ui: ReactElement) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
@@ -91,5 +93,28 @@ describe('ReviewScreen', () => {
     renderWithClient(<ReviewScreen documentId={1} />)
 
     expect(await screen.findByText('Untitled region')).toBeInTheDocument()
+  })
+
+  it('shows an error if the sections fail to load', async () => {
+    vi.spyOn(client, 'getSections').mockRejectedValue(new Error('Document not found'))
+    renderWithClient(<ReviewScreen documentId={1} />)
+
+    expect(await screen.findByText('Document not found')).toBeInTheDocument()
+  })
+
+  it('shows an error under the row if saving a title fails', async () => {
+    vi.spyOn(client, 'getSections').mockResolvedValue([baseSection])
+    vi.spyOn(client, 'updateSectionTitle').mockRejectedValue(new Error('Title cannot be blank'))
+
+    renderWithClient(<ReviewScreen documentId={1} />)
+
+    const titleButton = await screen.findByRole('button', { name: 'Chapter One' })
+    fireEvent.click(titleButton)
+
+    const input = screen.getByDisplayValue('Chapter One')
+    fireEvent.change(input, { target: { value: 'Renamed' } })
+    fireEvent.blur(input)
+
+    expect(await screen.findByText(/Title cannot be blank/)).toBeInTheDocument()
   })
 })

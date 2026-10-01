@@ -12,7 +12,9 @@ const projects: ProjectRead[] = [
 ]
 
 function renderWithClient(ui: ReactElement) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
@@ -59,5 +61,26 @@ describe('ProjectsListScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
     await waitFor(() => expect(createSpy).toHaveBeenCalledWith('Chemistry'))
+  })
+
+  it('shows an error if the project list fails to load', async () => {
+    vi.spyOn(client, 'listProjects').mockRejectedValue(new Error('Network error'))
+
+    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />)
+
+    expect(await screen.findByText('Network error')).toBeInTheDocument()
+  })
+
+  it('shows an error if creating a project fails', async () => {
+    vi.spyOn(client, 'listProjects').mockResolvedValue([])
+    vi.spyOn(client, 'createProject').mockRejectedValue(new Error('Name already taken'))
+
+    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />)
+
+    const input = await screen.findByPlaceholderText('New project name')
+    fireEvent.change(input, { target: { value: 'Chemistry' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Create' }))
+
+    expect(await screen.findByText('Name already taken')).toBeInTheDocument()
   })
 })

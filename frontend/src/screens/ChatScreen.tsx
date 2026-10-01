@@ -345,6 +345,13 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
             New chapter
           </button>
         </div>
+        {(conversations.isError || createConversation.isError || deleteConversation.isError) && (
+          <p className="shrink-0 border-b border-rule px-4 py-2 font-mono text-[11px] text-red-700 dark:border-rule-dark dark:text-red-400">
+            {(
+              (conversations.error ?? createConversation.error ?? deleteConversation.error) as Error
+            ).message}
+          </p>
+        )}
         <ul className="min-h-0 flex-1 overflow-y-auto">
           {chapters.map((conversation, index) => (
             <ChapterRow
@@ -358,11 +365,21 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
           ))}
         </ul>
 
+        {deletedConversations.isError && (
+          <p className="shrink-0 border-t border-rule px-4 py-2 font-mono text-[11px] text-red-700 dark:border-rule-dark dark:text-red-400">
+            {(deletedConversations.error as Error).message}
+          </p>
+        )}
         {(deletedConversations.data?.length ?? 0) > 0 && (
           <details className="shrink-0 border-t border-rule dark:border-rule-dark">
             <summary className="cursor-pointer px-4 py-2 font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
               Deleted ({deletedConversations.data?.length})
             </summary>
+            {restoreConversation.isError && (
+              <p className="px-4 py-1.5 font-mono text-[11px] text-red-700 dark:text-red-400">
+                {(restoreConversation.error as Error).message}
+              </p>
+            )}
             <ul className="max-h-40 overflow-y-auto">
               {deletedConversations.data?.map((conversation) => (
                 <li
@@ -394,6 +411,11 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
           <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
             {documentCount} document{documentCount === 1 ? '' : 's'}
           </p>
+          {(project.isError || projectDocuments.isError) && (
+            <p className="mt-1 text-sm text-red-700 dark:text-red-400">
+              {((project.error ?? projectDocuments.error) as Error).message}
+            </p>
+          )}
         </div>
 
         {conversationId === null ? (
@@ -403,6 +425,11 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
         ) : (
           <>
             <div className="min-h-0 max-w-[75ch] flex-1 space-y-6 overflow-y-auto px-6 py-6">
+              {history.isError && (
+                <p className="font-serif text-sm text-red-700 dark:text-red-400">
+                  Couldn&rsquo;t load this chapter&rsquo;s messages: {(history.error as Error).message}
+                </p>
+              )}
               {messages.map((message) => (
                 <div key={message.id}>
                   <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">

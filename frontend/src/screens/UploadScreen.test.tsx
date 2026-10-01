@@ -28,7 +28,9 @@ const uploadResponse: DocumentUploadResponse = {
 }
 
 function renderWithClient(ui: ReactElement) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
@@ -91,5 +93,15 @@ describe('UploadScreen', () => {
     renderWithClient(<UploadScreen onReviewDocument={vi.fn()} />)
 
     expect(await screen.findByText(/extra time and compute/i)).toBeInTheDocument()
+  })
+
+  it('shows an error if checking on job progress fails', async () => {
+    vi.spyOn(client, 'uploadDocument').mockResolvedValue(uploadResponse)
+    vi.spyOn(client, 'getJob').mockRejectedValue(new Error('Job not found'))
+
+    const { container } = renderWithClient(<UploadScreen onReviewDocument={vi.fn()} />)
+    selectAFile(container)
+
+    expect(await screen.findByText(/Job not found/)).toBeInTheDocument()
   })
 })

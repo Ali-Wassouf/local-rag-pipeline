@@ -43,7 +43,9 @@ const unattachedDoc: DocumentRead = {
 }
 
 function renderWithClient(ui: ReactElement) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
@@ -417,5 +419,86 @@ describe('ProjectDetailScreen', () => {
 
     expect(screen.getByText('Physics')).toBeInTheDocument()
     expect(renameSpy).not.toHaveBeenCalled()
+  })
+
+  it('shows an error if the project fails to load', async () => {
+    vi.spyOn(client, 'getProject').mockRejectedValue(new Error('Project not found'))
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('Project not found')).toBeInTheDocument()
+  })
+
+  it('shows an error if the document list fails to load', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockRejectedValue(new Error('Database unreachable'))
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('Database unreachable')).toBeInTheDocument()
+  })
+
+  it('shows an error if attaching a document fails', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([unattachedDoc])
+    vi.spyOn(client, 'attachDocumentToProject').mockRejectedValue(new Error('Already attached'))
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    const select = await screen.findByLabelText('Attach an existing document')
+    await screen.findByRole('option', { name: 'Thermodynamics' })
+    fireEvent.change(select, { target: { value: '11' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Attach' }))
+
+    expect(await screen.findByText('Already attached')).toBeInTheDocument()
+  })
+
+  it('shows an error if removing a document fails', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([attachedDoc])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([attachedDoc])
+    vi.spyOn(client, 'detachDocumentFromProject').mockRejectedValue(new Error('Still in use'))
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove' }))
+
+    expect(await screen.findByText('Still in use')).toBeInTheDocument()
   })
 })

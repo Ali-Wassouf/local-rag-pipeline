@@ -166,6 +166,9 @@ export function ProjectDetailScreen({
       {renameProject.isError && (
         <p className="mt-1 text-sm text-red-600">{(renameProject.error as Error).message}</p>
       )}
+      {project.isError && (
+        <p className="mt-1 text-sm text-red-600">{(project.error as Error).message}</p>
+      )}
 
       <div className="mt-6 flex items-center gap-2">
         <label htmlFor="attach-document-select" className="sr-only">
@@ -194,6 +197,12 @@ export function ProjectDetailScreen({
           Attach
         </button>
       </div>
+      {attachDocument.isError && (
+        <p className="mt-1 text-sm text-red-600">{(attachDocument.error as Error).message}</p>
+      )}
+      {allDocuments.isError && (
+        <p className="mt-1 text-sm text-red-600">{(allDocuments.error as Error).message}</p>
+      )}
 
       <button
         type="button"
@@ -204,6 +213,12 @@ export function ProjectDetailScreen({
       </button>
 
       {projectDocuments.isLoading && <p className="mt-4 text-sm text-gray-500">Loading…</p>}
+      {projectDocuments.isError && (
+        <p className="mt-4 text-sm text-red-600">{(projectDocuments.error as Error).message}</p>
+      )}
+      {detachDocument.isError && (
+        <p className="mt-1 text-sm text-red-600">{(detachDocument.error as Error).message}</p>
+      )}
 
       <ul className="mt-6 space-y-2">
         {(projectDocuments.data ?? []).map((doc) => {

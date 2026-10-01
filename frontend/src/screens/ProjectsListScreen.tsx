@@ -48,7 +48,14 @@ export function ProjectsListScreen({
         </button>
       </div>
 
+      {createProject.isError && (
+        <p className="mt-2 text-sm text-red-600">{(createProject.error as Error).message}</p>
+      )}
+
       {projects.isLoading && <p className="mt-4 text-sm text-gray-500">Loading…</p>}
+      {projects.isError && (
+        <p className="mt-4 text-sm text-red-600">{(projects.error as Error).message}</p>
+      )}
 
       <ul className="mt-6 space-y-1">
         {(projects.data ?? []).map((project) => (

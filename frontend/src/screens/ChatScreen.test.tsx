@@ -56,7 +56,9 @@ const oldMessages: MessageRead[] = [
 ]
 
 function renderWithClient(ui: ReactElement) {
-  const queryClient = new QueryClient()
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  })
   return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
 }
 
@@ -467,5 +469,90 @@ describe('ChatScreen', () => {
 
     const footnoteLine = (await screen.findByText(/Part II/)).closest('li')
     expect(footnoteLine).toHaveTextContent('(summary)')
+  })
+
+  it('shows an error if the chapter list fails to load', async () => {
+    vi.spyOn(client, 'listConversations').mockRejectedValue(new Error('Database unreachable'))
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([])
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    expect(await screen.findByText('Database unreachable')).toBeInTheDocument()
+  })
+
+  it('shows an error if starting a new chapter fails', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([])
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([])
+    vi.spyOn(client, 'createConversation').mockRejectedValue(new Error('Project not found'))
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'New chapter' }))
+
+    expect(await screen.findByText('Project not found')).toBeInTheDocument()
+  })
+
+  it('shows an error if removing a chapter fails', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([])
+    vi.spyOn(client, 'deleteConversation').mockRejectedValue(new Error('Conversation not found'))
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove chapter' }))
+
+    expect(await screen.findByText('Conversation not found')).toBeInTheDocument()
+  })
+
+  it('shows an error if restoring a deleted chapter fails', async () => {
+    const deletedConversation: ConversationRead = {
+      id: 9,
+      project_id: 1,
+      title: 'An old abandoned chat',
+      created_at: '2026-01-01T00:00:00Z',
+    }
+    vi.spyOn(client, 'listConversations').mockResolvedValue([])
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([deletedConversation])
+    vi.spyOn(client, 'restoreConversation').mockRejectedValue(new Error('Already restored'))
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    fireEvent.click(await screen.findByText('Deleted (1)'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }))
+
+    expect(await screen.findByText('Already restored')).toBeInTheDocument()
+  })
+
+  it('shows an error if the deleted-chapters list fails to load', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([])
+    vi.spyOn(client, 'listDeletedConversations').mockRejectedValue(new Error('Server error'))
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    expect(await screen.findByText('Server error')).toBeInTheDocument()
+  })
+
+  it('shows an error if a chapter’s messages fail to load', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([])
+    vi.spyOn(client, 'listMessages').mockRejectedValue(new Error('Conversation not found'))
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    expect(await screen.findByText(/Conversation not found/)).toBeInTheDocument()
+  })
+
+  it('shows an error if the project or its documents fail to load', async () => {
+    vi.restoreAllMocks()
+    vi.spyOn(client, 'getProject').mockRejectedValue(new Error('Project not found'))
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([])
+    vi.spyOn(client, 'listConversations').mockResolvedValue([])
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([])
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    expect(await screen.findByText('Project not found')).toBeInTheDocument()
   })
 })
