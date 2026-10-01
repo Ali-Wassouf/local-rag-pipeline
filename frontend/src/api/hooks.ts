@@ -4,15 +4,18 @@ import {
   attachDocumentToProject,
   createConversation,
   createProject,
+  deleteConversation,
   detachDocumentFromProject,
   getJob,
   getProject,
   getSections,
   listAllDocuments,
   listConversations,
+  listDeletedConversations,
   listMessages,
   listProjectDocuments,
   listProjects,
+  restoreConversation,
   updateSectionTitle,
   uploadDocument,
 } from './client'
@@ -135,6 +138,36 @@ export function useCreateConversation(projectId: number) {
     mutationFn: () => createConversation(projectId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', projectId] })
+    },
+  })
+}
+
+export function useDeletedConversations(projectId: number | null) {
+  return useQuery({
+    queryKey: ['deleted-conversations', projectId],
+    queryFn: () => listDeletedConversations(projectId as number),
+    enabled: projectId !== null,
+  })
+}
+
+export function useDeleteConversation(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (conversationId: number) => deleteConversation(conversationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['deleted-conversations', projectId] })
+    },
+  })
+}
+
+export function useRestoreConversation(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (conversationId: number) => restoreConversation(conversationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['deleted-conversations', projectId] })
     },
   })
 }

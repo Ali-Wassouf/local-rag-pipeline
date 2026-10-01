@@ -135,6 +135,121 @@ async def test_send_message_404s_for_unknown_conversation(client: AsyncClient) -
     assert response.status_code == 404
 
 
+# --- soft delete / restore --------------------------------------------------
+
+
+async def test_deleting_a_conversation_removes_it_from_the_active_list(
+    client: AsyncClient,
+) -> None:
+    project_id = await _create_project(client)
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+
+    delete_response = await client.delete(f"/conversations/{conversation_id}")
+    assert delete_response.status_code == 204
+
+    listing = await client.get(f"/projects/{project_id}/conversations")
+    assert listing.json() == []
+
+
+async def test_delete_404s_for_unknown_conversation(client: AsyncClient) -> None:
+    response = await client.delete("/conversations/999999")
+    assert response.status_code == 404
+
+
+async def test_delete_404s_for_an_already_deleted_conversation(client: AsyncClient) -> None:
+    project_id = await _create_project(client)
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+    await client.delete(f"/conversations/{conversation_id}")
+
+    second_delete = await client.delete(f"/conversations/{conversation_id}")
+    assert second_delete.status_code == 404
+
+
+async def test_a_deleted_conversations_messages_are_unreachable(client: AsyncClient) -> None:
+    project_id = await _create_project(client)
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+    await client.delete(f"/conversations/{conversation_id}")
+
+    read_response = await client.get(f"/conversations/{conversation_id}/messages")
+    assert read_response.status_code == 404
+
+    send_response = await client.post(
+        f"/conversations/{conversation_id}/messages", json={"content": "hi"}
+    )
+    assert send_response.status_code == 404
+
+
+async def test_deleted_list_only_shows_that_projects_deleted_conversations(
+    client: AsyncClient,
+) -> None:
+    project_a = await _create_project(client, "A")
+    project_b = await _create_project(client, "B")
+
+    convo_a = (await client.post(f"/projects/{project_a}/conversations")).json()["id"]
+    convo_b = (await client.post(f"/projects/{project_b}/conversations")).json()["id"]
+    still_active = (await client.post(f"/projects/{project_a}/conversations")).json()["id"]
+
+    await client.delete(f"/conversations/{convo_a}")
+    await client.delete(f"/conversations/{convo_b}")
+
+    deleted_a = await client.get(f"/projects/{project_a}/conversations/deleted")
+    assert [c["id"] for c in deleted_a.json()] == [convo_a]
+    assert still_active not in [c["id"] for c in deleted_a.json()]
+
+
+async def test_deleted_list_404s_for_unknown_project(client: AsyncClient) -> None:
+    response = await client.get("/projects/999999/conversations/deleted")
+    assert response.status_code == 404
+
+
+async def test_restore_brings_a_conversation_back_to_the_active_list(
+    client: AsyncClient,
+) -> None:
+    project_id = await _create_project(client)
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+    await client.delete(f"/conversations/{conversation_id}")
+
+    restore_response = await client.post(f"/conversations/{conversation_id}/restore")
+    assert restore_response.status_code == 200
+
+    active = await client.get(f"/projects/{project_id}/conversations")
+    assert [c["id"] for c in active.json()] == [conversation_id]
+
+    deleted = await client.get(f"/projects/{project_id}/conversations/deleted")
+    assert deleted.json() == []
+
+
+async def test_restore_404s_for_unknown_conversation(client: AsyncClient) -> None:
+    response = await client.post("/conversations/999999/restore")
+    assert response.status_code == 404
+
+
+async def test_restore_404s_for_a_conversation_that_is_not_deleted(
+    client: AsyncClient,
+) -> None:
+    project_id = await _create_project(client)
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+
+    response = await client.post(f"/conversations/{conversation_id}/restore")
+    assert response.status_code == 404
+
+
+async def test_restoring_makes_messages_reachable_again(client: AsyncClient) -> None:
+    project_id = await _create_project(client)
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+    await client.delete(f"/conversations/{conversation_id}")
+    await client.post(f"/conversations/{conversation_id}/restore")
+
+    response = await client.get(f"/conversations/{conversation_id}/messages")
+    assert response.status_code == 200
+
+
 # --- full send-message flow, needs real Ollama (embed + generate) ---------
 
 

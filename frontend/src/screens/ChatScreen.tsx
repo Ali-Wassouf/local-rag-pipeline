@@ -7,9 +7,12 @@ import { sendMessage } from '../api/client'
 import {
   useConversations,
   useCreateConversation,
+  useDeleteConversation,
+  useDeletedConversations,
   useMessages,
   useProject,
   useProjectDocuments,
+  useRestoreConversation,
 } from '../api/hooks'
 import type { CitationRead, ConversationRead, MessageRead } from '../api/types'
 
@@ -140,20 +143,21 @@ interface ChapterRowProps {
   folio: number
   isActive: boolean
   onSelect: () => void
+  onRemove: () => void
 }
 
-function ChapterRow({ conversation, folio, isActive, onSelect }: ChapterRowProps) {
+function ChapterRow({ conversation, folio, isActive, onSelect, onRemove }: ChapterRowProps) {
   const messages = useMessages(conversation.id)
   const firstQuestion = messages.data?.find((message) => message.role === 'user')?.content
   const preview = firstQuestion ?? conversation.title ?? 'New chapter'
 
   return (
-    <li>
+    <li className="group relative">
       <button
         type="button"
         onClick={onSelect}
         aria-current={isActive ? 'true' : undefined}
-        className={`w-full border-l-2 px-3 py-2 text-left transition-colors ${
+        className={`w-full border-l-2 py-2 pr-14 pl-3 text-left transition-colors ${
           isActive
             ? 'border-accent bg-rail dark:border-accent-dark dark:bg-rail-dark'
             : 'border-transparent hover:bg-rail/60 dark:hover:bg-rail-dark/60'
@@ -165,6 +169,17 @@ function ChapterRow({ conversation, folio, isActive, onSelect }: ChapterRowProps
         </div>
         <p className="mt-0.5 truncate font-serif text-sm text-ink dark:text-ink-dark">{preview}</p>
       </button>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation()
+          onRemove()
+        }}
+        aria-label="Remove chapter"
+        className="absolute top-1.5 right-2.5 rounded-sm px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-ink-muted uppercase opacity-0 transition-opacity hover:bg-accent/10 hover:text-accent group-hover:opacity-100 group-focus-within:opacity-100 dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
+      >
+        Remove
+      </button>
     </li>
   )
 }
@@ -174,6 +189,9 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
   const projectDocuments = useProjectDocuments(projectId)
   const conversations = useConversations(projectId)
   const createConversation = useCreateConversation(projectId)
+  const deletedConversations = useDeletedConversations(projectId)
+  const deleteConversation = useDeleteConversation(projectId)
+  const restoreConversation = useRestoreConversation(projectId)
 
   const [conversationId, setConversationId] = useState<number | null>(null)
   // A previous conversation's send can still be in flight (and will still
@@ -206,6 +224,23 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
       onSuccess: (conversation) => {
         switchConversation(conversation.id)
         setMessages([])
+      },
+    })
+  }
+
+  function handleRemoveConversation(id: number) {
+    deleteConversation.mutate(id, {
+      onSuccess: () => {
+        if (conversationId === id) {
+          // The open chapter was just removed — there's nothing left to
+          // show, so fall back to the empty state rather than leaving a
+          // now-gone conversation's transcript on screen.
+          currentConversationIdRef.current = null
+          setConversationId(null)
+          setIsSending(false)
+          setStreamingText('')
+          setSendError(null)
+        }
       },
     })
   }
@@ -266,9 +301,9 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
   const chapters = conversations.data ?? []
 
   return (
-    <div className="mx-auto flex max-w-6xl">
-      <aside className="w-64 shrink-0 border-r border-rule dark:border-rule-dark">
-        <div className="flex items-center justify-between gap-2 border-b border-rule px-4 py-3 dark:border-rule-dark">
+    <div className="mx-auto flex h-full max-w-6xl">
+      <aside className="flex w-64 shrink-0 flex-col border-r border-rule dark:border-rule-dark">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-rule px-4 py-3 dark:border-rule-dark">
           <button
             type="button"
             onClick={onBack}
@@ -284,7 +319,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
             New chapter
           </button>
         </div>
-        <ul>
+        <ul className="min-h-0 flex-1 overflow-y-auto">
           {chapters.map((conversation, index) => (
             <ChapterRow
               key={conversation.id}
@@ -292,13 +327,41 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
               folio={index + 1}
               isActive={conversationId === conversation.id}
               onSelect={() => switchConversation(conversation.id)}
+              onRemove={() => handleRemoveConversation(conversation.id)}
             />
           ))}
         </ul>
+
+        {(deletedConversations.data?.length ?? 0) > 0 && (
+          <details className="shrink-0 border-t border-rule dark:border-rule-dark">
+            <summary className="cursor-pointer px-4 py-2 font-mono text-[11px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
+              Deleted ({deletedConversations.data?.length})
+            </summary>
+            <ul className="max-h-40 overflow-y-auto">
+              {deletedConversations.data?.map((conversation) => (
+                <li
+                  key={conversation.id}
+                  className="flex items-center justify-between gap-2 px-4 py-1.5"
+                >
+                  <span className="truncate font-serif text-sm text-ink-muted italic dark:text-ink-muted-dark">
+                    {conversation.title ?? 'New chapter'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => restoreConversation.mutate(conversation.id)}
+                    className="shrink-0 rounded-sm px-1.5 py-0.5 font-mono text-[10px] tracking-wide text-ink-muted uppercase hover:bg-accent/10 hover:text-accent dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
+                  >
+                    Restore
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="border-b border-rule px-6 py-3 dark:border-rule-dark">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="shrink-0 border-b border-rule px-6 py-3 dark:border-rule-dark">
           <h1 className="font-serif text-lg text-ink italic dark:text-ink-dark">
             {project.data?.name ?? '…'}
           </h1>
@@ -313,7 +376,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
           </p>
         ) : (
           <>
-            <div className="max-w-[75ch] flex-1 space-y-6 overflow-y-auto px-6 py-6">
+            <div className="min-h-0 max-w-[75ch] flex-1 space-y-6 overflow-y-auto px-6 py-6">
               {messages.map((message) => (
                 <div key={message.id}>
                   <p className="font-mono text-[11px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
@@ -360,10 +423,10 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
             </div>
 
             {sendError && (
-              <p className="px-6 text-sm text-red-700 dark:text-red-400">{sendError}</p>
+              <p className="shrink-0 px-6 text-sm text-red-700 dark:text-red-400">{sendError}</p>
             )}
 
-            <div className="flex gap-2 border-t border-rule px-6 py-4 dark:border-rule-dark">
+            <div className="flex shrink-0 gap-2 border-t border-rule px-6 py-4 dark:border-rule-dark">
               <input
                 type="text"
                 placeholder="Ask a question…"

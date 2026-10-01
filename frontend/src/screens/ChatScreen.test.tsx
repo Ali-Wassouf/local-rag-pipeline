@@ -307,4 +307,64 @@ describe('ChatScreen', () => {
 
     expect(await screen.findByRole('status')).toHaveTextContent(/composing/i)
   })
+
+  it('removing a chapter deletes it and drops it from the list', async () => {
+    vi.spyOn(client, 'listConversations')
+      .mockResolvedValueOnce([oldConversation])
+      .mockResolvedValue([])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([])
+    const deleteSpy = vi.spyOn(client, 'deleteConversation').mockResolvedValue(undefined)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    await screen.findByText('Old chat about forces')
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove chapter' }))
+
+    await waitFor(() => expect(deleteSpy).toHaveBeenCalledWith(5))
+    await waitFor(() =>
+      expect(screen.queryByText('Old chat about forces')).not.toBeInTheDocument(),
+    )
+  })
+
+  it('removing the currently open chapter clears the view back to empty state', async () => {
+    vi.spyOn(client, 'listConversations')
+      .mockResolvedValueOnce([oldConversation])
+      .mockResolvedValue([])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(oldMessages)
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([])
+    vi.spyOn(client, 'deleteConversation').mockResolvedValue(undefined)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+    expect(await screen.findByPlaceholderText('Ask a question…')).toBeInTheDocument()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove chapter' }))
+
+    expect(await screen.findByText('Select a chapter, or begin a new one.')).toBeInTheDocument()
+  })
+
+  it('shows deleted chapters and restores one on request', async () => {
+    const deletedConversation: ConversationRead = {
+      id: 9,
+      project_id: 1,
+      title: 'An old abandoned chat',
+      created_at: '2026-01-01T00:00:00Z',
+    }
+    vi.spyOn(client, 'listConversations').mockResolvedValue([])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+    vi.spyOn(client, 'listDeletedConversations').mockResolvedValue([deletedConversation])
+    const restoreSpy = vi
+      .spyOn(client, 'restoreConversation')
+      .mockResolvedValue(deletedConversation)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+
+    const summary = await screen.findByText('Deleted (1)')
+    fireEvent.click(summary)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }))
+    await waitFor(() => expect(restoreSpy).toHaveBeenCalledWith(9))
+  })
 })

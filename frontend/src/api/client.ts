@@ -129,6 +129,25 @@ export async function listMessages(conversationId: number): Promise<MessageRead[
   return parseOrThrow<MessageRead[]>(response)
 }
 
+export async function deleteConversation(conversationId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}`, {
+    method: 'DELETE',
+  })
+  await okOrThrow(response)
+}
+
+export async function restoreConversation(conversationId: number): Promise<ConversationRead> {
+  const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/restore`, {
+    method: 'POST',
+  })
+  return parseOrThrow<ConversationRead>(response)
+}
+
+export async function listDeletedConversations(projectId: number): Promise<ConversationRead[]> {
+  const response = await fetch(`${API_BASE_URL}/projects/${projectId}/conversations/deleted`)
+  return parseOrThrow<ConversationRead[]>(response)
+}
+
 export interface SendMessageCallbacks {
   onToken: (token: string) => void
   onDone: (citations: CitationRead[]) => void

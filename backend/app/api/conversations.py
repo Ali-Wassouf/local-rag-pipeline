@@ -1,7 +1,8 @@
 import json
 from collections.abc import AsyncIterator
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 
@@ -18,6 +19,16 @@ from app.retrieval.prompt import build_prompt
 from app.schemas.conversation import CitationRead, ConversationRead, MessageCreate, MessageRead
 
 router = APIRouter(tags=["conversations"])
+
+
+async def _get_active_conversation(db: DbSession, conversation_id: int) -> Conversation | None:
+    """A soft-deleted conversation is treated as not-found everywhere except
+    the deleted-list and restore endpoints — deleted means gone from every
+    normal path, not just hidden from the sidebar."""
+    conversation = await db.get(Conversation, conversation_id)
+    if conversation is None or conversation.deleted_at is not None:
+        return None
+    return conversation
 
 
 @router.post("/projects/{project_id}/conversations", response_model=ConversationRead, status_code=201)
@@ -41,15 +52,52 @@ async def list_conversations(project_id: int, db: DbSession) -> list[Conversatio
 
     result = await db.execute(
         select(Conversation)
-        .where(Conversation.project_id == project_id)
+        .where(Conversation.project_id == project_id, Conversation.deleted_at.is_(None))
         .order_by(Conversation.created_at.desc())
     )
     return list(result.scalars().all())
 
 
+@router.get("/projects/{project_id}/conversations/deleted", response_model=list[ConversationRead])
+async def list_deleted_conversations(project_id: int, db: DbSession) -> list[Conversation]:
+    project = await db.get(Project, project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    result = await db.execute(
+        select(Conversation)
+        .where(Conversation.project_id == project_id, Conversation.deleted_at.is_not(None))
+        .order_by(Conversation.deleted_at.desc())
+    )
+    return list(result.scalars().all())
+
+
+@router.delete("/conversations/{conversation_id}", status_code=204)
+async def delete_conversation(conversation_id: int, db: DbSession) -> Response:
+    conversation = await _get_active_conversation(db, conversation_id)
+    if conversation is None:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    conversation.deleted_at = datetime.now(UTC)
+    await db.commit()
+    return Response(status_code=204)
+
+
+@router.post("/conversations/{conversation_id}/restore", response_model=ConversationRead)
+async def restore_conversation(conversation_id: int, db: DbSession) -> Conversation:
+    conversation = await db.get(Conversation, conversation_id)
+    if conversation is None or conversation.deleted_at is None:
+        raise HTTPException(status_code=404, detail="Deleted conversation not found")
+
+    conversation.deleted_at = None
+    await db.commit()
+    await db.refresh(conversation)
+    return conversation
+
+
 @router.get("/conversations/{conversation_id}/messages", response_model=list[MessageRead])
 async def list_messages(conversation_id: int, db: DbSession) -> list[MessageRead]:
-    conversation = await db.get(Conversation, conversation_id)
+    conversation = await _get_active_conversation(db, conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
@@ -95,7 +143,7 @@ async def list_messages(conversation_id: int, db: DbSession) -> list[MessageRead
 async def send_message(
     conversation_id: int, payload: MessageCreate, db: DbSession
 ) -> StreamingResponse:
-    conversation = await db.get(Conversation, conversation_id)
+    conversation = await _get_active_conversation(db, conversation_id)
     if conversation is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
