@@ -71,10 +71,9 @@ What it does:
    embedding and generation share one Ollama process on a 16GB machine and
    should not both stay resident.
 5. Verifies the embedder actually returns 1024-dimensional vectors.
-6. Installs `sentence-transformers` and pre-downloads a cross-encoder
-   reranker (`BAAI/bge-reranker-base`). This is prep for the hybrid
-   search/reranking phase in `docs/build-phases.md`; the current pipeline
-   doesn't call it yet.
+6. Installs `sentence-transformers` and pre-downloads the cross-encoder
+   reranker (`BAAI/bge-reranker-base`, ~1.1GB on first load) used by the
+   retrieval pipeline — see "How retrieval works" below.
 
 Model tags on Ollama's registry can move — if a pull fails, check
 [ollama.com/library](https://ollama.com/library) for the current tag.
@@ -177,6 +176,50 @@ curl http://localhost:8000/health
 curl -X POST http://localhost:8000/documents -F "file=@/path/to/some.pdf"
 ```
 
+## How retrieval works
+
+Asking a question doesn't just run a vector search. The pipeline
+(`backend/app/retrieval/pipeline.py`, per `docs/plan.md` §4.3) is:
+
+1. **Query rewriting** (`generate.py`'s `rewrite_query`) — a follow-up like
+   "what about the second one?" is rewritten into a standalone question
+   using the conversation history, via one small Ollama generation call,
+   *before* retrieval runs. Skipped entirely on a conversation's first
+   message (no history to resolve against). If the rewrite call fails for
+   any reason, it falls back to the original question rather than failing
+   the request.
+2. **Vector search** (top 50 by cosine distance) and **keyword search**
+   (top 50 by Postgres full-text `ts_rank` over `chunks.tsv`) run against
+   that question — two independent candidate lists, since embeddings catch
+   semantic matches and full-text catches exact terms an embedding can
+   miss (or vice versa).
+3. **Reciprocal rank fusion** (`fuse.py`, `k=60`) merges the two ranked
+   lists into one, purely by rank position — a chunk both searches agree
+   on outranks one only one of them found.
+4. **Cross-encoder reranking** (`rerank.py`, in-process
+   `BAAI/bge-reranker-base` via `sentence-transformers`, not Ollama) scores
+   the fused candidates for real relevance to the question — a slower but
+   far more accurate judgment than the embedder's precomputed-vector
+   distance — and narrows down to the final top 8 sent to the generator.
+
+Measured, not assumed: `evals/baseline.md` (vector-only), `evals/hybrid-no-rerank.md`,
+and `evals/hybrid-reranked.md` re-run the same 20 real questions against the
+real DDIA corpus in each configuration — hybrid shares only ~4.2/8 sources
+with vector-only on average, and reranking reorders the top 3 in 19/20
+questions, confirming each stage is doing real work rather than rubber-stamping
+the one before it.
+
+**Citations show what the model was given, not just what it used.** Every
+answer persists all 8 reranked chunks as citations (`message_citations`),
+regardless of which `[n]` markers actually appear in the generated text —
+deliberate, per `docs/plan.md` §4.6, because a local 8B model doesn't
+reliably cite everything it was handed, and papering over that by filtering
+the list down to "only what got cited" would hide the drift instead of
+surfacing it. The chat UI reflects this: a source whose rank never appears
+inline in the answer renders dimmed and italic, labelled
+"(retrieved, not cited)," instead of looking identical to one the answer
+actually relied on.
+
 ## Configuration
 
 Defaults in [`backend/app/core/config.py`](backend/app/core/config.py) match
@@ -221,6 +264,10 @@ skip gracefully if it isn't reachable.
   system Node, not `node@22`; see the `PATH` prefix above.
 - **Uploading a PDF fails as a "scanned document"** — this is by design: the
   character-count-per-page check rejects scanned PDFs (no OCR is planned).
+- **The first chat question hangs for a while** — if `scripts/setup-env.sh`
+  didn't pre-download the reranker (or it was cleared from the cache), the
+  first real request downloads `BAAI/bge-reranker-base` (~1.1GB) before it
+  can answer. One-time cost; it's cached under `~/.cache/huggingface` after.
 - **Postgres extensions missing** — `init-extensions.sql` only runs on the
   *first* container boot against an empty volume. If you changed it after
   the volume already existed, run `docker compose down -v` (this deletes the
