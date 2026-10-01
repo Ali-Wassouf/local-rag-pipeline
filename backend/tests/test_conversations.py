@@ -12,6 +12,7 @@ from app.models.conversation import Message
 from app.models.document import DocFormat, Document, ProjectDocument
 from app.models.project import Project
 from app.models.section import Section
+from app.models.summary import SectionSummary
 
 
 async def _ollama_is_running() -> bool:
@@ -83,6 +84,50 @@ async def _seed_embedded_chunk(
     db_session.add(chunk)
     await db_session.flush()
     return chunk
+
+
+async def _seed_section_with_summary(
+    db_session: AsyncSession,
+    project_id: int,
+    document_title: str,
+    summary_text: str,
+    embedding: list[float],
+) -> SectionSummary:
+    document = Document(
+        sha256=(uuid.uuid4().hex + uuid.uuid4().hex),
+        title=document_title,
+        format=DocFormat.txt,
+        original_name="d.txt",
+        storage_path="/tmp/d.txt",
+        raw_text=summary_text,
+    )
+    db_session.add(document)
+    await db_session.flush()
+    db_session.add(ProjectDocument(project_id=project_id, document_id=document.id))
+
+    section = Section(
+        document_id=document.id,
+        path="n1",
+        title=document_title,
+        display_path=document_title,
+        depth=1,
+        ordinal=1,
+        char_start=0,
+        char_end=len(summary_text),
+    )
+    db_session.add(section)
+    await db_session.flush()
+
+    summary = SectionSummary(
+        section_id=section.id,
+        document_id=document.id,
+        summary=summary_text,
+        embedding=embedding,
+        model="rag-gen",
+    )
+    db_session.add(summary)
+    await db_session.flush()
+    return summary
 
 
 # --- conversation/message CRUD, no Ollama needed ---------------------------
@@ -402,3 +447,155 @@ async def test_followup_question_retrieves_the_chunk_it_actually_refers_to(
     history = await client.get(f"/conversations/{conversation_id}/messages")
     messages = history.json()
     assert messages[-2]["content"] == "What about the second one?"
+
+
+# --- Phase 5: survey mode (docs/build-phases.md) ---------------------------
+
+
+async def test_survey_mode_refuses_to_answer_when_no_summaries_exist(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    if not await _ollama_is_running():
+        pytest.skip("Ollama is not running locally")
+
+    def _fail_if_called(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError(
+            "the generator must not be called when survey mode has no summaries to draw on"
+        )
+
+    monkeypatch.setattr("app.api.conversations.stream_generate", _fail_if_called)
+
+    # A project with no documents (and so no summaries) at all — the
+    # simplest way to guarantee survey_search finds nothing.
+    project_id = await _create_project(client, "Empty Survey Project")
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+
+    response = await client.post(
+        f"/conversations/{conversation_id}/messages",
+        json={"content": "What is written about Kafka here?", "mode": "survey"},
+    )
+    assert response.status_code == 200
+    events = _parse_sse_events(response.text)
+    final = next(e for e in events if e.get("done"))
+
+    assert final["citations"] == []
+    token_events = [e for e in events if "token" in e]
+    full_text = "".join(e["token"] for e in token_events)
+    assert "no summar" in full_text.lower()
+
+    # Persisted, so it's still there (and still citation-free) on reload.
+    history = await client.get(f"/conversations/{conversation_id}/messages")
+    messages = history.json()
+    assert messages[-1]["role"] == "assistant"
+    assert messages[-1]["citations"] == []
+
+
+async def test_survey_mode_cites_summaries_not_passages(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    if not await _ollama_is_running():
+        pytest.skip("Ollama is not running locally")
+
+    project_id = await _create_project(client, "Survey Project")
+    summary_text = "This section explains that mitochondria produce ATP for the cell."
+    embedding = (await embed_batch([summary_text]))[0]
+    summary = await _seed_section_with_summary(
+        db_session, project_id, "Cell Biology", summary_text, embedding
+    )
+    await db_session.commit()
+
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+
+    response = await client.post(
+        f"/conversations/{conversation_id}/messages",
+        json={"content": "Summarise what this covers about cell energy.", "mode": "survey"},
+    )
+    assert response.status_code == 200
+    events = _parse_sse_events(response.text)
+    final = next(e for e in events if e.get("done"))
+
+    assert len(final["citations"]) >= 1
+    for citation in final["citations"]:
+        assert citation["is_summary"] is True
+        assert citation["chunk_id"] is None
+
+    # Persisted and re-read the same way.
+    history = await client.get(f"/conversations/{conversation_id}/messages")
+    reread_citations = history.json()[-1]["citations"]
+    assert reread_citations[0]["is_summary"] is True
+    assert reread_citations[0]["display_path"] == "Cell Biology"
+    assert summary.id is not None  # seeded row really exists
+
+
+async def test_survey_answer_across_two_documents_attributes_citations_correctly(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    if not await _ollama_is_running():
+        pytest.skip("Ollama is not running locally")
+
+    project_id = await _create_project(client, "Two Book Survey")
+
+    summary_a_text = "Transaction isolation levels prevent concurrency anomalies in databases."
+    summary_b_text = "Load balancers distribute network traffic across backend servers."
+    embedding_a = (await embed_batch([summary_a_text]))[0]
+    embedding_b = (await embed_batch([summary_b_text]))[0]
+    await _seed_section_with_summary(
+        db_session, project_id, "Database Internals", summary_a_text, embedding_a
+    )
+    await _seed_section_with_summary(
+        db_session, project_id, "Networking Systems", summary_b_text, embedding_b
+    )
+    await db_session.commit()
+
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+
+    response = await client.post(
+        f"/conversations/{conversation_id}/messages",
+        json={
+            "content": "Summarise everything about databases and networking in this project.",
+            "mode": "survey",
+        },
+    )
+    events = _parse_sse_events(response.text)
+    final = next(e for e in events if e.get("done"))
+
+    cited_documents = {c["document_title"] for c in final["citations"]}
+    assert cited_documents == {"Database Internals", "Networking Systems"}
+    for citation in final["citations"]:
+        assert citation["is_summary"] is True
+
+
+async def test_survey_mode_draws_on_four_or_more_sections_for_a_broad_topic(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    if not await _ollama_is_running():
+        pytest.skip("Ollama is not running locally")
+
+    project_id = await _create_project(client, "Broad Topic Survey")
+
+    topic_summaries = [
+        "Replication copies data across multiple nodes for availability.",
+        "Partitioning splits a dataset across nodes to scale throughput.",
+        "Consensus algorithms let distributed nodes agree despite failures.",
+        "Transactions group operations so they succeed or fail together.",
+        "Caching stores frequently accessed data closer to where it's used.",
+    ]
+    for i, text in enumerate(topic_summaries):
+        embedding = (await embed_batch([text]))[0]
+        await _seed_section_with_summary(db_session, project_id, f"Chapter {i}", text, embedding)
+    await db_session.commit()
+
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+
+    response = await client.post(
+        f"/conversations/{conversation_id}/messages",
+        json={"content": "Summarise everything about distributed systems design.", "mode": "survey"},
+    )
+    events = _parse_sse_events(response.text)
+    final = next(e for e in events if e.get("done"))
+
+    assert len(final["citations"]) >= 4

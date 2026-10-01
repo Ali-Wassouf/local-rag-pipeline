@@ -29,7 +29,7 @@ _CHUNK_STRIDE = CHUNK_TOKENS - CHUNK_OVERLAP_TOKENS
 
 
 @lru_cache(maxsize=1)
-def _tokenizer() -> Tokenizer:
+def tokenizer() -> Tokenizer:
     return Tokenizer.from_pretrained(TOKENIZER_MODEL)
 
 
@@ -51,7 +51,7 @@ def chunk_section(
     `section_char_offset` is where this section starts in the document's
     raw_text, so returned offsets are absolute, not section-local.
     """
-    encoding = _tokenizer().encode(section_text, add_special_tokens=False)
+    encoding = tokenizer().encode(section_text, add_special_tokens=False)
     offsets = encoding.offsets
     total = len(offsets)
     if total == 0:

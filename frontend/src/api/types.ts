@@ -16,6 +16,7 @@ export interface DocumentRead {
   format: DocFormat
   original_name: string
   status: DocStatus
+  generate_summary: boolean
   created_at: string
 }
 
@@ -67,11 +68,14 @@ export interface ConversationRead {
 }
 
 export interface CitationRead {
-  chunk_id: number
+  chunk_id: number | null
   rank: number
   document_title: string
   display_path: string
+  is_summary: boolean
 }
+
+export type ChatMode = 'lookup' | 'survey'
 
 export type MessageRole = 'user' | 'assistant'
 

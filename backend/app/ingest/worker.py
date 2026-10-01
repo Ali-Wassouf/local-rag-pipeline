@@ -1,12 +1,12 @@
 """Ingest worker.
 
-Wires extract -> structure -> chunk -> embed for real (Phase 2). `summarise`
-remains a stub — section summaries are Phase 5. Extraction and structure
-building happen as one atomic unit of work (Block is deliberately never
-persisted — see app/extract/base.py — so there's no checkpoint to resume
-from between them without re-parsing the file, which docs/plan.md explicitly
-wants to avoid); the job still passes through the "structure" stage value
-on its way to "chunk" so the stage name stays meaningful in `ingest_jobs`.
+Wires extract -> structure -> chunk -> embed -> summarise for real.
+Extraction and structure building happen as one atomic unit of work (Block
+is deliberately never persisted — see app/extract/base.py — so there's no
+checkpoint to resume from between them without re-parsing the file, which
+docs/plan.md explicitly wants to avoid); the job still passes through the
+"structure" stage value on its way to "chunk" so the stage name stays
+meaningful in `ingest_jobs`.
 
 A bad document must not kill the worker: any exception during a stage marks
 that job failed with the error message and moves on, rather than crashing
@@ -31,6 +31,7 @@ from app.extract.base import ExtractFn
 from app.ingest.chunk import persist_chunks
 from app.ingest.embed import EMBEDDING_DIMENSION, embed_batch, get_or_create_embedding_run
 from app.ingest.structure import build_structure, persist_structure
+from app.ingest.summarize import needs_summary, persist_section_summary, summarize_section
 from app.models.chunk import Chunk
 from app.models.document import DocFormat, DocStatus, Document
 from app.models.job import IngestJob, JobStage
@@ -48,10 +49,16 @@ _EXTRACTORS: dict[DocFormat, ExtractFn] = {
 
 
 def _status_for_stage(stage: JobStage) -> DocStatus:
+    # Called with the stage the job just transitioned INTO (the next
+    # pending action), not the one just completed.
     if stage in (JobStage.extract, JobStage.structure):
         return DocStatus.extracting
-    if stage in (JobStage.chunk, JobStage.embed, JobStage.summarise):
+    if stage in (JobStage.chunk, JobStage.embed):
         return DocStatus.indexing
+    # stage is "summarise" (embedding just finished — chunks are queryable
+    # now) or "done". Chat-usable the moment embedding is done; summarising
+    # (slowest stage, docs/plan.md §3 step 7) must not keep the document
+    # looking unusable while it runs in the background.
     return DocStatus.ready
 
 
@@ -97,6 +104,30 @@ async def _run_embed(db: AsyncSession, document: Document) -> None:
         chunk.embedding_run_id = run.id
 
 
+async def _run_summarize(db: AsyncSession, document: Document) -> None:
+    result = await db.execute(select(Section).where(Section.document_id == document.id))
+    sections = list(result.scalars().all())
+    raw_text = document.raw_text or ""
+
+    candidates = [
+        (section, raw_text[section.char_start : section.char_end]) for section in sections
+    ]
+    to_summarize = [(section, text) for section, text in candidates if needs_summary(text)]
+    if not to_summarize:
+        return
+
+    summary_texts = [await summarize_section(text) for _section, text in to_summarize]
+    vectors = await embed_batch(summary_texts)
+
+    settings = get_settings()
+    for (section, _text), summary_text, vector in zip(
+        to_summarize, summary_texts, vectors, strict=True
+    ):
+        await persist_section_summary(
+            db, section, summary_text, vector, model=settings.generation_model
+        )
+
+
 async def _advance(db: AsyncSession, job: IngestJob) -> None:
     document = await db.get(Document, job.document_id)
     if document is None:
@@ -121,7 +152,13 @@ async def _advance(db: AsyncSession, job: IngestJob) -> None:
             await _run_embed(db, document)
             job.stage = JobStage.summarise.value
         elif stage is JobStage.summarise:
-            # Stub — section summaries are Phase 5.
+            # Opt-in (docs/build-phases.md Phase 5 follow-up) — summarizing
+            # is a real time/resource cost, so a document that didn't ask
+            # for it at upload time skips straight to done. It can still be
+            # summarised later via POST /documents/{id}/summarize, which
+            # queues a fresh job at this same stage with the flag flipped.
+            if document.generate_summary:
+                await _run_summarize(db, document)
             job.stage = JobStage.done.value
             job.finished_at = datetime.now(UTC)
     except Exception as exc:

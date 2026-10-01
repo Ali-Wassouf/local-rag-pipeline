@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.api.deps import DbSession
 from app.core.config import get_settings
-from app.models.document import DocFormat, Document, ProjectDocument
+from app.models.document import DocFormat, DocStatus, Document, ProjectDocument
 from app.models.job import IngestJob, JobStage
 from app.models.project import Project
 from app.schemas.document import DocumentRead, DocumentUploadResponse
@@ -54,6 +54,7 @@ async def upload_document(
     title: str | None = Form(None),
     author: str | None = Form(None),
     project_id: int | None = Form(None),
+    generate_summary: bool = Form(True),
 ) -> DocumentUploadResponse:
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
@@ -85,6 +86,7 @@ async def upload_document(
         format=doc_format,
         original_name=file.filename,
         storage_path=str(storage_path),
+        generate_summary=generate_summary,
     )
     db.add(document)
     await db.flush()
@@ -115,4 +117,35 @@ async def get_document(document_id: int, db: DbSession) -> Document:
     document = await db.get(Document, document_id)
     if document is None:
         raise HTTPException(status_code=404, detail="Document not found")
+    return document
+
+
+@router.post("/{document_id}/summarize", response_model=DocumentRead)
+async def summarize_document(document_id: int, db: DbSession) -> Document:
+    """Generate a summary for a document that opted out at upload time
+    (docs/build-phases.md Phase 5 follow-up). Queues a normal summarise-
+    stage job — the existing worker loop runs it exactly like it would
+    during ingest, no separate code path."""
+    document = await db.get(Document, document_id)
+    if document is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if document.status != DocStatus.ready:
+        raise HTTPException(
+            status_code=409, detail="Document is still indexing — not ready to summarize yet"
+        )
+
+    existing_job = await db.execute(
+        select(IngestJob).where(
+            IngestJob.document_id == document_id,
+            IngestJob.stage == JobStage.summarise.value,
+            IngestJob.error.is_(None),
+        )
+    )
+    if existing_job.scalar_one_or_none() is not None:
+        raise HTTPException(status_code=409, detail="Summary generation is already in progress")
+
+    document.generate_summary = True
+    db.add(IngestJob(document_id=document_id, stage=JobStage.summarise.value, progress=0.0))
+    await db.commit()
+    await db.refresh(document)
     return document

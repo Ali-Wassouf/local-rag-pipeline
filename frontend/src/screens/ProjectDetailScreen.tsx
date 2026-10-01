@@ -6,6 +6,7 @@ import {
   useDetachDocument,
   useProject,
   useProjectDocuments,
+  useSummarizeDocument,
 } from '../api/hooks'
 
 interface ProjectDetailScreenProps {
@@ -28,6 +29,7 @@ export function ProjectDetailScreen({
   const allDocuments = useAllDocuments()
   const attachDocument = useAttachDocument(projectId)
   const detachDocument = useDetachDocument(projectId)
+  const summarizeDocument = useSummarizeDocument(projectId)
   const [selectedDocumentId, setSelectedDocumentId] = useState('')
 
   const attachedIds = new Set((projectDocuments.data ?? []).map((d) => d.id))
@@ -98,30 +100,53 @@ export function ProjectDetailScreen({
       {projectDocuments.isLoading && <p className="mt-4 text-sm text-gray-500">Loading…</p>}
 
       <ul className="mt-6 space-y-2">
-        {(projectDocuments.data ?? []).map((doc) => (
-          <li
-            key={doc.id}
-            className="flex items-center justify-between rounded border border-gray-200 px-3 py-2 dark:border-gray-700"
-          >
-            <div>
-              <button
-                type="button"
-                onClick={() => onReviewDocument(doc.id)}
-                className="text-sm font-medium text-gray-900 hover:underline dark:text-gray-100"
-              >
-                {doc.title}
-              </button>
-              <p className="text-xs text-gray-500">{doc.status}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => detachDocument.mutate(doc.id)}
-              className="text-sm text-red-600 hover:underline"
+        {(projectDocuments.data ?? []).map((doc) => {
+          const isSummarizingThis =
+            summarizeDocument.isPending && summarizeDocument.variables === doc.id
+          const summarizeFailedForThis =
+            summarizeDocument.isError && summarizeDocument.variables === doc.id
+          return (
+            <li
+              key={doc.id}
+              className="flex items-center justify-between rounded border border-gray-200 px-3 py-2 dark:border-gray-700"
             >
-              Remove
-            </button>
-          </li>
-        ))}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => onReviewDocument(doc.id)}
+                  className="text-sm font-medium text-gray-900 hover:underline dark:text-gray-100"
+                >
+                  {doc.title}
+                </button>
+                <p className="text-xs text-gray-500">{doc.status}</p>
+                {summarizeFailedForThis && (
+                  <p className="text-xs text-red-600">
+                    {(summarizeDocument.error as Error).message}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {!doc.generate_summary && doc.status === 'ready' && (
+                  <button
+                    type="button"
+                    onClick={() => summarizeDocument.mutate(doc.id)}
+                    disabled={isSummarizingThis}
+                    className="text-sm text-blue-600 hover:underline disabled:opacity-50"
+                  >
+                    {isSummarizingThis ? 'Starting…' : 'Generate summary'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => detachDocument.mutate(doc.id)}
+                  className="text-sm text-red-600 hover:underline"
+                >
+                  Remove
+                </button>
+              </div>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )

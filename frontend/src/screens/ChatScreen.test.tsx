@@ -23,6 +23,7 @@ const doc: DocumentRead = {
   format: 'pdf',
   original_name: 'mechanics.pdf',
   status: 'ready',
+  generate_summary: true,
   created_at: '2026-01-01T00:00:00Z',
 }
 
@@ -48,7 +49,7 @@ const oldMessages: MessageRead[] = [
     role: 'assistant',
     content: 'An object in motion stays in motion [1].',
     created_at: '2026-01-01T00:00:01Z',
-    citations: [{ chunk_id: 99, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 1' }],
+    citations: [{ chunk_id: 99, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 1', is_summary: false }],
   },
 ]
 
@@ -123,7 +124,7 @@ describe('ChatScreen', () => {
         callbacks.onToken('The answer is ')
         callbacks.onToken('42 [1].')
         callbacks.onDone([
-          { chunk_id: 7, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 2' },
+          { chunk_id: 7, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 2', is_summary: false },
         ])
       },
     )
@@ -212,8 +213,8 @@ describe('ChatScreen', () => {
         content: 'Answers should be **grounded** in sources [1] and [2].',
         created_at: '2026-01-01T00:00:00Z',
         citations: [
-          { chunk_id: 1, rank: 1, document_title: 'Doc A', display_path: 'Ch. 1' },
-          { chunk_id: 2, rank: 2, document_title: 'Doc B', display_path: 'Ch. 2' },
+          { chunk_id: 1, rank: 1, document_title: 'Doc A', display_path: 'Ch. 1', is_summary: false },
+          { chunk_id: 2, rank: 2, document_title: 'Doc B', display_path: 'Ch. 2', is_summary: false },
         ],
       },
     ]
@@ -245,7 +246,7 @@ describe('ChatScreen', () => {
         content: 'A transaction groups operations into one unit [1].',
         created_at: '2026-01-01T00:00:00Z',
         citations: [
-          { chunk_id: 1, rank: 1, document_title: 'DDIA', display_path: 'Ch. 7' },
+          { chunk_id: 1, rank: 1, document_title: 'DDIA', display_path: 'Ch. 7', is_summary: false },
         ],
       },
     ]
@@ -275,8 +276,8 @@ describe('ChatScreen', () => {
         content: 'RAID 10 is best for high availability [1].',
         created_at: '2026-01-01T00:00:00Z',
         citations: [
-          { chunk_id: 1, rank: 1, document_title: 'Storage Deck', display_path: 'Slide 16' },
-          { chunk_id: 2, rank: 2, document_title: 'Storage Deck', display_path: 'Slide 5' },
+          { chunk_id: 1, rank: 1, document_title: 'Storage Deck', display_path: 'Slide 16', is_summary: false },
+          { chunk_id: 2, rank: 2, document_title: 'Storage Deck', display_path: 'Slide 5', is_summary: false },
         ],
       },
     ]
@@ -366,5 +367,61 @@ describe('ChatScreen', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Restore' }))
     await waitFor(() => expect(restoreSpy).toHaveBeenCalledWith(9))
+  })
+
+  it('defaults to lookup mode and switches to survey mode on request', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+    const sendSpy = vi
+      .spyOn(client, 'sendMessage')
+      .mockImplementation(async (_id, _content, callbacks: SendMessageCallbacks) => {
+        callbacks.onDone([])
+      })
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const input = await screen.findByPlaceholderText('Ask a question…')
+    fireEvent.change(input, { target: { value: 'First question' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+    await waitFor(() =>
+      expect(sendSpy).toHaveBeenCalledWith(5, 'First question', expect.anything(), 'lookup'),
+    )
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Survey' }))
+    fireEvent.change(input, { target: { value: 'Second question' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+    await waitFor(() =>
+      expect(sendSpy).toHaveBeenCalledWith(5, 'Second question', expect.anything(), 'survey'),
+    )
+  })
+
+  it('visibly labels a summary citation and never styles it like a passage', async () => {
+    const surveyMessages: MessageRead[] = [
+      {
+        id: 11,
+        conversation_id: 5,
+        role: 'assistant',
+        content: 'Across several chapters, the book covers isolation and replication [1].',
+        created_at: '2026-01-01T00:00:00Z',
+        citations: [
+          {
+            chunk_id: null,
+            rank: 1,
+            document_title: 'DDIA',
+            display_path: 'Part II',
+            is_summary: true,
+          },
+        ],
+      },
+    ]
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(surveyMessages)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const footnoteLine = (await screen.findByText(/Part II/)).closest('li')
+    expect(footnoteLine).toHaveTextContent('(summary)')
   })
 })

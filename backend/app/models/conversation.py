@@ -35,12 +35,20 @@ class Message(Base):
 
 
 class MessageCitation(Base):
+    """Exactly one of chunk_id / section_summary_id is set (DB CHECK
+    constraint) — a lookup-mode citation points at a passage, a survey-mode
+    one points at a section's summary. Never both, never neither."""
+
     __tablename__ = "message_citations"
 
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     message_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("messages.id", ondelete="CASCADE"), primary_key=True
+        BigInteger, ForeignKey("messages.id", ondelete="CASCADE"), nullable=False
     )
-    chunk_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("chunks.id", ondelete="CASCADE"), primary_key=True
+    chunk_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("chunks.id", ondelete="CASCADE")
+    )
+    section_summary_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("section_summaries.id", ondelete="CASCADE")
     )
     rank: Mapped[int] = mapped_column(Integer, nullable=False)

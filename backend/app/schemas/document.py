@@ -15,6 +15,7 @@ class DocumentRead(BaseModel):
     format: DocFormat
     original_name: str
     status: DocStatus
+    generate_summary: bool
     created_at: datetime
 
 

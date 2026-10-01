@@ -13,6 +13,7 @@ interface UploadScreenProps {
 export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScreenProps) {
   const [jobId, setJobId] = useState<number | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
+  const [generateSummary, setGenerateSummary] = useState(true)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const upload = useUploadDocument()
   const job = useJob(jobId)
@@ -22,7 +23,7 @@ export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScre
     if (!file) return
     setFileName(file.name)
     upload.mutate(
-      { file, projectId },
+      { file, projectId, generateSummary },
       {
         onSuccess: (data) => setJobId(data.job_id),
       },
@@ -43,6 +44,25 @@ export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScre
         </button>
       )}
       <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Upload a document</h1>
+
+      <div className="mt-4 flex items-start gap-2">
+        <input
+          id="generate-summary"
+          type="checkbox"
+          checked={generateSummary}
+          onChange={(event) => setGenerateSummary(event.target.checked)}
+          disabled={upload.isPending}
+          className="mt-0.5"
+        />
+        <label htmlFor="generate-summary" className="text-sm text-gray-700 dark:text-gray-300">
+          Generate a summary for this document
+        </label>
+      </div>
+      <p className="mt-2 rounded-md bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+        Generating a summary takes extra time and compute — it runs one AI generation call for
+        every long section once the document finishes indexing. You can leave this unchecked and
+        generate a summary for the document later from its project page.
+      </p>
 
       <input
         ref={fileInputRef}

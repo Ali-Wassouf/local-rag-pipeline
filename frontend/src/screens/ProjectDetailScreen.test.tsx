@@ -22,6 +22,7 @@ const attachedDoc: DocumentRead = {
   format: 'pdf',
   original_name: 'mechanics.pdf',
   status: 'ready',
+  generate_summary: true,
   created_at: '2026-01-01T00:00:00Z',
 }
 
@@ -33,6 +34,7 @@ const unattachedDoc: DocumentRead = {
   format: 'pdf',
   original_name: 'thermo.pdf',
   status: 'ready',
+  generate_summary: true,
   created_at: '2026-01-01T00:00:00Z',
 }
 
@@ -112,5 +114,73 @@ describe('ProjectDetailScreen', () => {
     fireEvent.click(removeButton)
 
     await waitFor(() => expect(detachSpy).toHaveBeenCalledWith(1, 10))
+  })
+
+  it('offers to generate a summary later for a document that opted out', async () => {
+    const optedOutDoc: DocumentRead = { ...attachedDoc, generate_summary: false }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([optedOutDoc])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([optedOutDoc])
+    const summarizeSpy = vi
+      .spyOn(client, 'summarizeDocument')
+      .mockResolvedValue({ ...optedOutDoc, generate_summary: true })
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    const generateButton = await screen.findByRole('button', { name: 'Generate summary' })
+    fireEvent.click(generateButton)
+
+    await waitFor(() => expect(summarizeSpy).toHaveBeenCalledWith(10))
+  })
+
+  it('does not offer to generate a summary for a document that already has one', async () => {
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([attachedDoc])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([attachedDoc])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    await screen.findByText('Mechanics 101')
+    expect(screen.queryByRole('button', { name: 'Generate summary' })).not.toBeInTheDocument()
+  })
+
+  it('does not offer to generate a summary while the document is still indexing', async () => {
+    const stillIndexing: DocumentRead = {
+      ...attachedDoc,
+      generate_summary: false,
+      status: 'indexing',
+    }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([stillIndexing])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([stillIndexing])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    await screen.findByText('Mechanics 101')
+    expect(screen.queryByRole('button', { name: 'Generate summary' })).not.toBeInTheDocument()
   })
 })

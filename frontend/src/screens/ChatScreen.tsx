@@ -14,7 +14,7 @@ import {
   useProjectDocuments,
   useRestoreConversation,
 } from '../api/hooks'
-import type { CitationRead, ConversationRead, MessageRead } from '../api/types'
+import type { ChatMode, CitationRead, ConversationRead, MessageRead } from '../api/types'
 
 interface ChatScreenProps {
   projectId: number
@@ -104,7 +104,7 @@ function Footnotes({
             const wasCited = citedRanks?.has(citation.rank) ?? true
             return (
               <li
-                key={citation.chunk_id}
+                key={citation.rank}
                 id={footnoteAnchorId(messageId, citation.rank)}
                 className={`footnote-entry flex scroll-mt-6 gap-2 px-1 font-mono text-[12px] ${
                   wasCited
@@ -122,6 +122,12 @@ function Footnotes({
                   {citation.rank}
                 </span>
                 <span>
+                  {citation.is_summary && (
+                    // CLAUDE.md invariant 6 — a survey citation points at a
+                    // summary, never rendered as if it were a passage the
+                    // model actually read. Visible, not just implied.
+                    <span className="text-accent dark:text-accent-dark">(summary) </span>
+                  )}
                   {citation.document_title} &mdash; {citation.display_path}
                   {!wasCited && ' (retrieved, not cited)'}
                 </span>
@@ -206,6 +212,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
   const [streamingText, setStreamingText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
+  const [mode, setMode] = useState<ChatMode>('lookup')
 
   useEffect(() => {
     setMessages(history.data ?? [])
@@ -267,34 +274,39 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
     setStreamingText('')
 
     let fullText = ''
-    void sendMessage(activeConversationId, content, {
-      onToken: (token) => {
-        if (currentConversationIdRef.current !== activeConversationId) return
-        fullText += token
-        setStreamingText(fullText)
+    void sendMessage(
+      activeConversationId,
+      content,
+      {
+        onToken: (token) => {
+          if (currentConversationIdRef.current !== activeConversationId) return
+          fullText += token
+          setStreamingText(fullText)
+        },
+        onDone: (citations) => {
+          if (currentConversationIdRef.current !== activeConversationId) return
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now() + 1,
+              conversation_id: activeConversationId,
+              role: 'assistant',
+              content: fullText,
+              created_at: new Date().toISOString(),
+              citations,
+            },
+          ])
+          setStreamingText('')
+          setIsSending(false)
+        },
+        onError: (message) => {
+          if (currentConversationIdRef.current !== activeConversationId) return
+          setSendError(message)
+          setIsSending(false)
+        },
       },
-      onDone: (citations) => {
-        if (currentConversationIdRef.current !== activeConversationId) return
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now() + 1,
-            conversation_id: activeConversationId,
-            role: 'assistant',
-            content: fullText,
-            created_at: new Date().toISOString(),
-            citations,
-          },
-        ])
-        setStreamingText('')
-        setIsSending(false)
-      },
-      onError: (message) => {
-        if (currentConversationIdRef.current !== activeConversationId) return
-        setSendError(message)
-        setIsSending(false)
-      },
-    })
+      mode,
+    )
   }
 
   const documentCount = projectDocuments.data?.length ?? 0
@@ -426,7 +438,33 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
               <p className="shrink-0 px-6 text-sm text-red-700 dark:text-red-400">{sendError}</p>
             )}
 
-            <div className="flex shrink-0 gap-2 border-t border-rule px-6 py-4 dark:border-rule-dark">
+            <div className="shrink-0 border-t border-rule px-6 pt-3 dark:border-rule-dark">
+              <div className="flex gap-2" role="radiogroup" aria-label="Question mode">
+                {(['lookup', 'survey'] as const).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    role="radio"
+                    aria-checked={mode === option}
+                    onClick={() => setMode(option)}
+                    className={`border px-2 py-1 font-mono text-[12px] tracking-wide uppercase ${
+                      mode === option
+                        ? 'border-accent text-accent dark:border-accent-dark dark:text-accent-dark'
+                        : 'border-rule text-ink-muted hover:border-accent hover:text-accent dark:border-rule-dark dark:text-ink-muted-dark dark:hover:border-accent-dark dark:hover:text-accent-dark'
+                    }`}
+                  >
+                    {option === 'lookup' ? 'Lookup' : 'Survey'}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 font-serif text-xs text-ink-muted italic dark:text-ink-muted-dark">
+                {mode === 'lookup'
+                  ? 'Finds specific passages that answer this question directly.'
+                  : 'Summarises broad topics by drawing on several sections at once.'}
+              </p>
+            </div>
+
+            <div className="flex shrink-0 gap-2 px-6 pt-3 pb-4">
               <input
                 type="text"
                 placeholder="Ask a question…"

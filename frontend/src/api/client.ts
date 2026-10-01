@@ -1,4 +1,5 @@
 import type {
+  ChatMode,
   CitationRead,
   ConversationRead,
   DocumentRead,
@@ -29,17 +30,26 @@ async function okOrThrow(response: Response): Promise<void> {
 export async function uploadDocument(
   file: File,
   projectId?: number,
+  generateSummary = true,
 ): Promise<DocumentUploadResponse> {
   const formData = new FormData()
   formData.append('file', file)
   if (projectId !== undefined) {
     formData.append('project_id', String(projectId))
   }
+  formData.append('generate_summary', String(generateSummary))
   const response = await fetch(`${API_BASE_URL}/documents`, {
     method: 'POST',
     body: formData,
   })
   return parseOrThrow<DocumentUploadResponse>(response)
+}
+
+export async function summarizeDocument(documentId: number): Promise<DocumentRead> {
+  const response = await fetch(`${API_BASE_URL}/documents/${documentId}/summarize`, {
+    method: 'POST',
+  })
+  return parseOrThrow<DocumentRead>(response)
 }
 
 export async function getJob(jobId: number): Promise<JobRead> {
@@ -161,11 +171,12 @@ export async function sendMessage(
   conversationId: number,
   content: string,
   callbacks: SendMessageCallbacks,
+  mode: ChatMode = 'lookup',
 ): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, mode }),
   })
 
   if (!response.ok || !response.body) {

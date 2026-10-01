@@ -1,12 +1,12 @@
-from app.ingest.chunk import _tokenizer, chunk_section
+from app.ingest.chunk import chunk_section, tokenizer
 
 
 def _text_with_exact_token_count(unit: str, target_tokens: int) -> str:
     """Builds text with exactly `target_tokens` tokens, verified against the
     real tokenizer rather than assumed."""
-    tokenizer = _tokenizer()
+    tok = tokenizer()
     text = unit * (target_tokens + 20)
-    encoding = tokenizer.encode(text, add_special_tokens=False)
+    encoding = tok.encode(text, add_special_tokens=False)
     assert len(encoding.ids) >= target_tokens
     end_char = encoding.offsets[target_tokens - 1][1]
     return text[:end_char]

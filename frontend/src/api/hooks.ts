@@ -16,6 +16,7 @@ import {
   listProjectDocuments,
   listProjects,
   restoreConversation,
+  summarizeDocument,
   updateSectionTitle,
   uploadDocument,
 } from './client'
@@ -23,8 +24,15 @@ import {
 export function useUploadDocument() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ file, projectId }: { file: File; projectId?: number }) =>
-      uploadDocument(file, projectId),
+    mutationFn: ({
+      file,
+      projectId,
+      generateSummary,
+    }: {
+      file: File
+      projectId?: number
+      generateSummary?: boolean
+    }) => uploadDocument(file, projectId, generateSummary),
     onSuccess: (data, variables) => {
       if (data.job_id !== null) {
         queryClient.invalidateQueries({ queryKey: ['job', data.job_id] })
@@ -32,6 +40,16 @@ export function useUploadDocument() {
       if (variables.projectId !== undefined) {
         queryClient.invalidateQueries({ queryKey: ['project-documents', variables.projectId] })
       }
+    },
+  })
+}
+
+export function useSummarizeDocument(projectId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (documentId: number) => summarizeDocument(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['project-documents', projectId] })
     },
   })
 }

@@ -1,7 +1,9 @@
 from httpx import AsyncClient
 from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.document import Document
+from app.models.document import DocStatus, Document
+from app.models.job import IngestJob, JobStage
 
 
 async def test_upload_returns_job_and_creates_document(client: AsyncClient) -> None:
@@ -60,3 +62,95 @@ async def test_list_all_documents(client: AsyncClient) -> None:
     assert response.status_code == 200
     titles = [d["title"] for d in response.json()]
     assert "x" in titles
+
+
+# --- opt-in summarization ----------------------------------------------
+
+
+async def test_upload_defaults_to_generating_a_summary(client: AsyncClient) -> None:
+    response = await client.post(
+        "/documents", files={"file": ("default.txt", b"content", "text/plain")}
+    )
+    assert response.json()["document"]["generate_summary"] is True
+
+
+async def test_upload_can_opt_out_of_summary_generation(client: AsyncClient) -> None:
+    response = await client.post(
+        "/documents",
+        files={"file": ("optout.txt", b"content", "text/plain")},
+        data={"generate_summary": "false"},
+    )
+    assert response.json()["document"]["generate_summary"] is False
+
+
+async def test_summarize_endpoint_flips_the_flag_and_queues_a_job(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    upload = await client.post(
+        "/documents",
+        files={"file": ("later.txt", b"content", "text/plain")},
+        data={"generate_summary": "false"},
+    )
+    document_id = upload.json()["document"]["id"]
+
+    document = await db_session.get(Document, document_id)
+    assert document is not None
+    document.status = DocStatus.ready
+    await db_session.commit()
+
+    response = await client.post(f"/documents/{document_id}/summarize")
+    assert response.status_code == 200
+    assert response.json()["generate_summary"] is True
+
+    jobs = (
+        (
+            await db_session.execute(
+                select(IngestJob).where(IngestJob.document_id == document_id)
+            )
+        )
+        .scalars()
+        .all()
+    )
+    summarise_jobs = [j for j in jobs if j.stage == JobStage.summarise.value]
+    assert len(summarise_jobs) == 1
+
+
+async def test_summarize_endpoint_404s_for_unknown_document(client: AsyncClient) -> None:
+    response = await client.post("/documents/999999/summarize")
+    assert response.status_code == 404
+
+
+async def test_summarize_endpoint_409s_if_document_is_not_ready_yet(
+    client: AsyncClient,
+) -> None:
+    upload = await client.post(
+        "/documents",
+        files={"file": ("notready.txt", b"content", "text/plain")},
+        data={"generate_summary": "false"},
+    )
+    document_id = upload.json()["document"]["id"]
+    # Freshly uploaded — still "uploaded"/"extracting", not "ready" yet.
+
+    response = await client.post(f"/documents/{document_id}/summarize")
+    assert response.status_code == 409
+
+
+async def test_summarize_endpoint_409s_if_already_in_progress(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    upload = await client.post(
+        "/documents",
+        files={"file": ("inprogress.txt", b"content", "text/plain")},
+        data={"generate_summary": "false"},
+    )
+    document_id = upload.json()["document"]["id"]
+    document = await db_session.get(Document, document_id)
+    assert document is not None
+    document.status = DocStatus.ready
+    await db_session.commit()
+
+    first = await client.post(f"/documents/{document_id}/summarize")
+    assert first.status_code == 200
+
+    second = await client.post(f"/documents/{document_id}/summarize")
+    assert second.status_code == 409

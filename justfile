@@ -28,6 +28,9 @@ test:
     cd backend && uv run mypy app && uv run pytest
     cd frontend && PATH="{{node_bin}}:$PATH" pnpm test
 
+backfill-summaries project_id="":
+    cd backend && uv run python -m app.ingest.backfill_summaries {{ if project_id == "" { "" } else { "--project-id " + project_id } }}
+
 check-models:
     curl -sf http://localhost:11434/api/tags >/dev/null || (echo "ollama is not running"; exit 1)
     @echo "ollama is up"

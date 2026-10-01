@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, Text
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, Text
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -46,6 +46,13 @@ class Document(Base):
         server_default=DocStatus.uploaded.value,
     )
     page_offset: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    # Opt-in at upload time — summarization is a real time/resource cost
+    # (one generation call per long section). False means the summarise
+    # stage is skipped during ingest; a document can still be summarised
+    # later via POST /documents/{id}/summarize.
+    generate_summary: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="true"
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

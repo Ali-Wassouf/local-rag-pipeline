@@ -13,10 +13,14 @@ from app.models.conversation import Conversation, Message, MessageCitation
 from app.models.document import Document
 from app.models.project import Project
 from app.models.section import Section
+from app.models.summary import SectionSummary
 from app.retrieval.generate import GenerationError, rewrite_query, stream_generate
 from app.retrieval.pipeline import retrieve
 from app.retrieval.prompt import build_prompt
+from app.retrieval.survey import survey_search
 from app.schemas.conversation import CitationRead, ConversationRead, MessageCreate, MessageRead
+
+SURVEY_TOP_K = 6
 
 router = APIRouter(tags=["conversations"])
 
@@ -29,6 +33,68 @@ async def _get_active_conversation(db: DbSession, conversation_id: int) -> Conve
     if conversation is None or conversation.deleted_at is not None:
         return None
     return conversation
+
+
+async def _load_citations(
+    db: DbSession, message_ids: list[int]
+) -> dict[int, list[CitationRead]]:
+    """A citation points at exactly one of a chunk (lookup mode) or a
+    section summary (survey mode) — resolved with two targeted lookups
+    rather than one query with two outer joins."""
+    citations_result = await db.execute(
+        select(MessageCitation).where(MessageCitation.message_id.in_(message_ids)).order_by(
+            MessageCitation.rank
+        )
+    )
+    message_citations = list(citations_result.scalars().all())
+
+    chunk_ids = [mc.chunk_id for mc in message_citations if mc.chunk_id is not None]
+    chunk_info: dict[int, tuple[str, str]] = {}
+    if chunk_ids:
+        rows = await db.execute(
+            select(Chunk.id, Document.title, Section.display_path)
+            .join(Section, Section.id == Chunk.section_id)
+            .join(Document, Document.id == Chunk.document_id)
+            .where(Chunk.id.in_(chunk_ids))
+        )
+        chunk_info = {row[0]: (row[1], row[2]) for row in rows.all()}
+
+    summary_ids = [
+        mc.section_summary_id for mc in message_citations if mc.section_summary_id is not None
+    ]
+    summary_info: dict[int, tuple[str, str]] = {}
+    if summary_ids:
+        rows = await db.execute(
+            select(SectionSummary.id, Document.title, Section.display_path)
+            .join(Section, Section.id == SectionSummary.section_id)
+            .join(Document, Document.id == SectionSummary.document_id)
+            .where(SectionSummary.id.in_(summary_ids))
+        )
+        summary_info = {row[0]: (row[1], row[2]) for row in rows.all()}
+
+    citations_by_message: dict[int, list[CitationRead]] = {}
+    for mc in message_citations:
+        if mc.chunk_id is not None:
+            title, display_path = chunk_info[mc.chunk_id]
+            citation = CitationRead(
+                chunk_id=mc.chunk_id,
+                rank=mc.rank,
+                document_title=title,
+                display_path=display_path,
+                is_summary=False,
+            )
+        else:
+            assert mc.section_summary_id is not None  # CHECK constraint guarantees this
+            title, display_path = summary_info[mc.section_summary_id]
+            citation = CitationRead(
+                chunk_id=None,
+                rank=mc.rank,
+                document_title=title,
+                display_path=display_path,
+                is_summary=True,
+            )
+        citations_by_message.setdefault(mc.message_id, []).append(citation)
+    return citations_by_message
 
 
 @router.post("/projects/{project_id}/conversations", response_model=ConversationRead, status_code=201)
@@ -108,23 +174,7 @@ async def list_messages(conversation_id: int, db: DbSession) -> list[MessageRead
 
     citations_by_message: dict[int, list[CitationRead]] = {}
     if messages:
-        citations_result = await db.execute(
-            select(MessageCitation, Chunk, Section, Document)
-            .join(Chunk, Chunk.id == MessageCitation.chunk_id)
-            .join(Section, Section.id == Chunk.section_id)
-            .join(Document, Document.id == Chunk.document_id)
-            .where(MessageCitation.message_id.in_([m.id for m in messages]))
-            .order_by(MessageCitation.rank)
-        )
-        for message_citation, chunk, section, document in citations_result.all():
-            citations_by_message.setdefault(message_citation.message_id, []).append(
-                CitationRead(
-                    chunk_id=chunk.id,
-                    rank=message_citation.rank,
-                    document_title=document.title,
-                    display_path=section.display_path,
-                )
-            )
+        citations_by_message = await _load_citations(db, [m.id for m in messages])
 
     return [
         MessageRead(
@@ -161,20 +211,51 @@ async def send_message(
 
     standalone_question = await rewrite_query(payload.content, history)
     query_embedding = (await embed_batch([standalone_question]))[0]
-    results = await retrieve(db, conversation.project_id, query_embedding, standalone_question)
-    prompt = build_prompt(
-        [chunk.embed_text for chunk, _s, _d in results], history, standalone_question
-    )
+    is_survey = payload.mode == "survey"
+
+    if is_survey:
+        # Survey path (docs/plan.md §4.4): summaries, not passages — no
+        # keyword search/RRF/reranking, just vector search over summaries.
+        survey_results = await survey_search(
+            db, conversation.project_id, query_embedding, top_k=SURVEY_TOP_K
+        )
+        sources = [
+            f"{section.display_path}\n\n{summary.summary}"
+            for summary, section, _document in survey_results
+        ]
+    else:
+        lookup_results = await retrieve(
+            db, conversation.project_id, query_embedding, standalone_question
+        )
+        sources = [chunk.embed_text for chunk, _section, _document in lookup_results]
+
+    # A RAG tool's whole premise is grounded answers — with zero sources to
+    # draw on (survey mode before any document has summaries, e.g.), the
+    # model will still cheerfully answer from its own trained knowledge and
+    # invent plausible-looking citation numbers for it. Refuse rather than
+    # let that happen silently; no generation call at all.
+    no_sources = is_survey and not sources
+    prompt = "" if no_sources else build_prompt(sources, history, standalone_question)
 
     async def event_stream() -> AsyncIterator[str]:
         collected: list[str] = []
-        try:
-            async for token in stream_generate(prompt):
-                collected.append(token)
-                yield f"data: {json.dumps({'token': token})}\n\n"
-        except GenerationError as exc:
-            yield f"data: {json.dumps({'error': str(exc)})}\n\n"
-            return
+        if no_sources:
+            message = (
+                "No summarised sections are available yet for survey mode in this "
+                "project. Summaries are generated automatically once a document "
+                "finishes indexing — try again shortly, or switch to Lookup mode "
+                "for an answer right now."
+            )
+            collected.append(message)
+            yield f"data: {json.dumps({'token': message})}\n\n"
+        else:
+            try:
+                async for token in stream_generate(prompt):
+                    collected.append(token)
+                    yield f"data: {json.dumps({'token': token})}\n\n"
+            except GenerationError as exc:
+                yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+                return
 
         assistant_message = Message(
             conversation_id=conversation_id, role="assistant", content="".join(collected)
@@ -182,17 +263,39 @@ async def send_message(
         db.add(assistant_message)
         await db.flush()
 
-        citations_payload = []
-        for rank, (chunk, section, document) in enumerate(results, start=1):
-            db.add(MessageCitation(message_id=assistant_message.id, chunk_id=chunk.id, rank=rank))
-            citations_payload.append(
-                {
-                    "chunk_id": chunk.id,
-                    "rank": rank,
-                    "document_title": document.title,
-                    "display_path": section.display_path,
-                }
-            )
+        citations_payload: list[dict[str, object]] = []
+        if is_survey:
+            for rank, (summary, section, document) in enumerate(survey_results, start=1):
+                db.add(
+                    MessageCitation(
+                        message_id=assistant_message.id,
+                        section_summary_id=summary.id,
+                        rank=rank,
+                    )
+                )
+                citations_payload.append(
+                    {
+                        "chunk_id": None,
+                        "rank": rank,
+                        "document_title": document.title,
+                        "display_path": section.display_path,
+                        "is_summary": True,
+                    }
+                )
+        else:
+            for rank, (chunk, section, document) in enumerate(lookup_results, start=1):
+                db.add(
+                    MessageCitation(message_id=assistant_message.id, chunk_id=chunk.id, rank=rank)
+                )
+                citations_payload.append(
+                    {
+                        "chunk_id": chunk.id,
+                        "rank": rank,
+                        "document_title": document.title,
+                        "display_path": section.display_path,
+                        "is_summary": False,
+                    }
+                )
         await db.commit()
 
         yield f"data: {json.dumps({'done': True, 'citations': citations_payload})}\n\n"
