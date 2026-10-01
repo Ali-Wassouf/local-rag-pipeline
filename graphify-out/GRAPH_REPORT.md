@@ -1,24 +1,24 @@
 # Graph Report - local-rag-pipeline  (2026-10-01)
 
 ## Corpus Check
-- 182 files · ~139,037 words
+- 183 files · ~138,753 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 16 file(s) not represented in the graph (top: (none) 7, .pptx 4, .ini 1)
 
 ## Summary
-- 1683 nodes · 3359 edges · 115 communities (96 shown, 19 thin omitted)
+- 1682 nodes · 3357 edges · 117 communities (98 shown, 19 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 248 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `028aa3ec`
+- Built from commit: `0a007c20`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - chunks table
 - Phase 4 eval — hybrid + cross-encoder reranking (full Phase 4 pipeline)
-- test_search.py
+- Section
 - package.json
 - Document
 - types.ts
@@ -27,7 +27,7 @@
 - compilerOptions
 - pdf.py
 - DESIGN.md
-- App.tsx
+- ProjectDetailScreen
 - Block
 - extract
 - test_conversations.py
@@ -36,18 +36,20 @@
 - test_text.py
 - ReviewScreen.tsx
 - Phase 4 eval — hybrid (vector + keyword RRF), no reranking
+- ingest/chunk.py
+- reciprocal_rank_fusion
 - Phase 3 Baseline Evals (vector-only)
 - Backend API
 - test_summarize.py
 - test_project_documents.py
 - Ingest pipeline (store → extract → tree → review → chunk → embed → summarise)
+- build_prompt
 - extract
 - conversations.py
 - Needle path (vector + keyword + RRF + rerank + generate)
 - hooks.ts
 - ChatScreen.tsx
 - db service (pgvector/pgvector:pg16)
-- env.py
 - conftest.py
 - Lookup/Survey routing toggle
 - httpx
@@ -64,7 +66,7 @@
 - Vite Build Tool Logo
 - setup-env.sh
 - rag-backend
-- UploadScreen.tsx
+- App.tsx
 - bolder.md
 - /impeccable hooks
 - Impeccable Documenter
@@ -141,10 +143,10 @@
   README.md → backend/app/retrieval/generate.py
 - `10. What is the two-phase commit protocol?` --references--> `commit()`  [INFERRED]
   evals/hybrid-no-rerank.md → frontend/src/screens/ReviewScreen.tsx
-- `PDF with bookmark outline (Chapter One / Section 1.1 / 1.2)` --semantically_similar_to--> `Markdown headings fixture (H1/H2/H3 hierarchy)`  [INFERRED] [semantically similar]
-  backend/tests/extract/fixtures/outline.pdf → backend/tests/extract/fixtures/headings.md
 - `Structure review screen` --implements--> `Invariant: page numbers never appear in output`  [INFERRED]
   docs/plan.md → CLAUDE.md
+- `PDF with bookmark outline (Chapter One / Section 1.1 / 1.2)` --semantically_similar_to--> `Markdown headings fixture (H1/H2/H3 hierarchy)`  [INFERRED] [semantically similar]
+  backend/tests/extract/fixtures/outline.pdf → backend/tests/extract/fixtures/headings.md
 
 ## Import Cycles
 - None detected.
@@ -158,7 +160,7 @@
 - **PDF heading detection fallback chain (outline -> heuristic -> root)** — backend_tests_extract_fixtures_outline, backend_tests_extract_fixtures_no_outline_with_heuristic, backend_tests_extract_fixtures_no_outline_no_heuristic, section_heading_detection [INFERRED 0.85]
 - **PDF rejection/error edge cases** — backend_tests_extract_fixtures_corrupted, backend_tests_extract_fixtures_scanned, backend_tests_extract_fixtures_mostly_text_one_scanned_page [INFERRED 0.85]
 
-## Communities (115 total, 19 thin omitted)
+## Communities (117 total, 19 thin omitted)
 
 ### Community 0 - "chunks table"
 Cohesion: 0.24
@@ -168,9 +170,9 @@ Nodes (10): Invariant: chunks never cross a section boundary, Invariant: embed_t
 Cohesion: 0.06
 Nodes (32): 10. What is the two-phase commit protocol?, 11. What is linearizability?, 12. What is the difference between REST and RPC?, 13. What is a message broker used for?, 14. What is the actor model in the context of distributed systems?, 15. What is data partitioning (sharding)?, 16. How does consistent hashing help with partitioning?, 17. What is a secondary index and why is it harder to maintain in a partitioned database? (+24 more)
 
-### Community 2 - "test_search.py"
-Cohesion: 0.09
-Nodes (61): Chunk, Reciprocal rank fusion — combines the vector and keyword candidate lists into…, reciprocal_rank_fusion(), AsyncSession, Candidate, The needle path (docs/plan.md §4.3): vector + keyword candidates, fused by RRF,…, retrieve(), _load_reranker() (+53 more)
+### Community 2 - "Section"
+Cohesion: 0.11
+Nodes (53): Chunk, Section, AsyncSession, Candidate, The needle path (docs/plan.md §4.3): vector + keyword candidates, fused by RRF,…, retrieve(), _load_reranker(), Candidate (+45 more)
 
 ### Community 3 - "package.json"
 Cohesion: 0.12
@@ -178,11 +180,11 @@ Nodes (16): name, private, type, version, jsdom, oxlint, react-dom, react-markdo
 
 ### Community 4 - "Document"
 Cohesion: 0.05
-Nodes (93): argparse, delete_document(), _format_from_filename(), get_document(), list_documents(), DbSession, delete, get (+85 more)
+Nodes (89): argparse, asyncio, delete_document(), _format_from_filename(), get_document(), list_documents(), DbSession, delete (+81 more)
 
 ### Community 5 - "types.ts"
 Cohesion: 0.08
-Nodes (30): SendMessageCallbacks, ChatMode, CitationRead, DocFormat, DocStatus, DocumentRead, DocumentUploadResponse, JobRead (+22 more)
+Nodes (27): getProject(), SendMessageCallbacks, ChatMode, CitationRead, DocFormat, DocStatus, DocumentRead, DocumentUploadResponse (+19 more)
 
 ### Community 6 - "test_structure.py"
 Cohesion: 0.24
@@ -204,9 +206,9 @@ Nodes (21): Exception, Raised when a document has near-zero extractable text —
 Cohesion: 0.22
 Nodes (8): Colors, Components, Do's and Don'ts, Elevation & Depth, Layout, Overview, Shapes, Typography
 
-### Community 11 - "App.tsx"
-Cohesion: 0.12
-Nodes (14): useProject(), useProjectDocuments(), useRenameProject(), AppContent(), projectIdForNav(), queryClient, View, Shell() (+6 more)
+### Community 11 - "ProjectDetailScreen"
+Cohesion: 0.17
+Nodes (9): listProjectDocuments(), useAttachDocument(), useDeleteDocument(), useDetachDocument(), useProjectDocuments(), IN_PROGRESS_STATUSES, ProjectDetailScreen(), ProjectDetailScreenProps (+1 more)
 
 ### Community 12 - "Block"
 Cohesion: 0.11
@@ -217,8 +219,8 @@ Cohesion: 0.27
 Nodes (10): extract(), Path, test_anchor_is_sequential_block_index(), test_blank_paragraphs_are_skipped(), test_heading_styles_map_to_levels(), test_list_becomes_list_block(), test_no_heading_styles_produces_zero_headings(), test_normal_paragraphs_have_no_level() (+2 more)
 
 ### Community 14 - "test_conversations.py"
-Cohesion: 0.07
-Nodes (60): Settings, embed_batch(), EmbeddingError, get_or_create_embedding_run(), AsyncClient, AsyncSession, Exception, Async client for Ollama's embed endpoint. Calls Ollama over HTTP rather than… (+52 more)
+Cohesion: 0.08
+Nodes (56): embed_batch(), EmbeddingError, get_or_create_embedding_run(), AsyncClient, AsyncSession, Exception, Async client for Ollama's embed endpoint. Calls Ollama over HTTP rather than…, Raised when Ollama's embed endpoint fails or returns something unexpected. (+48 more)
 
 ### Community 15 - "frontend-src-screens-chatscreen-tsx.md"
 Cohesion: 0.33
@@ -233,12 +235,20 @@ Cohesion: 0.10
 Nodes (29): extract(), Path, Corrupted PDF fixture (not a real PDF; expects extraction error), Empty text fixture (no content; expects []), PDF with repeated header/footer ('My Book Title'/'Confidential Draft') to strip, Markdown headings fixture (H1/H2/H3 hierarchy), Markdown list fixture (heading + bullet list), Mostly-text PDF with one scanned page (should pass char-count check) (+21 more)
 
 ### Community 18 - "ReviewScreen.tsx"
-Cohesion: 0.47
-Nodes (4): useSections(), useUpdateSectionTitle(), ReviewScreen(), ReviewScreenProps
+Cohesion: 0.28
+Nodes (7): getSections(), updateSectionTitle(), useSections(), useUpdateSectionTitle(), SectionRead, ReviewScreen(), ReviewScreenProps
 
 ### Community 19 - "Phase 4 eval — hybrid (vector + keyword RRF), no reranking"
 Cohesion: 0.06
 Nodes (31): 10. What is the two-phase commit protocol?, 11. What is linearizability?, 12. What is the difference between REST and RPC?, 13. What is a message broker used for?, 14. What is the actor model in the context of distributed systems?, 15. What is data partitioning (sharding)?, 16. How does consistent hashing help with partitioning?, 17. What is a secondary index and why is it harder to maintain in a partitioned database? (+23 more)
+
+### Community 20 - "ingest/chunk.py"
+Cohesion: 0.15
+Nodes (24): chunk_section(), ChunkDraft, persist_chunks(), AsyncSession, Chunker: splits a section's text into overlapping token windows. A flat token-…, Slide a 700-token/100-overlap window over one section's text.…, Chunk every section and write the resulting rows. embedding and…, tokenizer() (+16 more)
+
+### Community 21 - "reciprocal_rank_fusion"
+Cohesion: 0.33
+Nodes (9): Reciprocal rank fusion — combines the vector and keyword candidate lists into…, reciprocal_rank_fusion(), test_a_chunk_in_both_lists_outranks_one_in_only_one_list(), test_both_lists_empty_returns_empty(), test_chunk_only_in_keyword_list_is_still_included(), test_chunk_only_in_vector_list_is_still_included(), test_final_order_is_by_descending_fused_score(), test_output_truncated_to_top_k() (+1 more)
 
 ### Community 22 - "Phase 3 Baseline Evals (vector-only)"
 Cohesion: 0.26
@@ -249,8 +259,8 @@ Cohesion: 0.20
 Nodes (15): Local RAG Pipeline System Architecture Diagram, Backend API, Browser, Embedder (text to vector, ingest only), Frontend (SPA), Generator (writes answers, query only), Extraction -> Structuring -> Chunking -> Embedding, Ingest Worker (+7 more)
 
 ### Community 24 - "test_summarize.py"
-Cohesion: 0.08
-Nodes (41): chunk_section(), ChunkDraft, Chunker: splits a section's text into overlapping token windows. A flat token-…, Slide a 700-token/100-overlap window over one section's text.…, tokenizer(), needs_summary(), persist_section_summary(), AsyncClient (+33 more)
+Cohesion: 0.13
+Nodes (25): needs_summary(), persist_section_summary(), AsyncClient, AsyncSession, Exception, Section summarisation for the survey path (docs/plan.md §2.5, §4.4, §8). Calls…, Raised when Ollama's generate endpoint fails or returns something unexpected…, Below the threshold a section is only a chunk or two, already close to being… (+17 more)
 
 ### Community 25 - "test_project_documents.py"
 Cohesion: 0.37
@@ -260,13 +270,17 @@ Nodes (15): _create_document(), _create_project(), AsyncClient, AsyncSession, te
 Cohesion: 0.23
 Nodes (12): Block IR (TypedDict), Invariant: section tree covers full document, Invariant: every parser emits Block, No OCR / scanned PDFs out of scope, Phase 1 — extraction, Format extractors (PyMuPDF, python-docx, python-pptx, stdlib), Header/footer stripping, Ingest pipeline (store → extract → tree → review → chunk → embed → summarise) (+4 more)
 
+### Community 27 - "build_prompt"
+Cohesion: 0.43
+Nodes (6): build_prompt(), Assembles the prompt sent to the generator: system instructions, numbered…, test_history_appears_in_order(), test_no_history_does_not_crash_or_leave_stray_markers(), test_question_is_the_final_user_turn_followed_by_assistant_cue(), test_sources_appear_verbatim_and_numbered_from_one()
+
 ### Community 28 - "extract"
 Cohesion: 0.23
 Nodes (11): extract(), Path, _table_to_markdown(), test_anchor_is_sequential_block_index(), test_blank_slide_produces_no_blocks(), test_reading_order_is_slide_order_title_then_body(), test_slide_body_becomes_paragraphs(), test_slide_titles_become_headings() (+3 more)
 
 ### Community 29 - "conversations.py"
 Cohesion: 0.05
-Nodes (81): aiofiles, create_conversation(), delete_conversation(), _get_active_conversation(), list_conversations(), list_deleted_conversations(), list_messages(), _load_citations() (+73 more)
+Nodes (85): aiofiles, do_run_migrations(), Run migrations in 'offline' mode. This configures the context with just a URL…, In this scenario we need to create an Engine and associate a connection with…, Run migrations in 'online' mode., run_async_migrations(), run_migrations_offline(), run_migrations_online() (+77 more)
 
 ### Community 30 - "Needle path (vector + keyword + RRF + rerank + generate)"
 Cohesion: 0.19
@@ -274,19 +288,15 @@ Nodes (13): Phase 4 — retrieval quality, Phase 6 — polish, Architecture (UI 
 
 ### Community 31 - "hooks.ts"
 Cohesion: 0.13
-Nodes (35): attachDocumentToProject(), createConversation(), createProject(), deleteConversation(), deleteDocument(), detachDocumentFromProject(), errorMessageFromResponse(), getJob() (+27 more)
+Nodes (33): attachDocumentToProject(), createConversation(), createProject(), deleteConversation(), deleteDocument(), detachDocumentFromProject(), errorMessageFromResponse(), getJob() (+25 more)
 
 ### Community 32 - "ChatScreen.tsx"
-Cohesion: 0.13
-Nodes (18): sendMessage(), useCreateConversation(), useDeletedConversations(), useMessages(), useRestoreConversation(), ConversationRead, ActiveCitation, ChapterRow() (+10 more)
+Cohesion: 0.14
+Nodes (17): listMessages(), sendMessage(), useDeleteConversation(), useMessages(), ConversationRead, ActiveCitation, ChapterRow(), ChapterRowProps (+9 more)
 
 ### Community 33 - "db service (pgvector/pgvector:pg16)"
 Cohesion: 0.22
 Nodes (9): just commands (dev, test, db-up, migrate, check-models), Tests use real Postgres, no DB mocks, No Redis/Celery/message queue; plain asyncio worker, db service (pgvector/pgvector:pg16), init-extensions.sql initdb mount, pgdata volume, Phase 0 — skeleton, ingest_jobs table (+1 more)
-
-### Community 34 - "env.py"
-Cohesion: 0.20
-Nodes (11): asyncio, do_run_migrations(), Run migrations in 'offline' mode. This configures the context with just a URL…, In this scenario we need to create an Engine and associate a connection with…, Run migrations in 'online' mode., run_async_migrations(), run_migrations_offline(), run_migrations_online() (+3 more)
 
 ### Community 35 - "conftest.py"
 Cohesion: 0.16
@@ -320,9 +330,9 @@ Nodes (3): Frontend stack (React+TS+Vite, shadcn/ui, TanStack Query, SSE), front
 Cohesion: 0.67
 Nodes (3): Documentation Icon, Social Media Icons Collection, Social Media and Documentation Icon Sprite
 
-### Community 64 - "UploadScreen.tsx"
-Cohesion: 0.33
-Nodes (4): FileUploadRowProps, STAGES, UploadScreen(), UploadScreenProps
+### Community 64 - "App.tsx"
+Cohesion: 0.16
+Nodes (12): useProject(), App(), AppContent(), projectIdForNav(), queryClient, View, Shell(), ShellNav (+4 more)
 
 ### Community 66 - "bolder.md"
 Cohesion: 0.33
@@ -552,7 +562,7 @@ Nodes (4): Heuristics Scoring Guide, Issue Severity (P0–P3), Reference Materia
 
 ## Knowledge Gaps
 - **611 isolated node(s):** `rag-backend`, `$schema`, `plugins`, `react/rules-of-hooks`, `react/only-export-components` (+606 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 824 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 823 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -563,9 +573,9 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Phase 6 — polish` and `Query rewriting for follow-ups`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
 - **Why does `rewrite_query()` connect `httpx` to `Document`, `conversations.py`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
 - **Why does `Local RAG Pipeline` connect `httpx` to `Build Phases`?**
-  _High betweenness centrality (0.045) - this node is a cross-community bridge._
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
 - **Are the 32 inferred relationships involving `Document` (e.g. with `_load_citations()` and `delete_document()`) actually correct?**
   _`Document` has 32 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 18 inferred relationships involving `Section` (e.g. with `_load_citations()` and `reindex_document()`) actually correct?**

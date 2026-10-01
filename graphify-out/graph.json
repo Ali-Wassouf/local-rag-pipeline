@@ -108,52 +108,13 @@
   },
   "nodes": [
     {
-      "id": "frontend_src_app_view",
-      "label": "View",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "view",
-      "source_file": "frontend/src/App.tsx",
-      "source_location": "L14"
-    },
-    {
-      "id": "frontend_src_components_shell_shellnav",
-      "label": "ShellNav",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "shellnav",
-      "source_file": "frontend/src/components/Shell.tsx",
-      "source_location": "L3"
-    },
-    {
-      "id": "frontend_src_components_shell_shellprops",
-      "label": "ShellProps",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "shellprops",
-      "source_file": "frontend/src/components/Shell.tsx",
-      "source_location": "L11"
-    },
-    {
       "id": "frontend_src_screens_projectdetailscreen_projectdetailscreenprops",
       "label": "ProjectDetailScreenProps",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "projectdetailscreenprops",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -171,19 +132,6 @@
       "norm_label": "block",
       "source_file": "backend/app/extract/base.py",
       "source_location": "L13"
-    },
-    {
-      "id": "backend_app_core_config_settings",
-      "label": "Settings",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "test_conversations.py",
-      "file_type": "code",
-      "norm_label": "settings",
-      "source_file": "backend/app/core/config.py",
-      "source_location": "L7"
     },
     {
       "id": "backend_app_ingest_embed_embeddingerror",
@@ -212,6 +160,19 @@
       "source_location": "L9"
     },
     {
+      "id": "frontend_src_api_types_sectionread",
+      "label": "SectionRead",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "ReviewScreen.tsx",
+      "file_type": "code",
+      "norm_label": "sectionread",
+      "source_file": "frontend/src/api/types.ts",
+      "source_location": "L43"
+    },
+    {
       "id": "frontend_src_screens_reviewscreen_reviewscreenprops",
       "label": "ReviewScreenProps",
       "_callable": true,
@@ -231,11 +192,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "chunk",
       "source_file": "backend/app/models/chunk.py",
       "source_location": "L11"
+    },
+    {
+      "id": "backend_app_models_section_section",
+      "label": "Section",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Section",
+      "file_type": "code",
+      "norm_label": "section",
+      "source_file": "backend/app/models/section.py",
+      "source_location": "L16"
     },
     {
       "id": "backend_app_ingest_chunk_chunkdraft",
@@ -243,8 +217,8 @@
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
       "file_type": "code",
       "norm_label": "chunkdraft",
       "source_file": "backend/app/ingest/chunk.py",
@@ -498,6 +472,32 @@
       "source_location": "L11"
     },
     {
+      "id": "frontend_src_screens_uploadscreen_fileuploadrowprops",
+      "label": "FileUploadRowProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "hooks.ts",
+      "file_type": "code",
+      "norm_label": "fileuploadrowprops",
+      "source_file": "frontend/src/screens/UploadScreen.tsx",
+      "source_location": "L13"
+    },
+    {
+      "id": "frontend_src_screens_uploadscreen_uploadscreenprops",
+      "label": "UploadScreenProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "hooks.ts",
+      "file_type": "code",
+      "norm_label": "uploadscreenprops",
+      "source_file": "frontend/src/screens/UploadScreen.tsx",
+      "source_location": "L7"
+    },
+    {
       "id": "frontend_src_api_types_conversationread",
       "label": "ConversationRead",
       "_callable": true,
@@ -534,7 +534,7 @@
       "file_type": "code",
       "norm_label": "chapterrowprops",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L322"
+      "source_location": "L228"
     },
     {
       "id": "frontend_src_screens_chatscreen_chatscreenprops",
@@ -561,6 +561,19 @@
       "norm_label": "generationerror",
       "source_file": "backend/app/retrieval/generate.py",
       "source_location": "L15"
+    },
+    {
+      "id": "backend_app_core_config_settings",
+      "label": "Settings",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Document",
+      "file_type": "code",
+      "norm_label": "settings",
+      "source_file": "backend/app/core/config.py",
+      "source_location": "L7"
     },
     {
       "id": "backend_app_models_document_docformat",
@@ -626,19 +639,6 @@
       "norm_label": "jobstage",
       "source_file": "backend/app/models/job.py",
       "source_location": "L10"
-    },
-    {
-      "id": "backend_app_models_section_section",
-      "label": "Section",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "section",
-      "source_file": "backend/app/models/section.py",
-      "source_location": "L16"
     },
     {
       "id": "backend_tests_ingest_test_backfill_summaries_noclosesessioncontext",
@@ -823,19 +823,6 @@
       "source_location": "L58"
     },
     {
-      "id": "frontend_src_api_types_sectionread",
-      "label": "SectionRead",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "sectionread",
-      "source_file": "frontend/src/api/types.ts",
-      "source_location": "L43"
-    },
-    {
       "id": "frontend_src_api_types_structuresource",
       "label": "StructureSource",
       "_callable": true,
@@ -849,30 +836,43 @@
       "source_location": "L41"
     },
     {
-      "id": "frontend_src_screens_uploadscreen_fileuploadrowprops",
-      "label": "FileUploadRowProps",
+      "id": "frontend_src_app_view",
+      "label": "View",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "UploadScreen.tsx",
+      "community_name": "App.tsx",
       "file_type": "code",
-      "norm_label": "fileuploadrowprops",
-      "source_file": "frontend/src/screens/UploadScreen.tsx",
-      "source_location": "L13"
+      "norm_label": "view",
+      "source_file": "frontend/src/App.tsx",
+      "source_location": "L14"
     },
     {
-      "id": "frontend_src_screens_uploadscreen_uploadscreenprops",
-      "label": "UploadScreenProps",
+      "id": "frontend_src_components_shell_shellnav",
+      "label": "ShellNav",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "UploadScreen.tsx",
+      "community_name": "App.tsx",
       "file_type": "code",
-      "norm_label": "uploadscreenprops",
-      "source_file": "frontend/src/screens/UploadScreen.tsx",
-      "source_location": "L7"
+      "norm_label": "shellnav",
+      "source_file": "frontend/src/components/Shell.tsx",
+      "source_location": "L3"
+    },
+    {
+      "id": "frontend_src_components_shell_shellprops",
+      "label": "ShellProps",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "shellprops",
+      "source_file": "frontend/src/components/Shell.tsx",
+      "source_location": "L11"
     },
     {
       "id": "backend_app_db_types_ltreetype",
@@ -1005,16 +1005,52 @@
       "source_location": "L23"
     },
     {
-      "id": "frontend_src_api_hooks_useproject",
-      "label": "useProject()",
+      "id": "frontend_src_api_client_listprojectdocuments",
+      "label": "listProjectDocuments()",
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
-      "norm_label": "useproject()",
+      "norm_label": "listprojectdocuments()",
+      "source_file": "frontend/src/api/client.ts",
+      "source_location": "L141"
+    },
+    {
+      "id": "frontend_src_api_hooks_useattachdocument",
+      "label": "useAttachDocument()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "ProjectDetailScreen",
+      "file_type": "code",
+      "norm_label": "useattachdocument()",
       "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L108"
+      "source_location": "L139"
+    },
+    {
+      "id": "frontend_src_api_hooks_usedeletedocument",
+      "label": "useDeleteDocument()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "ProjectDetailScreen",
+      "file_type": "code",
+      "norm_label": "usedeletedocument()",
+      "source_file": "frontend/src/api/hooks.ts",
+      "source_location": "L159"
+    },
+    {
+      "id": "frontend_src_api_hooks_usedetachdocument",
+      "label": "useDetachDocument()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "ProjectDetailScreen",
+      "file_type": "code",
+      "norm_label": "usedetachdocument()",
+      "source_file": "frontend/src/api/hooks.ts",
+      "source_location": "L149"
     },
     {
       "id": "frontend_src_api_hooks_useprojectdocuments",
@@ -1022,71 +1058,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "useprojectdocuments()",
       "source_file": "frontend/src/api/hooks.ts",
       "source_location": "L127"
-    },
-    {
-      "id": "frontend_src_api_hooks_userenameproject",
-      "label": "useRenameProject()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "userenameproject()",
-      "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L116"
-    },
-    {
-      "id": "frontend_src_app_appcontent",
-      "label": "AppContent()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "appcontent()",
-      "source_file": "frontend/src/App.tsx",
-      "source_location": "L26"
-    },
-    {
-      "id": "frontend_src_app_projectidfornav",
-      "label": "projectIdForNav()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "projectidfornav()",
-      "source_file": "frontend/src/App.tsx",
-      "source_location": "L21"
-    },
-    {
-      "id": "frontend_src_components_shell_navlink",
-      "label": "NavLink()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "navlink()",
-      "source_file": "frontend/src/components/Shell.tsx",
-      "source_location": "L17"
-    },
-    {
-      "id": "frontend_src_components_shell_shell",
-      "label": "Shell()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "shell()",
-      "source_file": "frontend/src/components/Shell.tsx",
-      "source_location": "L47"
     },
     {
       "id": "frontend_src_screens_projectdetailscreen_projectdetailscreen",
@@ -1094,7 +1070,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "projectdetailscreen()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1106,7 +1082,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "canceldeleting()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1118,7 +1094,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "confirmdelete()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1130,7 +1106,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "handleattach()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1142,7 +1118,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "handlerenamesubmit()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1154,7 +1130,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "startdeleting()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1166,7 +1142,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "startrenaming()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1178,7 +1154,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "summarystatustext()",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -1989,6 +1965,30 @@
       "source_location": "L60"
     },
     {
+      "id": "frontend_src_api_client_getsections",
+      "label": "getSections()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "ReviewScreen.tsx",
+      "file_type": "code",
+      "norm_label": "getsections()",
+      "source_file": "frontend/src/api/client.ts",
+      "source_location": "L99"
+    },
+    {
+      "id": "frontend_src_api_client_updatesectiontitle",
+      "label": "updateSectionTitle()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 18,
+      "community_name": "ReviewScreen.tsx",
+      "file_type": "code",
+      "norm_label": "updatesectiontitle()",
+      "source_file": "frontend/src/api/client.ts",
+      "source_location": "L104"
+    },
+    {
       "id": "frontend_src_api_hooks_usesections",
       "label": "useSections()",
       "_callable": true,
@@ -2061,24 +2061,12 @@
       "source_location": "L36"
     },
     {
-      "id": "backend_app_retrieval_fuse_reciprocal_rank_fusion",
-      "label": "reciprocal_rank_fusion()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "reciprocal_rank_fusion()",
-      "source_file": "backend/app/retrieval/fuse.py",
-      "source_location": "L11"
-    },
-    {
       "id": "backend_app_retrieval_pipeline_retrieve",
       "label": "retrieve()",
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "retrieve()",
       "source_file": "backend/app/retrieval/pipeline.py",
@@ -2090,7 +2078,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_load_reranker()",
       "source_file": "backend/app/retrieval/rerank.py",
@@ -2102,7 +2090,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "rerank()",
       "source_file": "backend/app/retrieval/rerank.py",
@@ -2114,7 +2102,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_score_and_sort()",
       "source_file": "backend/app/retrieval/rerank.py",
@@ -2126,7 +2114,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "reranker_is_available()",
       "source_file": "backend/app/retrieval/rerank.py",
@@ -2138,7 +2126,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "keyword_search()",
       "source_file": "backend/app/retrieval/search.py",
@@ -2150,7 +2138,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "vector_search()",
       "source_file": "backend/app/retrieval/search.py",
@@ -2162,95 +2150,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "survey_search()",
       "source_file": "backend/app/retrieval/survey.py",
       "source_location": "L21"
-    },
-    {
-      "id": "backend_tests_retrieval_test_fuse_test_a_chunk_in_both_lists_outranks_one_in_only_one_list",
-      "label": "test_a_chunk_in_both_lists_outranks_one_in_only_one_list()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_a_chunk_in_both_lists_outranks_one_in_only_one_list()",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L4"
-    },
-    {
-      "id": "backend_tests_retrieval_test_fuse_test_both_lists_empty_returns_empty",
-      "label": "test_both_lists_empty_returns_empty()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_both_lists_empty_returns_empty()",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L48"
-    },
-    {
-      "id": "backend_tests_retrieval_test_fuse_test_chunk_only_in_keyword_list_is_still_included",
-      "label": "test_chunk_only_in_keyword_list_is_still_included()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_chunk_only_in_keyword_list_is_still_included()",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L14"
-    },
-    {
-      "id": "backend_tests_retrieval_test_fuse_test_chunk_only_in_vector_list_is_still_included",
-      "label": "test_chunk_only_in_vector_list_is_still_included()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_chunk_only_in_vector_list_is_still_included()",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L9"
-    },
-    {
-      "id": "backend_tests_retrieval_test_fuse_test_final_order_is_by_descending_fused_score",
-      "label": "test_final_order_is_by_descending_fused_score()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_final_order_is_by_descending_fused_score()",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L19"
-    },
-    {
-      "id": "backend_tests_retrieval_test_fuse_test_output_truncated_to_top_k",
-      "label": "test_output_truncated_to_top_k()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_output_truncated_to_top_k()",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L43"
-    },
-    {
-      "id": "backend_tests_retrieval_test_fuse_test_score_formula_matches_1_over_k_plus_rank",
-      "label": "test_score_formula_matches_1_over_k_plus_rank()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_score_formula_matches_1_over_k_plus_rank()",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L30"
     },
     {
       "id": "backend_tests_retrieval_test_pipeline_test_retrieve_respects_project_isolation_with_reranker_disabled",
@@ -2258,7 +2162,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_retrieve_respects_project_isolation_with_reranker_disabled()",
       "source_file": "backend/tests/retrieval/test_pipeline.py",
@@ -2270,7 +2174,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_retrieve_respects_top_k_with_reranker_disabled()",
       "source_file": "backend/tests/retrieval/test_pipeline.py",
@@ -2282,7 +2186,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_retrieve_with_reranker_disabled_unions_vector_and_keyword_hits()",
       "source_file": "backend/tests/retrieval/test_pipeline.py",
@@ -2294,7 +2198,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_retrieve_with_reranker_enabled_still_respects_project_isolation()",
       "source_file": "backend/tests/retrieval/test_pipeline.py",
@@ -2306,7 +2210,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_seeded_candidate()",
       "source_file": "backend/tests/retrieval/test_rerank.py",
@@ -2318,7 +2222,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_rerank_puts_the_more_relevant_candidate_first()",
       "source_file": "backend/tests/retrieval/test_rerank.py",
@@ -2330,7 +2234,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_rerank_respects_top_k()",
       "source_file": "backend/tests/retrieval/test_rerank.py",
@@ -2342,7 +2246,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_rerank_returns_empty_for_no_candidates()",
       "source_file": "backend/tests/retrieval/test_rerank.py",
@@ -2354,7 +2258,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_make_chunk()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2366,7 +2270,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_make_project_with_document()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2378,7 +2282,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_keyword_search_excludes_chunks_that_do_not_match()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2390,7 +2294,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_keyword_search_orders_best_match_first()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2402,7 +2306,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_keyword_search_respects_the_mandatory_project_filter()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2414,7 +2318,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_keyword_search_respects_top_k()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2426,7 +2330,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_keyword_search_returns_empty_for_project_with_no_matches()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2438,7 +2342,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_vector_search_ignores_chunks_with_no_embedding_yet()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2450,7 +2354,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_vector_search_orders_nearest_first()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2462,7 +2366,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_vector_search_respects_the_mandatory_project_filter()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2474,7 +2378,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_vector_search_respects_top_k()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2486,7 +2390,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_vector_search_returns_empty_for_project_with_no_chunks()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2498,7 +2402,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_vec()",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -2510,7 +2414,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_add_section()",
       "source_file": "backend/tests/retrieval/test_survey.py",
@@ -2522,7 +2426,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "_make_summary()",
       "source_file": "backend/tests/retrieval/test_survey.py",
@@ -2534,7 +2438,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_survey_search_orders_nearest_first()",
       "source_file": "backend/tests/retrieval/test_survey.py",
@@ -2546,7 +2450,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_survey_search_respects_the_mandatory_project_filter()",
       "source_file": "backend/tests/retrieval/test_survey.py",
@@ -2558,7 +2462,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_survey_search_respects_top_k()",
       "source_file": "backend/tests/retrieval/test_survey.py",
@@ -2570,7 +2474,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_survey_search_returns_empty_for_project_with_no_summaries()",
       "source_file": "backend/tests/retrieval/test_survey.py",
@@ -2581,24 +2485,276 @@
       "label": "chunk_section()",
       "_callable": true,
       "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
       "file_type": "code",
       "norm_label": "chunk_section()",
       "source_file": "backend/app/ingest/chunk.py",
       "source_location": "L46"
     },
     {
+      "id": "backend_app_ingest_chunk_persist_chunks",
+      "label": "persist_chunks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "persist_chunks()",
+      "source_file": "backend/app/ingest/chunk.py",
+      "source_location": "L88"
+    },
+    {
       "id": "backend_app_ingest_chunk_tokenizer",
       "label": "tokenizer()",
       "_callable": true,
       "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
       "file_type": "code",
       "norm_label": "tokenizer()",
       "source_file": "backend/app/ingest/chunk.py",
       "source_location": "L32"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_persistence_make_document_with_sections",
+      "label": "_make_document_with_sections()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "_make_document_with_sections()",
+      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
+      "source_location": "L10"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_persistence_test_chunk_embed_text_prefixes_the_breadcrumb_onto_text",
+      "label": "test_chunk_embed_text_prefixes_the_breadcrumb_onto_text()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_chunk_embed_text_prefixes_the_breadcrumb_onto_text()",
+      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
+      "source_location": "L82"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_persistence_test_no_chunk_crosses_its_sections_char_range",
+      "label": "test_no_chunk_crosses_its_sections_char_range()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_no_chunk_crosses_its_sections_char_range()",
+      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
+      "source_location": "L71"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_persistence_test_persist_chunks_writes_rows_with_no_embedding_yet",
+      "label": "test_persist_chunks_writes_rows_with_no_embedding_yet()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_persist_chunks_writes_rows_with_no_embedding_yet()",
+      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
+      "source_location": "L50"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_test_chunk_offsets_are_relative_to_the_document",
+      "label": "test_chunk_offsets_are_relative_to_the_document()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_chunk_offsets_are_relative_to_the_document()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L41"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_test_chunks_never_exceed_their_sections_char_range",
+      "label": "test_chunks_never_exceed_their_sections_char_range()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_chunks_never_exceed_their_sections_char_range()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L63"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_test_embed_text_starts_with_breadcrumb_text_does_not",
+      "label": "test_embed_text_starts_with_breadcrumb_text_does_not()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_embed_text_starts_with_breadcrumb_text_does_not()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L48"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_test_ordinal_is_sequential_and_one_indexed",
+      "label": "test_ordinal_is_sequential_and_one_indexed()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_ordinal_is_sequential_and_one_indexed()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L57"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_test_section_sized_for_two_windows",
+      "label": "test_section_sized_for_two_windows()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_section_sized_for_two_windows()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L25"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_test_short_section_is_a_single_chunk",
+      "label": "test_short_section_is_a_single_chunk()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_short_section_is_a_single_chunk()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L15"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_test_tiny_section_does_not_crash",
+      "label": "test_tiny_section_does_not_crash()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_tiny_section_does_not_crash()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L35"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_text_with_exact_token_count",
+      "label": "_text_with_exact_token_count()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "_text_with_exact_token_count()",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L4"
+    },
+    {
+      "id": "backend_app_retrieval_fuse_reciprocal_rank_fusion",
+      "label": "reciprocal_rank_fusion()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "reciprocal_rank_fusion()",
+      "source_file": "backend/app/retrieval/fuse.py",
+      "source_location": "L11"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse_test_a_chunk_in_both_lists_outranks_one_in_only_one_list",
+      "label": "test_a_chunk_in_both_lists_outranks_one_in_only_one_list()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_a_chunk_in_both_lists_outranks_one_in_only_one_list()",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L4"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse_test_both_lists_empty_returns_empty",
+      "label": "test_both_lists_empty_returns_empty()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_both_lists_empty_returns_empty()",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L48"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse_test_chunk_only_in_keyword_list_is_still_included",
+      "label": "test_chunk_only_in_keyword_list_is_still_included()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_chunk_only_in_keyword_list_is_still_included()",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse_test_chunk_only_in_vector_list_is_still_included",
+      "label": "test_chunk_only_in_vector_list_is_still_included()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_chunk_only_in_vector_list_is_still_included()",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L9"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse_test_final_order_is_by_descending_fused_score",
+      "label": "test_final_order_is_by_descending_fused_score()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_final_order_is_by_descending_fused_score()",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L19"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse_test_output_truncated_to_top_k",
+      "label": "test_output_truncated_to_top_k()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_output_truncated_to_top_k()",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L43"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse_test_score_formula_matches_1_over_k_plus_rank",
+      "label": "test_score_formula_matches_1_over_k_plus_rank()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_score_formula_matches_1_over_k_plus_rank()",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L30"
     },
     {
       "id": "backend_app_ingest_summarize_needs_summary",
@@ -2635,102 +2791,6 @@
       "norm_label": "summarize_section()",
       "source_file": "backend/app/ingest/summarize.py",
       "source_location": "L41"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_test_chunk_offsets_are_relative_to_the_document",
-      "label": "test_chunk_offsets_are_relative_to_the_document()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_chunk_offsets_are_relative_to_the_document()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L41"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_test_chunks_never_exceed_their_sections_char_range",
-      "label": "test_chunks_never_exceed_their_sections_char_range()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_chunks_never_exceed_their_sections_char_range()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L63"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_test_embed_text_starts_with_breadcrumb_text_does_not",
-      "label": "test_embed_text_starts_with_breadcrumb_text_does_not()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_embed_text_starts_with_breadcrumb_text_does_not()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L48"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_test_ordinal_is_sequential_and_one_indexed",
-      "label": "test_ordinal_is_sequential_and_one_indexed()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_ordinal_is_sequential_and_one_indexed()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L57"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_test_section_sized_for_two_windows",
-      "label": "test_section_sized_for_two_windows()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_section_sized_for_two_windows()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L25"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_test_short_section_is_a_single_chunk",
-      "label": "test_short_section_is_a_single_chunk()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_short_section_is_a_single_chunk()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L15"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_test_tiny_section_does_not_crash",
-      "label": "test_tiny_section_does_not_crash()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_tiny_section_does_not_crash()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L35"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_text_with_exact_token_count",
-      "label": "_text_with_exact_token_count()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "_text_with_exact_token_count()",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L4"
     },
     {
       "id": "backend_tests_ingest_test_summarize_client",
@@ -3057,6 +3117,66 @@
       "source_location": "L165"
     },
     {
+      "id": "backend_app_retrieval_prompt_build_prompt",
+      "label": "build_prompt()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "code",
+      "norm_label": "build_prompt()",
+      "source_file": "backend/app/retrieval/prompt.py",
+      "source_location": "L18"
+    },
+    {
+      "id": "backend_tests_retrieval_test_prompt_test_history_appears_in_order",
+      "label": "test_history_appears_in_order()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "code",
+      "norm_label": "test_history_appears_in_order()",
+      "source_file": "backend/tests/retrieval/test_prompt.py",
+      "source_location": "L14"
+    },
+    {
+      "id": "backend_tests_retrieval_test_prompt_test_no_history_does_not_crash_or_leave_stray_markers",
+      "label": "test_no_history_does_not_crash_or_leave_stray_markers()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "code",
+      "norm_label": "test_no_history_does_not_crash_or_leave_stray_markers()",
+      "source_file": "backend/tests/retrieval/test_prompt.py",
+      "source_location": "L31"
+    },
+    {
+      "id": "backend_tests_retrieval_test_prompt_test_question_is_the_final_user_turn_followed_by_assistant_cue",
+      "label": "test_question_is_the_final_user_turn_followed_by_assistant_cue()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "code",
+      "norm_label": "test_question_is_the_final_user_turn_followed_by_assistant_cue()",
+      "source_file": "backend/tests/retrieval/test_prompt.py",
+      "source_location": "L26"
+    },
+    {
+      "id": "backend_tests_retrieval_test_prompt_test_sources_appear_verbatim_and_numbered_from_one",
+      "label": "test_sources_appear_verbatim_and_numbered_from_one()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "code",
+      "norm_label": "test_sources_appear_verbatim_and_numbered_from_one()",
+      "source_file": "backend/tests/retrieval/test_prompt.py",
+      "source_location": "L4"
+    },
+    {
       "id": "backend_app_extract_pptx_extract",
       "label": "extract()",
       "_callable": true,
@@ -3163,6 +3283,54 @@
       "norm_label": "test_table_becomes_table_block()",
       "source_file": "backend/tests/extract/test_pptx.py",
       "source_location": "L45"
+    },
+    {
+      "id": "backend_alembic_env_do_run_migrations",
+      "label": "do_run_migrations()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "code",
+      "norm_label": "do_run_migrations()",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L56"
+    },
+    {
+      "id": "backend_alembic_env_run_async_migrations",
+      "label": "run_async_migrations()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "code",
+      "norm_label": "run_async_migrations()",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L63"
+    },
+    {
+      "id": "backend_alembic_env_run_migrations_offline",
+      "label": "run_migrations_offline()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "code",
+      "norm_label": "run_migrations_offline()",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L32"
+    },
+    {
+      "id": "backend_alembic_env_run_migrations_online",
+      "label": "run_migrations_online()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "code",
+      "norm_label": "run_migrations_online()",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L81"
     },
     {
       "id": "backend_app_api_conversations_create_conversation",
@@ -3417,18 +3585,6 @@
       "source_location": "L19"
     },
     {
-      "id": "backend_app_retrieval_prompt_build_prompt",
-      "label": "build_prompt()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "conversations.py",
-      "file_type": "code",
-      "norm_label": "build_prompt()",
-      "source_file": "backend/app/retrieval/prompt.py",
-      "source_location": "L18"
-    },
-    {
       "id": "backend_app_schemas_project_projectupdate_name_is_not_blank",
       "label": ".name_is_not_blank()",
       "_callable": true,
@@ -3439,54 +3595,6 @@
       "norm_label": ".name_is_not_blank()",
       "source_file": "backend/app/schemas/project.py",
       "source_location": "L16"
-    },
-    {
-      "id": "backend_tests_retrieval_test_prompt_test_history_appears_in_order",
-      "label": "test_history_appears_in_order()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "conversations.py",
-      "file_type": "code",
-      "norm_label": "test_history_appears_in_order()",
-      "source_file": "backend/tests/retrieval/test_prompt.py",
-      "source_location": "L14"
-    },
-    {
-      "id": "backend_tests_retrieval_test_prompt_test_no_history_does_not_crash_or_leave_stray_markers",
-      "label": "test_no_history_does_not_crash_or_leave_stray_markers()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "conversations.py",
-      "file_type": "code",
-      "norm_label": "test_no_history_does_not_crash_or_leave_stray_markers()",
-      "source_file": "backend/tests/retrieval/test_prompt.py",
-      "source_location": "L31"
-    },
-    {
-      "id": "backend_tests_retrieval_test_prompt_test_question_is_the_final_user_turn_followed_by_assistant_cue",
-      "label": "test_question_is_the_final_user_turn_followed_by_assistant_cue()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "conversations.py",
-      "file_type": "code",
-      "norm_label": "test_question_is_the_final_user_turn_followed_by_assistant_cue()",
-      "source_file": "backend/tests/retrieval/test_prompt.py",
-      "source_location": "L26"
-    },
-    {
-      "id": "backend_tests_retrieval_test_prompt_test_sources_appear_verbatim_and_numbered_from_one",
-      "label": "test_sources_appear_verbatim_and_numbered_from_one()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "conversations.py",
-      "file_type": "code",
-      "norm_label": "test_sources_appear_verbatim_and_numbered_from_one()",
-      "source_file": "backend/tests/retrieval/test_prompt.py",
-      "source_location": "L4"
     },
     {
       "id": "frontend_src_api_client_attachdocumenttoproject",
@@ -3585,30 +3693,6 @@
       "source_location": "L94"
     },
     {
-      "id": "frontend_src_api_client_getproject",
-      "label": "getProject()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "getproject()",
-      "source_file": "frontend/src/api/client.ts",
-      "source_location": "L127"
-    },
-    {
-      "id": "frontend_src_api_client_getsections",
-      "label": "getSections()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "getsections()",
-      "source_file": "frontend/src/api/client.ts",
-      "source_location": "L99"
-    },
-    {
       "id": "frontend_src_api_client_listalldocuments",
       "label": "listAllDocuments()",
       "_callable": true,
@@ -3643,30 +3727,6 @@
       "norm_label": "listdeletedconversations()",
       "source_file": "frontend/src/api/client.ts",
       "source_location": "L204"
-    },
-    {
-      "id": "frontend_src_api_client_listmessages",
-      "label": "listMessages()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "listmessages()",
-      "source_file": "frontend/src/api/client.ts",
-      "source_location": "L185"
-    },
-    {
-      "id": "frontend_src_api_client_listprojectdocuments",
-      "label": "listProjectDocuments()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "listprojectdocuments()",
-      "source_file": "frontend/src/api/client.ts",
-      "source_location": "L141"
     },
     {
       "id": "frontend_src_api_client_listprojects",
@@ -3753,18 +3813,6 @@
       "source_location": "L73"
     },
     {
-      "id": "frontend_src_api_client_updatesectiontitle",
-      "label": "updateSectionTitle()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "updatesectiontitle()",
-      "source_file": "frontend/src/api/client.ts",
-      "source_location": "L104"
-    },
-    {
       "id": "frontend_src_api_client_uploaddocument",
       "label": "uploadDocument()",
       "_callable": true,
@@ -3789,18 +3837,6 @@
       "source_location": "L135"
     },
     {
-      "id": "frontend_src_api_hooks_useattachdocument",
-      "label": "useAttachDocument()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "useattachdocument()",
-      "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L139"
-    },
-    {
       "id": "frontend_src_api_hooks_useconversations",
       "label": "useConversations()",
       "_callable": true,
@@ -3813,40 +3849,28 @@
       "source_location": "L181"
     },
     {
-      "id": "frontend_src_api_hooks_usedeleteconversation",
-      "label": "useDeleteConversation()",
+      "id": "frontend_src_api_hooks_usecreateconversation",
+      "label": "useCreateConversation()",
       "_callable": true,
       "_origin": "ast",
       "community": 31,
       "community_name": "hooks.ts",
       "file_type": "code",
-      "norm_label": "usedeleteconversation()",
+      "norm_label": "usecreateconversation()",
       "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L207"
+      "source_location": "L189"
     },
     {
-      "id": "frontend_src_api_hooks_usedeletedocument",
-      "label": "useDeleteDocument()",
+      "id": "frontend_src_api_hooks_usedeletedconversations",
+      "label": "useDeletedConversations()",
       "_callable": true,
       "_origin": "ast",
       "community": 31,
       "community_name": "hooks.ts",
       "file_type": "code",
-      "norm_label": "usedeletedocument()",
+      "norm_label": "usedeletedconversations()",
       "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L159"
-    },
-    {
-      "id": "frontend_src_api_hooks_usedetachdocument",
-      "label": "useDetachDocument()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "usedetachdocument()",
-      "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L149"
+      "source_location": "L199"
     },
     {
       "id": "frontend_src_api_hooks_usejob",
@@ -3871,6 +3895,30 @@
       "norm_label": "usereindexdocument()",
       "source_file": "frontend/src/api/hooks.ts",
       "source_location": "L170"
+    },
+    {
+      "id": "frontend_src_api_hooks_userenameproject",
+      "label": "useRenameProject()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "hooks.ts",
+      "file_type": "code",
+      "norm_label": "userenameproject()",
+      "source_file": "frontend/src/api/hooks.ts",
+      "source_location": "L116"
+    },
+    {
+      "id": "frontend_src_api_hooks_userestoreconversation",
+      "label": "useRestoreConversation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "hooks.ts",
+      "file_type": "code",
+      "norm_label": "userestoreconversation()",
+      "source_file": "frontend/src/api/hooks.ts",
+      "source_location": "L218"
     },
     {
       "id": "frontend_src_api_hooks_usesummarizedocument",
@@ -3909,6 +3957,18 @@
       "source_location": "L23"
     },
     {
+      "id": "frontend_src_api_client_listmessages",
+      "label": "listMessages()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 32,
+      "community_name": "ChatScreen.tsx",
+      "file_type": "code",
+      "norm_label": "listmessages()",
+      "source_file": "frontend/src/api/client.ts",
+      "source_location": "L185"
+    },
+    {
       "id": "frontend_src_api_client_sendmessage",
       "label": "sendMessage()",
       "_callable": true,
@@ -3921,28 +3981,16 @@
       "source_location": "L218"
     },
     {
-      "id": "frontend_src_api_hooks_usecreateconversation",
-      "label": "useCreateConversation()",
+      "id": "frontend_src_api_hooks_usedeleteconversation",
+      "label": "useDeleteConversation()",
       "_callable": true,
       "_origin": "ast",
       "community": 32,
       "community_name": "ChatScreen.tsx",
       "file_type": "code",
-      "norm_label": "usecreateconversation()",
+      "norm_label": "usedeleteconversation()",
       "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L189"
-    },
-    {
-      "id": "frontend_src_api_hooks_usedeletedconversations",
-      "label": "useDeletedConversations()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "ChatScreen.tsx",
-      "file_type": "code",
-      "norm_label": "usedeletedconversations()",
-      "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L199"
+      "source_location": "L207"
     },
     {
       "id": "frontend_src_api_hooks_usemessages",
@@ -3957,18 +4005,6 @@
       "source_location": "L229"
     },
     {
-      "id": "frontend_src_api_hooks_userestoreconversation",
-      "label": "useRestoreConversation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "ChatScreen.tsx",
-      "file_type": "code",
-      "norm_label": "userestoreconversation()",
-      "source_file": "frontend/src/api/hooks.ts",
-      "source_location": "L218"
-    },
-    {
       "id": "frontend_src_screens_chatscreen_chapterrow",
       "label": "ChapterRow()",
       "_callable": true,
@@ -3978,7 +4014,7 @@
       "file_type": "code",
       "norm_label": "chapterrow()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L330"
+      "source_location": "L236"
     },
     {
       "id": "frontend_src_screens_chatscreen_chatscreen",
@@ -3990,7 +4026,7 @@
       "file_type": "code",
       "norm_label": "chatscreen()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L373"
+      "source_location": "L279"
     },
     {
       "id": "frontend_src_screens_chatscreen_chatscreen_handlenewconversation",
@@ -4002,7 +4038,7 @@
       "file_type": "code",
       "norm_label": "handlenewconversation()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L413"
+      "source_location": "L318"
     },
     {
       "id": "frontend_src_screens_chatscreen_chatscreen_handleremoveconversation",
@@ -4014,7 +4050,7 @@
       "file_type": "code",
       "norm_label": "handleremoveconversation()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L422"
+      "source_location": "L327"
     },
     {
       "id": "frontend_src_screens_chatscreen_chatscreen_handlesend",
@@ -4026,7 +4062,7 @@
       "file_type": "code",
       "norm_label": "handlesend()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L439"
+      "source_location": "L344"
     },
     {
       "id": "frontend_src_screens_chatscreen_chatscreen_switchconversation",
@@ -4038,7 +4074,7 @@
       "file_type": "code",
       "norm_label": "switchconversation()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L404"
+      "source_location": "L309"
     },
     {
       "id": "frontend_src_screens_chatscreen_extractcitedranks",
@@ -4062,7 +4098,7 @@
       "file_type": "code",
       "norm_label": "formatfoliodate()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L318"
+      "source_location": "L224"
     },
     {
       "id": "frontend_src_screens_chatscreen_markdownmessage",
@@ -4098,7 +4134,7 @@
       "file_type": "code",
       "norm_label": "passageinspector()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L184"
+      "source_location": "L90"
     },
     {
       "id": "frontend_src_screens_chatscreen_passageinspector_handlecopy",
@@ -4110,67 +4146,7 @@
       "file_type": "code",
       "norm_label": "handlecopy()",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L205"
-    },
-    {
-      "id": "frontend_src_screens_chatscreen_retrievedledger",
-      "label": "RetrievedLedger()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 32,
-      "community_name": "ChatScreen.tsx",
-      "file_type": "code",
-      "norm_label": "retrievedledger()",
-      "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L90"
-    },
-    {
-      "id": "backend_alembic_env_do_run_migrations",
-      "label": "do_run_migrations()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "code",
-      "norm_label": "do_run_migrations()",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L56"
-    },
-    {
-      "id": "backend_alembic_env_run_async_migrations",
-      "label": "run_async_migrations()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "code",
-      "norm_label": "run_async_migrations()",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L63"
-    },
-    {
-      "id": "backend_alembic_env_run_migrations_offline",
-      "label": "run_migrations_offline()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "code",
-      "norm_label": "run_migrations_offline()",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L32"
-    },
-    {
-      "id": "backend_alembic_env_run_migrations_online",
-      "label": "run_migrations_online()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "code",
-      "norm_label": "run_migrations_online()",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L81"
+      "source_location": "L111"
     },
     {
       "id": "backend_tests_conftest_client",
@@ -4725,18 +4701,6 @@
       "source_location": "L42"
     },
     {
-      "id": "backend_app_ingest_chunk_persist_chunks",
-      "label": "persist_chunks()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "persist_chunks()",
-      "source_file": "backend/app/ingest/chunk.py",
-      "source_location": "L88"
-    },
-    {
       "id": "backend_app_ingest_worker_advance",
       "label": "_advance()",
       "_callable": true,
@@ -4939,54 +4903,6 @@
       "norm_label": "fake_run_summarize()",
       "source_file": "backend/tests/ingest/test_backfill_summaries.py",
       "source_location": "L78"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_persistence_make_document_with_sections",
-      "label": "_make_document_with_sections()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "_make_document_with_sections()",
-      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
-      "source_location": "L10"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_persistence_test_chunk_embed_text_prefixes_the_breadcrumb_onto_text",
-      "label": "test_chunk_embed_text_prefixes_the_breadcrumb_onto_text()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "test_chunk_embed_text_prefixes_the_breadcrumb_onto_text()",
-      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
-      "source_location": "L82"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_persistence_test_no_chunk_crosses_its_sections_char_range",
-      "label": "test_no_chunk_crosses_its_sections_char_range()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "test_no_chunk_crosses_its_sections_char_range()",
-      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
-      "source_location": "L71"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_persistence_test_persist_chunks_writes_rows_with_no_embedding_yet",
-      "label": "test_persist_chunks_writes_rows_with_no_embedding_yet()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "test_persist_chunks_writes_rows_with_no_embedding_yet()",
-      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
-      "source_location": "L50"
     },
     {
       "id": "backend_tests_test_documents_test_delete_document_removes_everything",
@@ -5301,16 +5217,16 @@
       "source_location": "L29"
     },
     {
-      "id": "frontend_src_app_app",
-      "label": "App()",
+      "id": "frontend_src_api_client_getproject",
+      "label": "getProject()",
       "_callable": true,
       "_origin": "ast",
       "community": 5,
       "community_name": "types.ts",
       "file_type": "code",
-      "norm_label": "app()",
-      "source_file": "frontend/src/App.tsx",
-      "source_location": "L103"
+      "norm_label": "getproject()",
+      "source_file": "frontend/src/api/client.ts",
+      "source_location": "L127"
     },
     {
       "id": "frontend_src_screens_chatscreen_test_renderwithclient",
@@ -5661,12 +5577,84 @@
       "source_location": "L38"
     },
     {
+      "id": "frontend_src_api_hooks_useproject",
+      "label": "useProject()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "useproject()",
+      "source_file": "frontend/src/api/hooks.ts",
+      "source_location": "L108"
+    },
+    {
+      "id": "frontend_src_app_app",
+      "label": "App()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "app()",
+      "source_file": "frontend/src/App.tsx",
+      "source_location": "L103"
+    },
+    {
+      "id": "frontend_src_app_appcontent",
+      "label": "AppContent()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "appcontent()",
+      "source_file": "frontend/src/App.tsx",
+      "source_location": "L26"
+    },
+    {
+      "id": "frontend_src_app_projectidfornav",
+      "label": "projectIdForNav()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "projectidfornav()",
+      "source_file": "frontend/src/App.tsx",
+      "source_location": "L21"
+    },
+    {
+      "id": "frontend_src_components_shell_navlink",
+      "label": "NavLink()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "navlink()",
+      "source_file": "frontend/src/components/Shell.tsx",
+      "source_location": "L17"
+    },
+    {
+      "id": "frontend_src_components_shell_shell",
+      "label": "Shell()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "shell()",
+      "source_file": "frontend/src/components/Shell.tsx",
+      "source_location": "L47"
+    },
+    {
       "id": "frontend_src_screens_uploadscreen_uploadscreen",
       "label": "UploadScreen()",
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "UploadScreen.tsx",
+      "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "uploadscreen()",
       "source_file": "frontend/src/screens/UploadScreen.tsx",
@@ -5678,7 +5666,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 64,
-      "community_name": "UploadScreen.tsx",
+      "community_name": "App.tsx",
       "file_type": "code",
       "norm_label": "handlefileschange()",
       "source_file": "frontend/src/screens/UploadScreen.tsx",
@@ -8314,44 +8302,11 @@
       "source_location": "L47"
     },
     {
-      "id": "frontend_src_app",
-      "label": "App.tsx",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "app.tsx",
-      "source_file": "frontend/src/App.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "frontend_src_app_queryclient",
-      "label": "queryClient",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "queryclient",
-      "source_file": "frontend/src/App.tsx",
-      "source_location": "L12"
-    },
-    {
-      "id": "frontend_src_components_shell",
-      "label": "Shell.tsx",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "App.tsx",
-      "file_type": "code",
-      "norm_label": "shell.tsx",
-      "source_file": "frontend/src/components/Shell.tsx",
-      "source_location": "L1"
-    },
-    {
       "id": "frontend_src_screens_projectdetailscreen",
       "label": "ProjectDetailScreen.tsx",
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "projectdetailscreen.tsx",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -8362,7 +8317,7 @@
       "label": "IN_PROGRESS_STATUSES",
       "_origin": "ast",
       "community": 11,
-      "community_name": "App.tsx",
+      "community_name": "ProjectDetailScreen",
       "file_type": "code",
       "norm_label": "in_progress_statuses",
       "source_file": "frontend/src/screens/ProjectDetailScreen.tsx",
@@ -10389,17 +10344,6 @@
       "source_location": "L598"
     },
     {
-      "id": "backend_app_core_config",
-      "label": "config.py",
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "test_conversations.py",
-      "file_type": "code",
-      "norm_label": "config.py",
-      "source_file": "backend/app/core/config.py",
-      "source_location": "L1"
-    },
-    {
       "id": "backend_app_ingest_embed",
       "label": "embed.py",
       "_origin": "ast",
@@ -10528,17 +10472,6 @@
       "community_name": "test_conversations.py",
       "file_type": "code",
       "norm_label": "monkeypatch",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "basesettings",
-      "label": "BaseSettings",
-      "_origin": "ast",
-      "community": 14,
-      "community_name": "test_conversations.py",
-      "file_type": "code",
-      "norm_label": "basesettings",
       "source_file": "",
       "source_location": ""
     },
@@ -11245,22 +11178,11 @@
       "source_location": "L447"
     },
     {
-      "id": "backend_app_retrieval_fuse",
-      "label": "fuse.py",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "fuse.py",
-      "source_file": "backend/app/retrieval/fuse.py",
-      "source_location": "L1"
-    },
-    {
       "id": "backend_app_retrieval_pipeline",
       "label": "pipeline.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "pipeline.py",
       "source_file": "backend/app/retrieval/pipeline.py",
@@ -11271,7 +11193,7 @@
       "label": "AsyncSession",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "asyncsession",
       "source_file": "",
@@ -11282,7 +11204,7 @@
       "label": "Candidate",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "candidate",
       "source_file": "",
@@ -11293,7 +11215,7 @@
       "label": "rerank.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "rerank.py",
       "source_file": "backend/app/retrieval/rerank.py",
@@ -11304,7 +11226,7 @@
       "label": "Candidate",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "candidate",
       "source_file": "",
@@ -11315,7 +11237,7 @@
       "label": "search.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "search.py",
       "source_file": "backend/app/retrieval/search.py",
@@ -11326,7 +11248,7 @@
       "label": "AsyncSession",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "asyncsession",
       "source_file": "",
@@ -11337,29 +11259,18 @@
       "label": "AsyncSession",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "asyncsession",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "backend_tests_retrieval_test_fuse",
-      "label": "test_fuse.py",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "code",
-      "norm_label": "test_fuse.py",
-      "source_file": "backend/tests/retrieval/test_fuse.py",
-      "source_location": "L1"
-    },
-    {
       "id": "backend_tests_retrieval_test_pipeline",
       "label": "test_pipeline.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_pipeline.py",
       "source_file": "backend/tests/retrieval/test_pipeline.py",
@@ -11370,7 +11281,7 @@
       "label": "AsyncSession",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "asyncsession",
       "source_file": "",
@@ -11381,7 +11292,7 @@
       "label": "test_rerank.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_rerank.py",
       "source_file": "backend/tests/retrieval/test_rerank.py",
@@ -11392,7 +11303,7 @@
       "label": "AsyncSession",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "asyncsession",
       "source_file": "",
@@ -11403,7 +11314,7 @@
       "label": "test_search.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_search.py",
       "source_file": "backend/tests/retrieval/test_search.py",
@@ -11414,7 +11325,7 @@
       "label": "AsyncSession",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "asyncsession",
       "source_file": "",
@@ -11425,7 +11336,7 @@
       "label": "test_survey.py",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "test_survey.py",
       "source_file": "backend/tests/retrieval/test_survey.py",
@@ -11436,7 +11347,7 @@
       "label": "AsyncSession",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "asyncsession",
       "source_file": "",
@@ -11447,29 +11358,18 @@
       "label": "CrossEncoder",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "code",
       "norm_label": "crossencoder",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "backend_app_retrieval_fuse_rationale_1",
-      "label": "Reciprocal rank fusion \u2014 combines the vector and keyword candidate lists into\u2026",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "test_search.py",
-      "file_type": "rationale",
-      "norm_label": "reciprocal rank fusion \u2014 combines the vector and keyword candidate lists into...",
-      "source_file": "backend/app/retrieval/fuse.py",
-      "source_location": "L1"
-    },
-    {
       "id": "backend_app_retrieval_pipeline_rationale_1",
       "label": "The needle path (docs/plan.md \u00a74.3): vector + keyword candidates, fused by RRF,\u2026",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "rationale",
       "norm_label": "the needle path (docs/plan.md \u00a74.3): vector + keyword candidates, fused by rrf,...",
       "source_file": "backend/app/retrieval/pipeline.py",
@@ -11480,7 +11380,7 @@
       "label": "In-process cross-encoder reranking (docs/plan.md \u00a74.3, \u00a75) \u2014 run via sentence-\u2026",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "rationale",
       "norm_label": "in-process cross-encoder reranking (docs/plan.md \u00a74.3, \u00a75) \u2014 run via sentence-...",
       "source_file": "backend/app/retrieval/rerank.py",
@@ -11491,7 +11391,7 @@
       "label": "Vector and keyword retrieval \u2014 the two candidate sources fused by RRF in\u2026",
       "_origin": "ast",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "file_type": "rationale",
       "norm_label": "vector and keyword retrieval \u2014 the two candidate sources fused by rrf in...",
       "source_file": "backend/app/retrieval/search.py",
@@ -11501,11 +11401,132 @@
       "id": "backend_app_ingest_chunk",
       "label": "ingest/chunk.py",
       "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
       "file_type": "code",
       "norm_label": "ingest/chunk.py",
       "source_file": "backend/app/ingest/chunk.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_app_ingest_chunk_py_asyncsession",
+      "label": "AsyncSession",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "asyncsession",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk",
+      "label": "test_chunk.py",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_chunk.py",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_persistence",
+      "label": "test_chunk_persistence.py",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "test_chunk_persistence.py",
+      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_persistence_py_asyncsession",
+      "label": "AsyncSession",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "code",
+      "norm_label": "asyncsession",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "backend_app_ingest_chunk_rationale_1",
+      "label": "Chunker: splits a section's text into overlapping token windows. A flat token-\u2026",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "rationale",
+      "norm_label": "chunker: splits a section's text into overlapping token windows. a flat token-...",
+      "source_file": "backend/app/ingest/chunk.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_app_ingest_chunk_rationale_49",
+      "label": "Slide a 700-token/100-overlap window over one section's text.\u2026",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "rationale",
+      "norm_label": "slide a 700-token/100-overlap window over one section's text....",
+      "source_file": "backend/app/ingest/chunk.py",
+      "source_location": "L49"
+    },
+    {
+      "id": "backend_app_ingest_chunk_rationale_91",
+      "label": "Chunk every section and write the resulting rows. embedding and\u2026",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "rationale",
+      "norm_label": "chunk every section and write the resulting rows. embedding and...",
+      "source_file": "backend/app/ingest/chunk.py",
+      "source_location": "L91"
+    },
+    {
+      "id": "backend_tests_ingest_test_chunk_rationale_5",
+      "label": "Builds text with exactly `target_tokens` tokens, verified against the real\u2026",
+      "_origin": "ast",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
+      "file_type": "rationale",
+      "norm_label": "builds text with exactly `target_tokens` tokens, verified against the real...",
+      "source_file": "backend/tests/ingest/test_chunk.py",
+      "source_location": "L5"
+    },
+    {
+      "id": "backend_app_retrieval_fuse",
+      "label": "fuse.py",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "fuse.py",
+      "source_file": "backend/app/retrieval/fuse.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_retrieval_test_fuse",
+      "label": "test_fuse.py",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "code",
+      "norm_label": "test_fuse.py",
+      "source_file": "backend/tests/retrieval/test_fuse.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_app_retrieval_fuse_rationale_1",
+      "label": "Reciprocal rank fusion \u2014 combines the vector and keyword candidate lists into\u2026",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "reciprocal_rank_fusion",
+      "file_type": "rationale",
+      "norm_label": "reciprocal rank fusion \u2014 combines the vector and keyword candidate lists into...",
+      "source_file": "backend/app/retrieval/fuse.py",
       "source_location": "L1"
     },
     {
@@ -11553,17 +11574,6 @@
       "source_location": ""
     },
     {
-      "id": "backend_tests_ingest_test_chunk",
-      "label": "test_chunk.py",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "code",
-      "norm_label": "test_chunk.py",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L1"
-    },
-    {
       "id": "backend_tests_ingest_test_summarize",
       "label": "test_summarize.py",
       "_origin": "ast",
@@ -11595,28 +11605,6 @@
       "norm_label": "asyncsession",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "backend_app_ingest_chunk_rationale_1",
-      "label": "Chunker: splits a section's text into overlapping token windows. A flat token-\u2026",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "rationale",
-      "norm_label": "chunker: splits a section's text into overlapping token windows. a flat token-...",
-      "source_file": "backend/app/ingest/chunk.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_app_ingest_chunk_rationale_49",
-      "label": "Slide a 700-token/100-overlap window over one section's text.\u2026",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "rationale",
-      "norm_label": "slide a 700-token/100-overlap window over one section's text....",
-      "source_file": "backend/app/ingest/chunk.py",
-      "source_location": "L49"
     },
     {
       "id": "backend_app_ingest_summarize_rationale_1",
@@ -11663,17 +11651,6 @@
       "source_location": "L80"
     },
     {
-      "id": "backend_tests_ingest_test_chunk_rationale_5",
-      "label": "Builds text with exactly `target_tokens` tokens, verified against the real\u2026",
-      "_origin": "ast",
-      "community": 24,
-      "community_name": "test_summarize.py",
-      "file_type": "rationale",
-      "norm_label": "builds text with exactly `target_tokens` tokens, verified against the real...",
-      "source_file": "backend/tests/ingest/test_chunk.py",
-      "source_location": "L5"
-    },
-    {
       "id": "backend_tests_test_project_documents",
       "label": "test_project_documents.py",
       "_origin": "ast",
@@ -11705,6 +11682,39 @@
       "norm_label": "asyncsession",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "backend_app_retrieval_prompt",
+      "label": "prompt.py",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "code",
+      "norm_label": "prompt.py",
+      "source_file": "backend/app/retrieval/prompt.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_tests_retrieval_test_prompt",
+      "label": "test_prompt.py",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "code",
+      "norm_label": "test_prompt.py",
+      "source_file": "backend/tests/retrieval/test_prompt.py",
+      "source_location": "L1"
+    },
+    {
+      "id": "backend_app_retrieval_prompt_rationale_1",
+      "label": "Assembles the prompt sent to the generator: system instructions, numbered\u2026",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "build_prompt",
+      "file_type": "rationale",
+      "norm_label": "assembles the prompt sent to the generator: system instructions, numbered...",
+      "source_file": "backend/app/retrieval/prompt.py",
+      "source_location": "L1"
     },
     {
       "id": "backend_app_extract_init",
@@ -11749,6 +11759,17 @@
       "norm_label": "pptxtable",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "backend_alembic_env",
+      "label": "env.py",
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "code",
+      "norm_label": "env.py",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L1"
     },
     {
       "id": "backend_app_api_conversations",
@@ -12092,17 +12113,6 @@
       "source_location": "L1"
     },
     {
-      "id": "backend_app_retrieval_prompt",
-      "label": "prompt.py",
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "conversations.py",
-      "file_type": "code",
-      "norm_label": "prompt.py",
-      "source_file": "backend/app/retrieval/prompt.py",
-      "source_location": "L1"
-    },
-    {
       "id": "backend_app_retrieval_survey",
       "label": "survey.py",
       "_origin": "ast",
@@ -12202,15 +12212,15 @@
       "source_location": ""
     },
     {
-      "id": "backend_tests_retrieval_test_prompt",
-      "label": "test_prompt.py",
+      "id": "connection",
+      "label": "Connection",
       "_origin": "ast",
       "community": 29,
       "community_name": "conversations.py",
       "file_type": "code",
-      "norm_label": "test_prompt.py",
-      "source_file": "backend/tests/retrieval/test_prompt.py",
-      "source_location": "L1"
+      "norm_label": "connection",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "declarativebase",
@@ -12246,6 +12256,39 @@
       "source_location": ""
     },
     {
+      "id": "backend_alembic_env_rationale_33",
+      "label": "Run migrations in 'offline' mode. This configures the context with just a URL\u2026",
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "rationale",
+      "norm_label": "run migrations in 'offline' mode. this configures the context with just a url...",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L33"
+    },
+    {
+      "id": "backend_alembic_env_rationale_64",
+      "label": "In this scenario we need to create an Engine and associate a connection with\u2026",
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "rationale",
+      "norm_label": "in this scenario we need to create an engine and associate a connection with...",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L64"
+    },
+    {
+      "id": "backend_alembic_env_rationale_82",
+      "label": "Run migrations in 'online' mode.",
+      "_origin": "ast",
+      "community": 29,
+      "community_name": "conversations.py",
+      "file_type": "rationale",
+      "norm_label": "run migrations in 'online' mode.",
+      "source_file": "backend/alembic/env.py",
+      "source_location": "L82"
+    },
+    {
       "id": "backend_app_api_conversations_rationale_29",
       "label": "A soft-deleted conversation is treated as not-found everywhere except the\u2026",
       "_origin": "ast",
@@ -12277,17 +12320,6 @@
       "norm_label": "exactly one of chunk_id / section_summary_id is set (db check constraint) \u2014 a...",
       "source_file": "backend/app/models/conversation.py",
       "source_location": "L38"
-    },
-    {
-      "id": "backend_app_retrieval_prompt_rationale_1",
-      "label": "Assembles the prompt sent to the generator: system instructions, numbered\u2026",
-      "_origin": "ast",
-      "community": 29,
-      "community_name": "conversations.py",
-      "file_type": "rationale",
-      "norm_label": "assembles the prompt sent to the generator: system instructions, numbered...",
-      "source_file": "backend/app/retrieval/prompt.py",
-      "source_location": "L1"
     },
     {
       "id": "backend_app_retrieval_survey_rationale_1",
@@ -12499,17 +12531,6 @@
       "source_location": "L1"
     },
     {
-      "id": "frontend_src_api_client_test",
-      "label": "client.test.ts",
-      "_origin": "ast",
-      "community": 31,
-      "community_name": "hooks.ts",
-      "file_type": "code",
-      "norm_label": "client.test.ts",
-      "source_file": "frontend/src/api/client.test.ts",
-      "source_location": "L1"
-    },
-    {
       "id": "frontend_src_api_hooks",
       "label": "hooks.ts",
       "_origin": "ast",
@@ -12521,6 +12542,28 @@
       "source_location": "L1"
     },
     {
+      "id": "frontend_src_screens_uploadscreen",
+      "label": "UploadScreen.tsx",
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "hooks.ts",
+      "file_type": "code",
+      "norm_label": "uploadscreen.tsx",
+      "source_file": "frontend/src/screens/UploadScreen.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "frontend_src_screens_uploadscreen_stages",
+      "label": "STAGES",
+      "_origin": "ast",
+      "community": 31,
+      "community_name": "hooks.ts",
+      "file_type": "code",
+      "norm_label": "stages",
+      "source_file": "frontend/src/screens/UploadScreen.tsx",
+      "source_location": "L5"
+    },
+    {
       "id": "frontend_src_screens_chatscreen",
       "label": "ChatScreen.tsx",
       "_origin": "ast",
@@ -12530,61 +12573,6 @@
       "norm_label": "chatscreen.tsx",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
       "source_location": "L1"
-    },
-    {
-      "id": "backend_alembic_env",
-      "label": "env.py",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "code",
-      "norm_label": "env.py",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "connection",
-      "label": "Connection",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "code",
-      "norm_label": "connection",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "backend_alembic_env_rationale_33",
-      "label": "Run migrations in 'offline' mode. This configures the context with just a URL\u2026",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "rationale",
-      "norm_label": "run migrations in 'offline' mode. this configures the context with just a url...",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L33"
-    },
-    {
-      "id": "backend_alembic_env_rationale_64",
-      "label": "In this scenario we need to create an Engine and associate a connection with\u2026",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "rationale",
-      "norm_label": "in this scenario we need to create an engine and associate a connection with...",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L64"
-    },
-    {
-      "id": "backend_alembic_env_rationale_82",
-      "label": "Run migrations in 'online' mode.",
-      "_origin": "ast",
-      "community": 34,
-      "community_name": "env.py",
-      "file_type": "rationale",
-      "norm_label": "run migrations in 'online' mode.",
-      "source_file": "backend/alembic/env.py",
-      "source_location": "L82"
     },
     {
       "id": "backend_tests_conftest",
@@ -13030,6 +13018,17 @@
       "source_location": ""
     },
     {
+      "id": "backend_app_core_config",
+      "label": "config.py",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Document",
+      "file_type": "code",
+      "norm_label": "config.py",
+      "source_file": "backend/app/core/config.py",
+      "source_location": "L1"
+    },
+    {
       "id": "backend_app_db_session",
       "label": "session.py",
       "_origin": "ast",
@@ -13061,17 +13060,6 @@
       "norm_label": "backfill_summaries.py",
       "source_file": "backend/app/ingest/backfill_summaries.py",
       "source_location": "L1"
-    },
-    {
-      "id": "backend_app_ingest_chunk_py_asyncsession",
-      "label": "AsyncSession",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "asyncsession",
-      "source_file": "",
-      "source_location": ""
     },
     {
       "id": "backend_app_ingest_worker",
@@ -13151,28 +13139,6 @@
       "source_location": ""
     },
     {
-      "id": "backend_tests_ingest_test_chunk_persistence",
-      "label": "test_chunk_persistence.py",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "test_chunk_persistence.py",
-      "source_file": "backend/tests/ingest/test_chunk_persistence.py",
-      "source_location": "L1"
-    },
-    {
-      "id": "backend_tests_ingest_test_chunk_persistence_py_asyncsession",
-      "label": "AsyncSession",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "code",
-      "norm_label": "asyncsession",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "backend_tests_test_documents",
       "label": "test_documents.py",
       "_origin": "ast",
@@ -13235,6 +13201,17 @@
       "community_name": "Document",
       "file_type": "code",
       "norm_label": "baseexception",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "basesettings",
+      "label": "BaseSettings",
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "Document",
+      "file_type": "code",
+      "norm_label": "basesettings",
       "source_file": "",
       "source_location": ""
     },
@@ -13303,17 +13280,6 @@
       "norm_label": "backfill command \u2014 generates section summaries for documents that were indexed...",
       "source_file": "backend/app/ingest/backfill_summaries.py",
       "source_location": "L1"
-    },
-    {
-      "id": "backend_app_ingest_chunk_rationale_91",
-      "label": "Chunk every section and write the resulting rows. embedding and\u2026",
-      "_origin": "ast",
-      "community": 4,
-      "community_name": "Document",
-      "file_type": "rationale",
-      "norm_label": "chunk every section and write the resulting rows. embedding and...",
-      "source_file": "backend/app/ingest/chunk.py",
-      "source_location": "L91"
     },
     {
       "id": "backend_app_ingest_worker_rationale_1",
@@ -13560,6 +13526,17 @@
       "source_location": "L3"
     },
     {
+      "id": "frontend_src_api_client_test",
+      "label": "client.test.ts",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "types.ts",
+      "file_type": "code",
+      "norm_label": "client.test.ts",
+      "source_file": "frontend/src/api/client.test.ts",
+      "source_location": "L1"
+    },
+    {
       "id": "frontend_src_api_types",
       "label": "types.ts",
       "_origin": "ast",
@@ -13568,28 +13545,6 @@
       "file_type": "code",
       "norm_label": "types.ts",
       "source_file": "frontend/src/api/types.ts",
-      "source_location": "L1"
-    },
-    {
-      "id": "frontend_src_app_test",
-      "label": "App.test.tsx",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "app.test.tsx",
-      "source_file": "frontend/src/App.test.tsx",
-      "source_location": "L1"
-    },
-    {
-      "id": "frontend_src_main",
-      "label": "main.tsx",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "types.ts",
-      "file_type": "code",
-      "norm_label": "main.tsx",
-      "source_file": "frontend/src/main.tsx",
       "source_location": "L1"
     },
     {
@@ -13767,17 +13722,6 @@
       "norm_label": "uploadresponse",
       "source_file": "frontend/src/screens/UploadScreen.test.tsx",
       "source_location": "L24"
-    },
-    {
-      "id": "ref_react",
-      "label": "react",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "types.ts",
-      "file_type": "concept",
-      "norm_label": "react",
-      "source_file": "frontend/package.json",
-      "source_location": "L15"
     },
     {
       "id": "ref_tanstack_react_query",
@@ -13978,26 +13922,70 @@
       "version": "0.1.0"
     },
     {
-      "id": "frontend_src_screens_uploadscreen",
-      "label": "UploadScreen.tsx",
+      "id": "frontend_src_app",
+      "label": "App.tsx",
       "_origin": "ast",
       "community": 64,
-      "community_name": "UploadScreen.tsx",
+      "community_name": "App.tsx",
       "file_type": "code",
-      "norm_label": "uploadscreen.tsx",
-      "source_file": "frontend/src/screens/UploadScreen.tsx",
+      "norm_label": "app.tsx",
+      "source_file": "frontend/src/App.tsx",
       "source_location": "L1"
     },
     {
-      "id": "frontend_src_screens_uploadscreen_stages",
-      "label": "STAGES",
+      "id": "frontend_src_app_queryclient",
+      "label": "queryClient",
       "_origin": "ast",
       "community": 64,
-      "community_name": "UploadScreen.tsx",
+      "community_name": "App.tsx",
       "file_type": "code",
-      "norm_label": "stages",
-      "source_file": "frontend/src/screens/UploadScreen.tsx",
-      "source_location": "L5"
+      "norm_label": "queryclient",
+      "source_file": "frontend/src/App.tsx",
+      "source_location": "L12"
+    },
+    {
+      "id": "frontend_src_app_test",
+      "label": "App.test.tsx",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "app.test.tsx",
+      "source_file": "frontend/src/App.test.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "frontend_src_components_shell",
+      "label": "Shell.tsx",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "shell.tsx",
+      "source_file": "frontend/src/components/Shell.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "frontend_src_main",
+      "label": "main.tsx",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "code",
+      "norm_label": "main.tsx",
+      "source_file": "frontend/src/main.tsx",
+      "source_location": "L1"
+    },
+    {
+      "id": "ref_react",
+      "label": "react",
+      "_origin": "ast",
+      "community": 64,
+      "community_name": "App.tsx",
+      "file_type": "concept",
+      "norm_label": "react",
+      "source_file": "frontend/package.json",
+      "source_location": "L15"
     },
     {
       "id": "claude_skills_impeccable_reference_bolder",
@@ -19956,30 +19944,6 @@
       "type": "external"
     },
     {
-      "id": "functools",
-      "label": "functools",
-      "_origin": "semantic",
-      "community": 14,
-      "community_name": "test_conversations.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "functools",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "pydantic_settings",
-      "label": "pydantic_settings",
-      "_origin": "semantic",
-      "community": 14,
-      "community_name": "test_conversations.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "pydantic_settings",
-      "source_file": "",
-      "type": "external"
-    },
-    {
       "id": "uuid",
       "label": "uuid",
       "_origin": "semantic",
@@ -19996,7 +19960,7 @@
       "label": "pytest",
       "_origin": "semantic",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "external": true,
       "file_type": "concept",
       "norm_label": "pytest",
@@ -20008,7 +19972,7 @@
       "label": "sentence_transformers",
       "_origin": "semantic",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "external": true,
       "file_type": "concept",
       "norm_label": "sentence_transformers",
@@ -20020,7 +19984,7 @@
       "label": "sqlalchemy_ext_asyncio",
       "_origin": "semantic",
       "community": 2,
-      "community_name": "test_search.py",
+      "community_name": "Section",
       "external": true,
       "file_type": "concept",
       "norm_label": "sqlalchemy_ext_asyncio",
@@ -20031,8 +19995,8 @@
       "id": "dataclasses",
       "label": "dataclasses",
       "_origin": "semantic",
-      "community": 24,
-      "community_name": "test_summarize.py",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
       "external": true,
       "file_type": "concept",
       "norm_label": "dataclasses",
@@ -20043,8 +20007,8 @@
       "id": "tokenizers",
       "label": "tokenizers",
       "_origin": "semantic",
-      "community": 24,
-      "community_name": "test_summarize.py",
+      "community": 20,
+      "community_name": "ingest/chunk.py",
       "external": true,
       "file_type": "concept",
       "norm_label": "tokenizers",
@@ -20136,6 +20100,18 @@
       "type": "external"
     },
     {
+      "id": "logging_config",
+      "label": "logging_config",
+      "_origin": "semantic",
+      "community": 29,
+      "community_name": "conversations.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "logging_config",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "pgvector_sqlalchemy",
       "label": "pgvector_sqlalchemy",
       "_origin": "semantic",
@@ -20184,6 +20160,18 @@
       "type": "external"
     },
     {
+      "id": "sqlalchemy_engine",
+      "label": "sqlalchemy_engine",
+      "_origin": "semantic",
+      "community": 29,
+      "community_name": "conversations.py",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "sqlalchemy_engine",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "sqlalchemy_orm",
       "label": "sqlalchemy_orm",
       "_origin": "semantic",
@@ -20192,42 +20180,6 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "sqlalchemy_orm",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "asyncio",
-      "label": "asyncio",
-      "_origin": "semantic",
-      "community": 34,
-      "community_name": "env.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "asyncio",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "logging_config",
-      "label": "logging_config",
-      "_origin": "semantic",
-      "community": 34,
-      "community_name": "env.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "logging_config",
-      "source_file": "",
-      "type": "external"
-    },
-    {
-      "id": "sqlalchemy_engine",
-      "label": "sqlalchemy_engine",
-      "_origin": "semantic",
-      "community": 34,
-      "community_name": "env.py",
-      "external": true,
-      "file_type": "concept",
-      "norm_label": "sqlalchemy_engine",
       "source_file": "",
       "type": "external"
     },
@@ -20316,6 +20268,18 @@
       "type": "external"
     },
     {
+      "id": "asyncio",
+      "label": "asyncio",
+      "_origin": "semantic",
+      "community": 4,
+      "community_name": "Document",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "asyncio",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "collections_abc",
       "label": "collections_abc",
       "_origin": "semantic",
@@ -20328,6 +20292,18 @@
       "type": "external"
     },
     {
+      "id": "functools",
+      "label": "functools",
+      "_origin": "semantic",
+      "community": 4,
+      "community_name": "Document",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "functools",
+      "source_file": "",
+      "type": "external"
+    },
+    {
       "id": "logging",
       "label": "logging",
       "_origin": "semantic",
@@ -20336,6 +20312,18 @@
       "external": true,
       "file_type": "concept",
       "norm_label": "logging",
+      "source_file": "",
+      "type": "external"
+    },
+    {
+      "id": "pydantic_settings",
+      "label": "pydantic_settings",
+      "_origin": "semantic",
+      "community": 4,
+      "community_name": "Document",
+      "external": true,
+      "file_type": "concept",
+      "norm_label": "pydantic_settings",
       "source_file": "",
       "type": "external"
     },
@@ -20367,8 +20355,8 @@
       "id": "frontend_src_index",
       "label": "frontend_src_index",
       "_origin": "semantic",
-      "community": 5,
-      "community_name": "types.ts",
+      "community": 64,
+      "community_name": "App.tsx",
       "external": true,
       "file_type": "concept",
       "norm_label": "frontend_src_index",
@@ -27021,7 +27009,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L331",
+      "source_location": "L237",
       "weight": 1.0
     },
     {
@@ -27033,7 +27021,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L347",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -27045,7 +27033,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L374",
+      "source_location": "L280",
       "weight": 1.0
     },
     {
@@ -27057,7 +27045,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L375",
+      "source_location": "L281",
       "weight": 1.0
     },
     {
@@ -27069,7 +27057,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L376",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -27081,7 +27069,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L377",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -27093,7 +27081,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L378",
+      "source_location": "L284",
       "weight": 1.0
     },
     {
@@ -27105,7 +27093,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L379",
+      "source_location": "L285",
       "weight": 1.0
     },
     {
@@ -27117,7 +27105,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L380",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -27129,7 +27117,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L389",
+      "source_location": "L295",
       "weight": 1.0
     },
     {
@@ -27141,7 +27129,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L462",
+      "source_location": "L367",
       "weight": 1.0
     },
     {
@@ -27153,7 +27141,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L506",
+      "source_location": "L411",
       "weight": 1.0
     },
     {
@@ -27165,7 +27153,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L416",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -27177,7 +27165,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L462",
+      "source_location": "L367",
       "weight": 1.0
     },
     {
@@ -27453,7 +27441,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L404",
+      "source_location": "L309",
       "weight": 1.0
     },
     {
@@ -27465,7 +27453,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L422",
+      "source_location": "L327",
       "weight": 1.0
     },
     {
@@ -27477,7 +27465,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L439",
+      "source_location": "L344",
       "weight": 1.0
     },
     {
@@ -28089,7 +28077,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L323",
+      "source_location": "L229",
       "weight": 1.0
     },
     {
@@ -32511,18 +32499,6 @@
     {
       "source": "frontend_src_screens_chatscreen",
       "target": "frontend_src_api_types_chatmode",
-      "relation": "imports",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "import",
-      "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L17",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_screens_chatscreen",
-      "target": "frontend_src_api_types_citationread",
       "relation": "imports",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -52148,17 +52124,6 @@
     },
     {
       "source": "frontend_src_screens_chatscreen",
-      "target": "frontend_src_screens_chatscreen_passageinspector",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L184",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_screens_chatscreen",
       "target": "frontend_src_screens_chatscreen_chatscreenprops",
       "relation": "contains",
       "_origin": "ast",
@@ -52166,6 +52131,39 @@
       "confidence_score": 1.0,
       "source_file": "frontend/src/screens/ChatScreen.tsx",
       "source_location": "L19",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_screens_chatscreen",
+      "target": "frontend_src_screens_chatscreen_formatfoliodate",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/screens/ChatScreen.tsx",
+      "source_location": "L224",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_screens_chatscreen",
+      "target": "frontend_src_screens_chatscreen_chapterrowprops",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/screens/ChatScreen.tsx",
+      "source_location": "L228",
+      "weight": 1.0
+    },
+    {
+      "source": "frontend_src_screens_chatscreen",
+      "target": "frontend_src_screens_chatscreen_chapterrow",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "frontend/src/screens/ChatScreen.tsx",
+      "source_location": "L236",
       "weight": 1.0
     },
     {
@@ -52181,46 +52179,13 @@
     },
     {
       "source": "frontend_src_screens_chatscreen",
-      "target": "frontend_src_screens_chatscreen_formatfoliodate",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L318",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_screens_chatscreen",
-      "target": "frontend_src_screens_chatscreen_chapterrowprops",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L322",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_screens_chatscreen",
-      "target": "frontend_src_screens_chatscreen_chapterrow",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L330",
-      "weight": 1.0
-    },
-    {
-      "source": "frontend_src_screens_chatscreen",
       "target": "frontend_src_screens_chatscreen_chatscreen",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L373",
+      "source_location": "L279",
       "weight": 1.0
     },
     {
@@ -52247,7 +52212,7 @@
     },
     {
       "source": "frontend_src_screens_chatscreen",
-      "target": "frontend_src_screens_chatscreen_retrievedledger",
+      "target": "frontend_src_screens_chatscreen_passageinspector",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -52264,7 +52229,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L413",
+      "source_location": "L318",
       "weight": 1.0
     },
     {
@@ -52286,7 +52251,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "frontend/src/screens/ChatScreen.tsx",
-      "source_location": "L205",
+      "source_location": "L111",
       "weight": 1.0
     },
     {
@@ -59276,5 +59241,5 @@
       "source_file": "backend/tests/extract/fixtures/scanned.pdf"
     }
   ],
-  "built_at_commit": "028aa3ec0191ae2f613b4b4b0c2dfda22769f6f3"
+  "built_at_commit": "0a007c20e09db6c496d38c9946c62f9aa8f3aa29"
 }
