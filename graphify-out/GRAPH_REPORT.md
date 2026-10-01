@@ -1,40 +1,40 @@
 # Graph Report - local-rag-pipeline  (2026-10-01)
 
 ## Corpus Check
-- 180 files · ~134,298 words
+- 181 files · ~135,569 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 16 file(s) not represented in the graph (top: (none) 7, .pptx 4, .ini 1)
 
 ## Summary
-- 1661 nodes · 3334 edges · 120 communities (102 shown, 18 thin omitted)
+- 1664 nodes · 3341 edges · 121 communities (102 shown, 19 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 253 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3ba6f331`
+- Built from commit: `8f88bee2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- conftest.py
+- httpx
 - Phase 4 eval — hybrid + cross-encoder reranking (full Phase 4 pipeline)
-- Section
+- test_search.py
 - package.json
-- DocFormat
-- client.ts
+- Document
+- types.ts
 - test_structure.py
 - test_pdf.py
 - compilerOptions
 - pdf.py
 - models/document.py
-- LtreeType
+- ProjectDetailScreen
 - Block
 - extract
 - test_conversations.py
 - App.tsx
 - compilerOptions
 - test_text.py
-- Document
+- worker.py
 - Phase 4 eval — hybrid (vector + keyword RRF), no reranking
 - documents.py
 - DocStatus
@@ -50,11 +50,11 @@
 - hooks.ts
 - ChatScreen.tsx
 - db service (pgvector/pgvector:pg16)
-- run_async_migrations
-- embed.py
+- env.py
+- conftest.py
 - ingest/chunk.py
 - Lookup/Survey routing toggle
-- jobs.py
+- stream_generate
 - test_documents.py
 - .oxlintrc.json
 - scripts
@@ -69,19 +69,20 @@
 - Vite Build Tool Logo
 - setup-env.sh
 - rag-backend
-- reciprocal_rank_fusion
+- test_projects.py
 - UploadScreen.tsx
-- build_prompt
+- test_jobs.py
 - bolder.md
 - /impeccable hooks
 - Impeccable Documenter
+- vite.config.ts
+- @testing-library/jest-dom
 - structure.py
 - Responsive Design
 - onboard.md
 - new-work.md
 - SKILL.md
 - The Toolkit
-- projects.py
 - animate.md
 - live.md
 - Handle `generate`
@@ -146,10 +147,10 @@
   .impeccable/surfaces/frontend-src-screens-chatscreen-tsx.md → frontend/src/screens/ProjectDetailScreen.tsx
 - `10. What is the two-phase commit protocol?` --references--> `commit()`  [INFERRED]
   evals/hybrid-no-rerank.md → frontend/src/screens/ReviewScreen.tsx
-- `Scope and visitor mode` --references--> `ReviewScreen()`  [INFERRED]
-  .impeccable/surfaces/frontend-src-screens-chatscreen-tsx.md → frontend/src/screens/ReviewScreen.tsx
 - `Scope and visitor mode` --references--> `UploadScreen()`  [INFERRED]
   .impeccable/surfaces/frontend-src-screens-chatscreen-tsx.md → frontend/src/screens/UploadScreen.tsx
+- `Direction contract` --references--> `Shell()`  [INFERRED]
+  .impeccable/surfaces/frontend-src-screens-chatscreen-tsx.md → frontend/src/components/Shell.tsx
 
 ## Import Cycles
 - None detected.
@@ -163,31 +164,31 @@
 - **PDF heading detection fallback chain (outline -> heuristic -> root)** — backend_tests_extract_fixtures_outline, backend_tests_extract_fixtures_no_outline_with_heuristic, backend_tests_extract_fixtures_no_outline_no_heuristic, section_heading_detection [INFERRED 0.85]
 - **PDF rejection/error edge cases** — backend_tests_extract_fixtures_corrupted, backend_tests_extract_fixtures_scanned, backend_tests_extract_fixtures_mostly_text_one_scanned_page [INFERRED 0.85]
 
-## Communities (120 total, 18 thin omitted)
+## Communities (121 total, 19 thin omitted)
 
-### Community 0 - "conftest.py"
-Cohesion: 0.05
-Nodes (51): alembic_config, asyncpg, _build_rewrite_prompt(), GenerationError, AsyncClient, Exception, Streaming client for Ollama's generate endpoint (the `rag-gen` model — qwen3:8b…, Raised when Ollama's generate endpoint fails or returns something unexpected. (+43 more)
+### Community 0 - "httpx"
+Cohesion: 0.18
+Nodes (15): _build_rewrite_prompt(), AsyncClient, Streaming client for Ollama's generate endpoint (the `rag-gen` model — qwen3:8b…, Turns a context-dependent follow-up ("what about the second one?") into a…, rewrite_query(), _client(), AsyncClient, test_falls_back_to_original_question_on_failure_response() (+7 more)
 
 ### Community 1 - "Phase 4 eval — hybrid + cross-encoder reranking (full Phase 4 pipeline)"
 Cohesion: 0.06
 Nodes (32): 10. What is the two-phase commit protocol?, 11. What is linearizability?, 12. What is the difference between REST and RPC?, 13. What is a message broker used for?, 14. What is the actor model in the context of distributed systems?, 15. What is data partitioning (sharding)?, 16. How does consistent hashing help with partitioning?, 17. What is a secondary index and why is it harder to maintain in a partitioned database? (+24 more)
 
-### Community 2 - "Section"
-Cohesion: 0.11
-Nodes (55): Chunk, ProjectDocument, Section, SectionSummary, AsyncSession, Candidate, The needle path (docs/plan.md §4.3): vector + keyword candidates, fused by RRF,…, retrieve() (+47 more)
+### Community 2 - "test_search.py"
+Cohesion: 0.08
+Nodes (63): asyncio, Chunk, ProjectDocument, SectionSummary, Reciprocal rank fusion — combines the vector and keyword candidate lists into…, reciprocal_rank_fusion(), AsyncSession, Candidate (+55 more)
 
 ### Community 3 - "package.json"
-Cohesion: 0.10
-Nodes (18): name, private, type, version, jsdom, oxlint, react-markdown, rehype-raw (+10 more)
+Cohesion: 0.12
+Nodes (16): name, private, type, version, jsdom, oxlint, react-dom, react-markdown (+8 more)
 
-### Community 4 - "DocFormat"
-Cohesion: 0.21
-Nodes (18): _claim_next_job(), Claim and advance one job by one stage. Returns True if work was done., run_worker_iteration(), DocFormat, IngestJob, JobStage, str, _ollama_is_running() (+10 more)
+### Community 4 - "Document"
+Cohesion: 0.15
+Nodes (31): Redoes the whole ingest pipeline from the file already on disk — no re-upload…, reindex_document(), persist_section_summary(), AsyncSession, Upsert — section_id is unique, so re-running this (e.g. the backfill command)…, _advance(), _claim_next_job(), AsyncSession (+23 more)
 
-### Community 5 - "client.ts"
+### Community 5 - "types.ts"
 Cohesion: 0.09
-Nodes (29): SendMessageCallbacks, ChatMode, CitationRead, ConversationRead, DocFormat, DocStatus, DocumentRead, DocumentUploadResponse (+21 more)
+Nodes (23): SendMessageCallbacks, ChatMode, CitationRead, DocFormat, DocStatus, DocumentUploadResponse, JobRead, MessageRead (+15 more)
 
 ### Community 6 - "test_structure.py"
 Cohesion: 0.24
@@ -206,12 +207,12 @@ Cohesion: 0.13
 Nodes (21): Exception, Raised when a document has near-zero extractable text — e.g. a scanned PDF with…, ScannedDocumentError, _blocks_from_font_heuristic(), _blocks_from_outline(), _clean_row(), _guard_not_scanned(), _page_blocks() (+13 more)
 
 ### Community 10 - "models/document.py"
-Cohesion: 0.24
-Nodes (13): Run migrations in 'offline' mode. This configures the context with just a URL…, run_migrations_offline(), Base, Message, datetime, DeclarativeBase, enum, logging_config (+5 more)
+Cohesion: 0.37
+Nodes (8): Base, datetime, DeclarativeBase, enum, pgvector_sqlalchemy, sqlalchemy, sqlalchemy_dialects_postgresql, sqlalchemy_orm
 
-### Community 11 - "LtreeType"
-Cohesion: 0.33
-Nodes (4): LtreeType, Any, Maps to Postgres LTREE. Stored and returned as plain str paths., sqlalchemy_types
+### Community 11 - "ProjectDetailScreen"
+Cohesion: 0.12
+Nodes (11): getProject(), useAllDocuments(), useProject(), DocumentRead, IN_PROGRESS_STATUSES, ProjectDetailScreen(), ProjectDetailScreenProps, summaryStatusText() (+3 more)
 
 ### Community 12 - "Block"
 Cohesion: 0.11
@@ -227,7 +228,7 @@ Nodes (47): embed_batch(), EmbeddingError, AsyncClient, Exception, Raised when O
 
 ### Community 15 - "App.tsx"
 Cohesion: 0.11
-Nodes (19): createProject(), listProjects(), useCreateProject(), useProjects(), App(), queryClient, View, Shell() (+11 more)
+Nodes (20): useCreateProject(), useProjects(), useSections(), useUpdateSectionTitle(), App(), queryClient, View, Shell() (+12 more)
 
 ### Community 16 - "compilerOptions"
 Cohesion: 0.12
@@ -237,9 +238,9 @@ Nodes (16): compilerOptions, allowImportingTsExtensions, erasableSyntaxOnly, lib
 Cohesion: 0.10
 Nodes (29): extract(), Path, Corrupted PDF fixture (not a real PDF; expects extraction error), Empty text fixture (no content; expects []), PDF with repeated header/footer ('My Book Title'/'Confidential Draft') to strip, Markdown headings fixture (H1/H2/H3 hierarchy), Markdown list fixture (heading + bullet list), Mostly-text PDF with one scanned page (should pass char-count check) (+21 more)
 
-### Community 18 - "Document"
+### Community 18 - "worker.py"
 Cohesion: 0.16
-Nodes (21): argparse, asyncio, get_settings(), Settings, get_db(), AsyncSession, main(), Backfill command — generates section summaries for documents that were indexed… (+13 more)
+Nodes (18): get_settings(), Settings, get_db(), AsyncSession, get_or_create_embedding_run(), AsyncSession, Async client for Ollama's embed endpoint. Calls Ollama over HTTP rather than…, One row per (model, dimension). Swapping embedders is a deliberate, manual re-… (+10 more)
 
 ### Community 19 - "Phase 4 eval — hybrid (vector + keyword RRF), no reranking"
 Cohesion: 0.06
@@ -250,8 +251,8 @@ Cohesion: 0.14
 Nodes (22): aiofiles, delete_document(), _format_from_filename(), get_document(), _link_to_project(), list_documents(), DbSession, delete (+14 more)
 
 ### Community 21 - "DocStatus"
-Cohesion: 0.20
-Nodes (14): backfill(), DocStatus, str, _make_document(), _NoCloseSessionContext, AsyncSession, MonkeyPatch, Wraps the test's own db_session so backfill()'s `async with… (+6 more)
+Cohesion: 0.16
+Nodes (17): argparse, backfill(), main(), Backfill command — generates section summaries for documents that were indexed…, DocStatus, _make_document(), _NoCloseSessionContext, AsyncSession (+9 more)
 
 ### Community 22 - "Phase 3 Baseline Evals (vector-only)"
 Cohesion: 0.20
@@ -262,8 +263,8 @@ Cohesion: 0.20
 Nodes (15): Local RAG Pipeline System Architecture Diagram, Backend API, Browser, Embedder (text to vector, ingest only), Frontend (SPA), Generator (writes answers, query only), Extraction -> Structuring -> Chunking -> Embedding, Ingest Worker (+7 more)
 
 ### Community 24 - "test_summarize.py"
-Cohesion: 0.13
-Nodes (25): needs_summary(), persist_section_summary(), AsyncClient, AsyncSession, Exception, Section summarisation for the survey path (docs/plan.md §2.5, §4.4, §8). Calls…, Raised when Ollama's generate endpoint fails or returns something unexpected…, Below the threshold a section is only a chunk or two, already close to being… (+17 more)
+Cohesion: 0.10
+Nodes (34): chunk_section(), Slide a 700-token/100-overlap window over one section's text.…, tokenizer(), needs_summary(), AsyncClient, Exception, Section summarisation for the survey path (docs/plan.md §2.5, §4.4, §8). Calls…, Raised when Ollama's generate endpoint fails or returns something unexpected… (+26 more)
 
 ### Community 25 - "test_project_documents.py"
 Cohesion: 0.37
@@ -282,44 +283,44 @@ Cohesion: 0.23
 Nodes (11): extract(), Path, _table_to_markdown(), test_anchor_is_sequential_block_index(), test_blank_slide_produces_no_blocks(), test_reading_order_is_slide_order_title_then_body(), test_slide_body_becomes_paragraphs(), test_slide_titles_become_headings() (+3 more)
 
 ### Community 29 - "conversations.py"
-Cohesion: 0.16
-Nodes (27): create_conversation(), delete_conversation(), _get_active_conversation(), list_conversations(), list_deleted_conversations(), list_messages(), _load_citations(), DbSession (+19 more)
+Cohesion: 0.06
+Nodes (64): create_conversation(), delete_conversation(), _get_active_conversation(), list_conversations(), list_deleted_conversations(), list_messages(), _load_citations(), DbSession (+56 more)
 
 ### Community 30 - "chunks table"
 Cohesion: 0.15
 Nodes (18): Invariant: chunks never cross a section boundary, Invariant: embed_text embedded, text displayed/keyword-searched, Vector(1024) columns; embedder change = migration + re-index, Phase 2 — index, Phase 4 — retrieval quality, Phase 6 — polish, Architecture (UI / API / Ingest worker / Query engine / Postgres), bge-reranker-base cross-encoder (in-process) (+10 more)
 
 ### Community 31 - "hooks.ts"
-Cohesion: 0.09
-Nodes (40): attachDocumentToProject(), createConversation(), deleteConversation(), deleteDocument(), detachDocumentFromProject(), getProject(), getSections(), listAllDocuments() (+32 more)
+Cohesion: 0.14
+Nodes (33): attachDocumentToProject(), createConversation(), createProject(), deleteConversation(), deleteDocument(), detachDocumentFromProject(), errorMessageFromResponse(), getJob() (+25 more)
 
 ### Community 32 - "ChatScreen.tsx"
 Cohesion: 0.18
-Nodes (15): listMessages(), sendMessage(), useMessages(), ChapterRow(), ChatScreen(), handleNewConversation(), handleSend(), switchConversation() (+7 more)
+Nodes (17): sendMessage(), useMessages(), useProjectDocuments(), useRestoreConversation(), ConversationRead, ChapterRow(), ChapterRowProps, ChatScreen() (+9 more)
 
 ### Community 33 - "db service (pgvector/pgvector:pg16)"
 Cohesion: 0.18
 Nodes (11): just commands (dev, test, db-up, migrate, check-models), Tests use real Postgres, no DB mocks, No Redis/Celery/message queue; plain asyncio worker, db service (pgvector/pgvector:pg16), init-extensions.sql initdb mount, pgdata volume, Phase 0 — skeleton, documents table (+3 more)
 
-### Community 34 - "run_async_migrations"
-Cohesion: 0.33
-Nodes (6): do_run_migrations(), In this scenario we need to create an Engine and associate a connection with…, Run migrations in 'online' mode., run_async_migrations(), run_migrations_online(), Connection
+### Community 34 - "env.py"
+Cohesion: 0.22
+Nodes (10): do_run_migrations(), Run migrations in 'offline' mode. This configures the context with just a URL…, In this scenario we need to create an Engine and associate a connection with…, Run migrations in 'online' mode., run_async_migrations(), run_migrations_offline(), run_migrations_online(), Connection (+2 more)
 
-### Community 35 - "embed.py"
-Cohesion: 0.35
-Nodes (9): get_or_create_embedding_run(), AsyncSession, Async client for Ollama's embed endpoint. Calls Ollama over HTTP rather than…, One row per (model, dimension). Swapping embedders is a deliberate, manual re-…, EmbeddingRun, AsyncSession, test_different_model_creates_a_separate_run(), test_first_call_creates_a_new_current_run() (+1 more)
+### Community 35 - "conftest.py"
+Cohesion: 0.14
+Nodes (14): alembic_config, asyncpg, client(), db_session(), _fresh_test_database(), AsyncClient, AsyncSession, Test fixtures. Runs against a real Postgres (the docker-compose `db` service) —… (+6 more)
 
 ### Community 36 - "ingest/chunk.py"
-Cohesion: 0.15
-Nodes (25): chunk_section(), ChunkDraft, persist_chunks(), AsyncSession, Chunker: splits a section's text into overlapping token windows. A flat token-…, Slide a 700-token/100-overlap window over one section's text.…, Chunk every section and write the resulting rows. embedding and…, tokenizer() (+17 more)
+Cohesion: 0.23
+Nodes (13): ChunkDraft, persist_chunks(), AsyncSession, Chunker: splits a section's text into overlapping token windows. A flat token-…, Chunk every section and write the resulting rows. embedding and…, _make_document_with_sections(), AsyncSession, test_chunk_embed_text_prefixes_the_breadcrumb_onto_text() (+5 more)
 
 ### Community 37 - "Lookup/Survey routing toggle"
 Cohesion: 0.47
 Nodes (6): Phase 5 — survey path, Multi-document survey: single pass, no reduce step, Lookup/Survey routing toggle, section_summaries table, Summary threshold 1500 tokens, ~200-token target, Survey path (search section summaries)
 
-### Community 38 - "jobs.py"
-Cohesion: 0.16
-Nodes (10): get_job(), DbSession, get, health(), get, JobRead, BaseModel, fastapi (+2 more)
+### Community 38 - "stream_generate"
+Cohesion: 0.27
+Nodes (11): GenerationError, Exception, Raised when Ollama's generate endpoint fails or returns something unexpected., stream_generate(), _client(), AsyncClient, test_real_ollama_generate_streams_tokens(), test_stream_generate_raises_clear_error_on_failure_response() (+3 more)
 
 ### Community 39 - "test_documents.py"
 Cohesion: 0.21
@@ -345,17 +346,17 @@ Nodes (3): Frontend stack (React+TS+Vite, shadcn/ui, TanStack Query, SSE), front
 Cohesion: 0.67
 Nodes (3): Documentation Icon, Social Media Icons Collection, Social Media and Documentation Icon Sprite
 
-### Community 63 - "reciprocal_rank_fusion"
-Cohesion: 0.33
-Nodes (9): Reciprocal rank fusion — combines the vector and keyword candidate lists into…, reciprocal_rank_fusion(), test_a_chunk_in_both_lists_outranks_one_in_only_one_list(), test_both_lists_empty_returns_empty(), test_chunk_only_in_keyword_list_is_still_included(), test_chunk_only_in_vector_list_is_still_included(), test_final_order_is_by_descending_fused_score(), test_output_truncated_to_top_k() (+1 more)
+### Community 63 - "test_projects.py"
+Cohesion: 0.39
+Nodes (8): AsyncClient, test_create_and_get_project(), test_delete_project(), test_get_project_not_found(), test_list_projects_includes_created(), test_rename_project(), test_rename_project_404s_for_unknown_project(), test_rename_project_rejects_an_empty_name()
 
 ### Community 64 - "UploadScreen.tsx"
-Cohesion: 0.28
-Nodes (7): getJob(), uploadDocument(), useJob(), useUploadDocument(), STAGES, UploadScreen(), UploadScreenProps
+Cohesion: 0.38
+Nodes (5): useJob(), useUploadDocument(), STAGES, UploadScreen(), UploadScreenProps
 
-### Community 65 - "build_prompt"
-Cohesion: 0.43
-Nodes (6): build_prompt(), Assembles the prompt sent to the generator: system instructions, numbered…, test_history_appears_in_order(), test_no_history_does_not_crash_or_leave_stray_markers(), test_question_is_the_final_user_turn_followed_by_assistant_cue(), test_sources_appear_verbatim_and_numbered_from_one()
+### Community 65 - "test_jobs.py"
+Cohesion: 0.67
+Nodes (3): AsyncClient, test_get_job_after_upload(), test_get_job_not_found()
 
 ### Community 66 - "bolder.md"
 Cohesion: 0.33
@@ -369,9 +370,13 @@ Nodes (6): Constraints, Failure modes, Flow, /impeccable hooks, Routing, Triage 
 Cohesion: 0.40
 Nodes (4): Impeccable Documenter, Input Contract, Output Contract, Workflow
 
+### Community 69 - "vite.config.ts"
+Cohesion: 0.50
+Nodes (3): @tailwindcss/vite, vite, @vitejs/plugin-react
+
 ### Community 71 - "structure.py"
-Cohesion: 0.07
-Nodes (42): list_sections(), DbSession, get, patch, _to_read_model(), update_section(), estimate_chunks(), find_uncovered_ranges() (+34 more)
+Cohesion: 0.06
+Nodes (46): list_sections(), DbSession, get, patch, _to_read_model(), update_section(), LtreeType, Any (+38 more)
 
 ### Community 72 - "Responsive Design"
 Cohesion: 0.08
@@ -392,10 +397,6 @@ Nodes (10): Craft floor, Refuse, Verify, Command guidance, No-argument routing: 
 ### Community 78 - "The Toolkit"
 Cohesion: 0.10
 Nodes (20): Animate complex properties, Assess What "Extraordinary" Means Here, For data-heavy interfaces, For functional UI, For performance-critical UI, For visual/marketing surfaces, Implement with Discipline, Interact with the device (+12 more)
-
-### Community 80 - "projects.py"
-Cohesion: 0.20
-Nodes (20): attach_document(), create_project(), delete_project(), detach_document(), get_project(), list_project_documents(), list_projects(), DbSession (+12 more)
 
 ### Community 84 - "animate.md"
 Cohesion: 0.12
@@ -581,8 +582,8 @@ Nodes (4): Heuristics Scoring Guide, Issue Severity (P0–P3), Reference Materia
 
 ## Knowledge Gaps
 - **599 isolated node(s):** `rag-backend`, `$schema`, `plugins`, `react/rules-of-hooks`, `react/only-export-components` (+594 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 807 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 808 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -591,12 +592,12 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `Phase 6 — polish` and `Query rewriting for follow-ups`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `rewrite_query()` connect `conftest.py` to `Document`, `Local RAG Pipeline`, `conversations.py`?**
-  _High betweenness centrality (0.053) - this node is a cross-community bridge._
-- **Why does `Local RAG Pipeline` connect `Local RAG Pipeline` to `Build Phases`?**
+- **Why does `rewrite_query()` connect `httpx` to `worker.py`, `Local RAG Pipeline`, `conversations.py`?**
   _High betweenness centrality (0.052) - this node is a cross-community bridge._
-- **Why does `How retrieval works` connect `Local RAG Pipeline` to `conftest.py`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+- **Why does `Local RAG Pipeline` connect `Local RAG Pipeline` to `Build Phases`?**
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+- **Why does `How retrieval works` connect `Local RAG Pipeline` to `httpx`?**
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **Are the 32 inferred relationships involving `Document` (e.g. with `_load_citations()` and `delete_document()`) actually correct?**
   _`Document` has 32 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 18 inferred relationships involving `Section` (e.g. with `_load_citations()` and `reindex_document()`) actually correct?**
