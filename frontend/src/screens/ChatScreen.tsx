@@ -29,6 +29,20 @@ function footnoteAnchorId(messageId: number | string, rank: string | number) {
   return `fn-${messageId}-${rank}`
 }
 
+// message_citations persists every retrieved chunk the model was handed,
+// not just the ones it chose to cite (docs/plan.md §4.6 — deliberate, so
+// citation drift with a local 8B model is visible rather than papered
+// over by filtering the list down to match). This recovers which ranks
+// the prose actually references, so the footnote list can tell the two
+// apart instead of rendering them identically.
+function extractCitedRanks(content: string): Set<number> {
+  const ranks = new Set<number>()
+  for (const match of content.matchAll(/\[(\d+)\]/g)) {
+    ranks.add(Number(match[1]))
+  }
+  return ranks
+}
+
 // The model outputs real Markdown (bold, lists, headers) plus our own
 // [n] citation markers. Markers get turned into a <sup><a> before handing
 // off to ReactMarkdown (via rehype-raw) so both render properly together;
@@ -60,10 +74,12 @@ function Footnotes({
   citations,
   pending,
   messageId,
+  citedRanks,
 }: {
   citations: CitationRead[]
   pending: boolean
   messageId: number | string
+  citedRanks?: Set<number>
 }) {
   if (!pending && citations.length === 0) return null
 
@@ -81,20 +97,34 @@ function Footnotes({
         </p>
       ) : (
         <ol className="space-y-1">
-          {citations.map((citation) => (
-            <li
-              key={citation.chunk_id}
-              id={footnoteAnchorId(messageId, citation.rank)}
-              className="footnote-entry flex scroll-mt-6 gap-2 px-1 font-mono text-[11px] text-ink-muted dark:text-ink-muted-dark"
-            >
-              <span className="tabular-nums text-accent dark:text-accent-dark">
-                {citation.rank}
-              </span>
-              <span>
-                {citation.document_title} &mdash; {citation.display_path}
-              </span>
-            </li>
-          ))}
+          {citations.map((citation) => {
+            const wasCited = citedRanks?.has(citation.rank) ?? true
+            return (
+              <li
+                key={citation.chunk_id}
+                id={footnoteAnchorId(messageId, citation.rank)}
+                className={`footnote-entry flex scroll-mt-6 gap-2 px-1 font-mono text-[11px] ${
+                  wasCited
+                    ? 'text-ink-muted dark:text-ink-muted-dark'
+                    : 'text-ink-muted/55 italic dark:text-ink-muted-dark/55'
+                }`}
+              >
+                <span
+                  className={
+                    wasCited
+                      ? 'tabular-nums text-accent dark:text-accent-dark'
+                      : 'tabular-nums text-ink-muted/55 dark:text-ink-muted-dark/55'
+                  }
+                >
+                  {citation.rank}
+                </span>
+                <span>
+                  {citation.document_title} &mdash; {citation.display_path}
+                  {!wasCited && ' (retrieved, not cited)'}
+                </span>
+              </li>
+            )
+          })}
         </ol>
       )}
     </div>
@@ -300,6 +330,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
                         citations={message.citations}
                         pending={false}
                         messageId={message.id}
+                        citedRanks={extractCitedRanks(message.content)}
                       />
                     </>
                   )}

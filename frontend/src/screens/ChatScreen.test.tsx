@@ -263,6 +263,36 @@ describe('ChatScreen', () => {
     expect(footnoteLine.closest('li')).toHaveClass('footnote-entry')
   })
 
+  it('visually distinguishes a retrieved source the answer never actually cited', async () => {
+    // message_citations persists every retrieved chunk, not just the ones
+    // the model referenced inline (docs/plan.md §4.6) — the footnote list
+    // must tell those two cases apart rather than rendering them the same.
+    const markdownMessages: MessageRead[] = [
+      {
+        id: 7,
+        conversation_id: 5,
+        role: 'assistant',
+        content: 'RAID 10 is best for high availability [1].',
+        created_at: '2026-01-01T00:00:00Z',
+        citations: [
+          { chunk_id: 1, rank: 1, document_title: 'Storage Deck', display_path: 'Slide 16' },
+          { chunk_id: 2, rank: 2, document_title: 'Storage Deck', display_path: 'Slide 5' },
+        ],
+      },
+    ]
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(markdownMessages)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const citedLine = (await screen.findByText(/Slide 16/)).closest('li')
+    const uncitedLine = (await screen.findByText(/Slide 5/)).closest('li')
+
+    expect(citedLine).not.toHaveTextContent('not cited')
+    expect(uncitedLine).toHaveTextContent('(retrieved, not cited)')
+  })
+
   it('shows a moving indicator next to Reply while the answer is still generating', async () => {
     vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
     vi.spyOn(client, 'listMessages').mockResolvedValue([])
