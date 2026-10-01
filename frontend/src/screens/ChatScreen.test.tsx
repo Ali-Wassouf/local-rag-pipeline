@@ -236,8 +236,13 @@ describe('ChatScreen', () => {
     const inlineMarkers = within(reply).getAllByRole('button')
     expect(inlineMarkers.map((el) => el.textContent)).toEqual(['1', '2'])
 
-    expect((await screen.findAllByText(/Doc A/)).length).toBeGreaterThan(0)
-    expect((await screen.findAllByText(/Doc B/)).length).toBeGreaterThan(0)
+    // The inspector defaults to the first cited source; clicking the other
+    // marker switches it to the second.
+    const inspector = await screen.findByLabelText('Marginalia passage inspector')
+    expect(within(inspector).getByText('Doc A')).toBeInTheDocument()
+
+    fireEvent.click(inlineMarkers[1])
+    expect(within(inspector).getByText('Doc B')).toBeInTheDocument()
   })
 
   it('clicking a citation marker opens it in the passage inspector', async () => {
@@ -324,12 +329,15 @@ describe('ChatScreen', () => {
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
     fireEvent.click(await screen.findByText('Old chat about forces'))
 
-    const ledger = await screen.findByLabelText('Retrieved document passages')
-    const citedLine = within(ledger).getByText(/Slide 16/).closest('button')
-    const uncitedLine = within(ledger).getByText(/Slide 5/).closest('button')
+    const inspector = await screen.findByLabelText('Marginalia passage inspector')
+    // Defaults to the cited source (rank 1, Slide 16).
+    expect(within(inspector).getByText('Slide 16')).toBeInTheDocument()
+    expect(within(inspector).getByText(/Directly cited/)).toBeInTheDocument()
 
-    expect(citedLine).not.toHaveTextContent('not cited')
-    expect(uncitedLine).toHaveTextContent('(retrieved, not cited)')
+    fireEvent.click(within(inspector).getByRole('button', { name: '2' }))
+
+    expect(within(inspector).getByText('Slide 5')).toBeInTheDocument()
+    expect(within(inspector).getByText(/not cited in reply/)).toBeInTheDocument()
   })
 
   it('shows a moving indicator next to Reply while the answer is still generating', async () => {
@@ -460,11 +468,8 @@ describe('ChatScreen', () => {
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
     fireEvent.click(await screen.findByText('Old chat about forces'))
 
-    const ledger = await screen.findByLabelText('Retrieved document passages')
-    const ledgerRow = within(ledger).getByText(/Part II/).closest('button')
-    expect(ledgerRow).toHaveTextContent('(summary)')
-
     const inspector = await screen.findByLabelText('Marginalia passage inspector')
+    expect(within(inspector).getByText('DDIA')).toBeInTheDocument()
     expect(within(inspector).getByText('Summary')).toBeInTheDocument()
     expect(within(inspector).queryByText('Verbatim Document Excerpt')).not.toBeInTheDocument()
   })

@@ -14,7 +14,7 @@ import {
   useProjectDocuments,
   useRestoreConversation,
 } from '../api/hooks'
-import type { ChatMode, CitationRead, ConversationRead, MessageRead } from '../api/types'
+import type { ChatMode, ConversationRead, MessageRead } from '../api/types'
 
 interface ChatScreenProps {
   projectId: number
@@ -80,100 +80,6 @@ function MarkdownMessage({
         {withStyledCitations}
       </ReactMarkdown>
     </div>
-  )
-}
-
-// The ledger of everything retrieved for this reply — cited and uncited
-// alike (docs/plan.md §4.6) — shown as a preface to the synthesis it backs,
-// with a quick All/Cited Only filter. Every row opens its source in the
-// Marginalia Passage Inspector.
-function RetrievedLedger({
-  citations,
-  citedRanks,
-  messageId,
-  activeCitation,
-  filterMode,
-  onChangeFilterMode,
-  onSelect,
-}: {
-  citations: CitationRead[]
-  citedRanks: Set<number>
-  messageId: number | string
-  activeCitation: ActiveCitation | null
-  filterMode: 'all' | 'cited'
-  onChangeFilterMode: (mode: 'all' | 'cited') => void
-  onSelect: (rank: number) => void
-}) {
-  if (citations.length === 0) return null
-  const citedCount = citations.filter((c) => citedRanks.has(c.rank)).length
-  const uncitedCount = citations.length - citedCount
-  const visible = filterMode === 'cited' ? citations.filter((c) => citedRanks.has(c.rank)) : citations
-
-  return (
-    <section
-      aria-label="Retrieved document passages"
-      className="mb-4 rounded-md border border-rule bg-parchment p-4"
-    >
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-rule pb-3">
-        <div className="font-mono text-xs tabular-nums text-ink-secondary">
-          <span className="font-semibold text-ink">{citations.length} Passages Retrieved</span>
-          <span aria-hidden="true"> &middot; </span>
-          <span className="font-medium text-accent">{citedCount} Cited</span>
-          <span aria-hidden="true"> &middot; </span>
-          <span>{uncitedCount} Retrieved, not cited</span>
-        </div>
-        <div className="flex items-center gap-1 rounded-sm bg-stone p-0.5">
-          <button
-            type="button"
-            onClick={() => onChangeFilterMode('all')}
-            className={`cursor-pointer rounded-xs px-2 py-0.5 text-[11px] font-medium transition-colors ${
-              filterMode === 'all' ? 'bg-paper text-ink' : 'text-ink-secondary hover:text-ink'
-            }`}
-          >
-            All ({citations.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => onChangeFilterMode('cited')}
-            className={`cursor-pointer rounded-xs px-2 py-0.5 text-[11px] font-medium transition-colors ${
-              filterMode === 'cited' ? 'bg-paper text-accent' : 'text-ink-secondary hover:text-ink'
-            }`}
-          >
-            Cited Only ({citedCount})
-          </button>
-        </div>
-      </div>
-      <div className="divide-y divide-rule/60">
-        {visible.map((citation) => {
-          const isCited = citedRanks.has(citation.rank)
-          const isActive =
-            activeCitation?.messageId === messageId && activeCitation.rank === citation.rank
-          return (
-            <button
-              key={citation.rank}
-              type="button"
-              onClick={() => onSelect(citation.rank)}
-              className={`-mx-2 flex w-full cursor-pointer items-baseline gap-3 rounded-sm px-2 py-2 text-left font-mono text-xs transition-colors ${
-                isActive ? 'bg-accent/10' : 'hover:bg-stone/60'
-              }`}
-            >
-              <span
-                className={`w-4 shrink-0 tabular-nums font-semibold ${
-                  isCited ? 'text-accent' : 'text-ink-muted italic'
-                }`}
-              >
-                {citation.rank}
-              </span>
-              <span className={`flex-1 leading-relaxed ${isCited ? 'text-ink' : 'text-ink-muted italic'}`}>
-                {citation.is_summary && <span className="text-accent not-italic">(summary) </span>}
-                {citation.document_title} &ndash; {citation.display_path}
-                {!isCited && <span className="ml-1.5 text-ink-muted">(retrieved, not cited)</span>}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </section>
   )
 }
 
@@ -394,7 +300,6 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
   const [sendError, setSendError] = useState<string | null>(null)
   const [mode, setMode] = useState<ChatMode>('lookup')
   const [activeCitation, setActiveCitation] = useState<ActiveCitation | null>(null)
-  const [passageFilterMode, setPassageFilterMode] = useState<'all' | 'cited'>('all')
   const [showDeletedDrawer, setShowDeletedDrawer] = useState(false)
 
   useEffect(() => {
@@ -631,15 +536,6 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
                     </div>
                   ) : (
                     <div className="space-y-4 border-t border-rule pt-4">
-                      <RetrievedLedger
-                        citations={message.citations}
-                        citedRanks={extractCitedRanks(message.content)}
-                        messageId={message.id}
-                        activeCitation={activeCitation}
-                        filterMode={passageFilterMode}
-                        onChangeFilterMode={setPassageFilterMode}
-                        onSelect={(rank) => setActiveCitation({ messageId: message.id, rank })}
-                      />
                       <p className="font-mono text-xs text-ink-muted">Reply</p>
                       <MarkdownMessage
                         content={message.content}
