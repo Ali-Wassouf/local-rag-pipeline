@@ -30,9 +30,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "backend/app/api/conversations.py": {
-    "mtime": 1790857534.4666562,
-    "seen": 1790865170.0467641,
-    "ast_hash": "f65ca3be07db34b7accd2c680a2c3138",
+    "mtime": 1790867267.8661926,
+    "seen": 1790867703.7784178,
+    "ast_hash": "b46739c99043cea008b1674663b77708",
     "semantic_hash": ""
   },
   "backend/app/api/deps.py": {
@@ -42,9 +42,9 @@
     "semantic_hash": "0c06141878fbcdc7dc52654ec219f3cf"
   },
   "backend/app/api/documents.py": {
-    "mtime": 1790864836.2959375,
-    "seen": 1790865170.046792,
-    "ast_hash": "25a55d8c176d1432ee109dea96923395",
+    "mtime": 1790869168.262085,
+    "seen": 1790869546.833842,
+    "ast_hash": "148aac8ea0b3d5729bb047f072d009d2",
     "semantic_hash": ""
   },
   "backend/app/api/jobs.py": {
@@ -270,9 +270,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "backend/app/schemas/conversation.py": {
-    "mtime": 1790854228.6576655,
-    "seen": 1790854902.0692348,
-    "ast_hash": "6d2d1b2e1bdd113bc31d6927caf398aa",
+    "mtime": 1790867218.7276678,
+    "seen": 1790867703.77942,
+    "ast_hash": "891c5897924bec17e894e041c170ee42",
     "semantic_hash": ""
   },
   "backend/app/schemas/document.py": {
@@ -426,15 +426,15 @@
     "semantic_hash": ""
   },
   "backend/tests/test_conversations.py": {
-    "mtime": 1790857508.2409117,
-    "seen": 1790865170.0485098,
-    "ast_hash": "8a2e1d0e2615783210eb9f046153bea0",
+    "mtime": 1790867446.0470774,
+    "seen": 1790867703.780123,
+    "ast_hash": "ce3ee436faf37ce2821f416a191aead9",
     "semantic_hash": ""
   },
   "backend/tests/test_documents.py": {
-    "mtime": 1790864783.5097213,
-    "seen": 1790865170.048511,
-    "ast_hash": "0eeb9941ba9267b478a6623b8c25342f",
+    "mtime": 1790869294.3142877,
+    "seen": 1790869546.8378198,
+    "ast_hash": "2760362919a8ec769f5e78007e4bcea0",
     "semantic_hash": ""
   },
   "backend/tests/test_jobs.py": {
@@ -492,21 +492,21 @@
     "semantic_hash": ""
   },
   "frontend/src/api/client.ts": {
-    "mtime": 1790866732.8788106,
-    "seen": 1790866872.036362,
-    "ast_hash": "d865f4dc93c94c0934edcff123896086",
+    "mtime": 1790869322.634119,
+    "seen": 1790869546.838092,
+    "ast_hash": "4fad57aa21e962d9264d70ff6c7a976b",
     "semantic_hash": ""
   },
   "frontend/src/api/hooks.ts": {
-    "mtime": 1790866762.664225,
-    "seen": 1790866872.036366,
-    "ast_hash": "51da23c51d6128776bfc283e0e282684",
+    "mtime": 1790869349.4260223,
+    "seen": 1790869546.838093,
+    "ast_hash": "5c8236e7bdb1ff88e1050f153602dc66",
     "semantic_hash": ""
   },
   "frontend/src/api/types.ts": {
-    "mtime": 1790866377.6245368,
-    "seen": 1790866872.036366,
-    "ast_hash": "e0fe9fe7d079bf0ff5d5f666a81f73cd",
+    "mtime": 1790867530.0090885,
+    "seen": 1790867703.7803578,
+    "ast_hash": "27ab17444cbd6d58c512b88945a579bc",
     "semantic_hash": ""
   },
   "frontend/src/main.tsx": {
@@ -516,27 +516,27 @@
     "semantic_hash": "787e5a07efeb2bf6209d5937195f2f68"
   },
   "frontend/src/screens/ChatScreen.test.tsx": {
-    "mtime": 1790866424.2613106,
-    "seen": 1790866872.036423,
-    "ast_hash": "8fad1b3162593274215b26dee61ea566",
+    "mtime": 1790867669.8150492,
+    "seen": 1790867703.7804139,
+    "ast_hash": "f4108d56b6b30689ffb0f6469b00d3dd",
     "semantic_hash": ""
   },
   "frontend/src/screens/ChatScreen.tsx": {
-    "mtime": 1790854756.9513545,
-    "seen": 1790854902.070307,
-    "ast_hash": "28b1fa270f70d709dbd158eb88370305",
+    "mtime": 1790867573.1825688,
+    "seen": 1790867703.780415,
+    "ast_hash": "230758c4f6eafd1fabfedc469eacead6",
     "semantic_hash": ""
   },
   "frontend/src/screens/ProjectDetailScreen.test.tsx": {
-    "mtime": 1790866831.6953332,
-    "seen": 1790866872.036447,
-    "ast_hash": "37dbf1a41c655e0762e1a38935ee80d2",
+    "mtime": 1790869492.742764,
+    "seen": 1790869546.838251,
+    "ast_hash": "7b3a81edeb613cfa847369b514979315",
     "semantic_hash": ""
   },
   "frontend/src/screens/ProjectDetailScreen.tsx": {
-    "mtime": 1790866804.4190006,
-    "seen": 1790866872.036449,
-    "ast_hash": "d255649adb0e37fbd25b9909298e17aa",
+    "mtime": 1790869466.899219,
+    "seen": 1790869546.838252,
+    "ast_hash": "dd5f932e37d681cba36914c1191a1fb9",
     "semantic_hash": ""
   },
   "frontend/src/screens/ProjectsListScreen.test.tsx": {
