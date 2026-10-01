@@ -36,7 +36,7 @@ describe('ReviewScreen', () => {
 
   it('shows the preview of a section', async () => {
     vi.spyOn(client, 'getSections').mockResolvedValue([baseSection])
-    renderWithClient(<ReviewScreen documentId={1} />)
+    renderWithClient(<ReviewScreen documentId={1} onBack={vi.fn()} />)
 
     await screen.findByRole('button', { name: 'Chapter One' })
     expect(await screen.findByText('Chapter One body text')).toBeInTheDocument()
@@ -48,7 +48,7 @@ describe('ReviewScreen', () => {
       .spyOn(client, 'updateSectionTitle')
       .mockResolvedValue({ ...baseSection, title: 'Renamed', source: 'manual' })
 
-    renderWithClient(<ReviewScreen documentId={1} />)
+    renderWithClient(<ReviewScreen documentId={1} onBack={vi.fn()} />)
 
     const titleButton = await screen.findByRole('button', { name: 'Chapter One' })
     fireEvent.click(titleButton)
@@ -64,7 +64,7 @@ describe('ReviewScreen', () => {
     vi.spyOn(client, 'getSections').mockResolvedValue([baseSection])
     const updateSpy = vi.spyOn(client, 'updateSectionTitle')
 
-    renderWithClient(<ReviewScreen documentId={1} />)
+    renderWithClient(<ReviewScreen documentId={1} onBack={vi.fn()} />)
 
     const titleButton = await screen.findByRole('button', { name: 'Chapter One' })
     fireEvent.click(titleButton)
@@ -90,14 +90,14 @@ describe('ReviewScreen', () => {
       },
     ]
     vi.spyOn(client, 'getSections').mockResolvedValue(withGap)
-    renderWithClient(<ReviewScreen documentId={1} />)
+    renderWithClient(<ReviewScreen documentId={1} onBack={vi.fn()} />)
 
     expect(await screen.findByText('Untitled region')).toBeInTheDocument()
   })
 
   it('shows an error if the sections fail to load', async () => {
     vi.spyOn(client, 'getSections').mockRejectedValue(new Error('Document not found'))
-    renderWithClient(<ReviewScreen documentId={1} />)
+    renderWithClient(<ReviewScreen documentId={1} onBack={vi.fn()} />)
 
     expect(await screen.findByText('Document not found')).toBeInTheDocument()
   })
@@ -106,7 +106,7 @@ describe('ReviewScreen', () => {
     vi.spyOn(client, 'getSections').mockResolvedValue([baseSection])
     vi.spyOn(client, 'updateSectionTitle').mockRejectedValue(new Error('Title cannot be blank'))
 
-    renderWithClient(<ReviewScreen documentId={1} />)
+    renderWithClient(<ReviewScreen documentId={1} onBack={vi.fn()} />)
 
     const titleButton = await screen.findByRole('button', { name: 'Chapter One' })
     fireEvent.click(titleButton)

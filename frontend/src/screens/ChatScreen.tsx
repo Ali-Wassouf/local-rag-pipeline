@@ -21,23 +21,24 @@ interface ChatScreenProps {
   onBack: () => void
 }
 
+interface ActiveCitation {
+  messageId: number | string
+  rank: number
+}
+
 // A plain colored numeral reads as styled text, not a control — this world
 // has no blue-link convention to borrow, so the affordance has to come from
 // shape: a bordered, tinted badge that inverts to solid fill on hover/focus,
 // the same "struck vs. dormant" logic a real stamped reference tab would use.
 const CITATION_MARKER_CLASSES =
-  'inline-flex min-w-[1.1em] items-center justify-center rounded-full border border-accent/50 bg-accent/10 px-1 font-mono text-[11px] leading-[1.4] font-semibold text-accent no-underline tabular-nums transition-colors hover:border-accent hover:bg-accent hover:text-paper focus-visible:border-accent focus-visible:bg-accent focus-visible:text-paper dark:border-accent-dark/50 dark:bg-accent-dark/10 dark:text-accent-dark dark:hover:border-accent-dark dark:hover:bg-accent-dark dark:hover:text-paper-dark dark:focus-visible:border-accent-dark dark:focus-visible:bg-accent-dark dark:focus-visible:text-paper-dark'
-
-function footnoteAnchorId(messageId: number | string, rank: string | number) {
-  return `fn-${messageId}-${rank}`
-}
+  'inline-flex min-w-[1.1em] cursor-pointer items-center justify-center rounded-full border border-accent/50 bg-accent/10 px-1 font-mono text-[11px] leading-[1.4] font-semibold text-accent tabular-nums transition-colors hover:border-accent hover:bg-accent hover:text-paper focus-visible:border-accent focus-visible:bg-accent focus-visible:text-paper'
 
 // message_citations persists every retrieved chunk the model was handed,
 // not just the ones it chose to cite (docs/plan.md §4.6 — deliberate, so
 // citation drift with a local 8B model is visible rather than papered
 // over by filtering the list down to match). This recovers which ranks
-// the prose actually references, so the footnote list can tell the two
-// apart instead of rendering them identically.
+// the prose actually references, so the ledger and inspector can tell the
+// two apart instead of rendering them identically.
 function extractCitedRanks(content: string): Set<number> {
   const ranks = new Set<number>()
   for (const match of content.matchAll(/\[(\d+)\]/g)) {
@@ -47,20 +48,34 @@ function extractCitedRanks(content: string): Set<number> {
 }
 
 // The model outputs real Markdown (bold, lists, headers) plus our own
-// [n] citation markers. Markers get turned into a <sup><a> before handing
-// off to ReactMarkdown (via rehype-raw) so both render properly together;
-// the <a href="#fn-…"> is a real same-page link to that citation's own
-// footnote line — clicking or tabbing to it jumps there and, via :target
-// in index.css, keeps it highlighted for exactly as long as it's the one
-// being read.
-function MarkdownMessage({ content, messageId }: { content: string; messageId: number | string }) {
+// [n] citation markers. Markers become a real <button> (via rehype-raw) so
+// clicking one opens that source in the right-hand Marginalia Passage
+// Inspector rather than jumping anywhere on the page.
+function MarkdownMessage({
+  content,
+  onSelectCitation,
+}: {
+  content: string
+  onSelectCitation?: (rank: number) => void
+}) {
   const withStyledCitations = content.replace(
     /\[(\d+)\]/g,
     (_match, n: string) =>
-      `<sup class="mx-0.5"><a href="#${footnoteAnchorId(messageId, n)}" class="${CITATION_MARKER_CLASSES}">${n}</a></sup>`,
+      `<sup class="mx-0.5"><button type="button" data-citation-rank="${n}" class="${CITATION_MARKER_CLASSES}">${n}</button></sup>`,
   )
+
+  function handleClick(event: React.MouseEvent<HTMLDivElement>) {
+    if (!onSelectCitation) return
+    const target = (event.target as HTMLElement).closest('[data-citation-rank]')
+    if (!target) return
+    onSelectCitation(Number(target.getAttribute('data-citation-rank')))
+  }
+
   return (
-    <div className="prose prose-sm max-w-none font-serif text-ink prose-headings:font-serif prose-headings:text-ink dark:text-ink-dark dark:prose-invert dark:prose-headings:text-ink-dark">
+    <div
+      onClick={handleClick}
+      className="prose prose-sm max-w-none font-serif text-ink prose-headings:font-serif prose-headings:text-ink"
+    >
       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
         {withStyledCitations}
       </ReactMarkdown>
@@ -68,89 +83,235 @@ function MarkdownMessage({ content, messageId }: { content: string; messageId: n
   )
 }
 
-// A real footnote sits on the page that cites it, not on a rail shared
-// across the whole book — so every answer carries its own block, directly
-// beneath it. While the answer is still streaming, citations don't exist
-// yet (the SSE "done" event is the only place the server sends them), so
-// this shows a dormant placeholder rather than pretending otherwise.
-function Footnotes({
+// The ledger of everything retrieved for this reply — cited and uncited
+// alike (docs/plan.md §4.6) — shown as a preface to the synthesis it backs,
+// with a quick All/Cited Only filter. Every row opens its source in the
+// Marginalia Passage Inspector.
+function RetrievedLedger({
   citations,
-  pending,
-  messageId,
   citedRanks,
+  messageId,
+  activeCitation,
+  filterMode,
+  onChangeFilterMode,
+  onSelect,
 }: {
   citations: CitationRead[]
-  pending: boolean
+  citedRanks: Set<number>
   messageId: number | string
-  citedRanks?: Set<number>
+  activeCitation: ActiveCitation | null
+  filterMode: 'all' | 'cited'
+  onChangeFilterMode: (mode: 'all' | 'cited') => void
+  onSelect: (rank: number) => void
 }) {
-  if (!pending && citations.length === 0) return null
+  if (citations.length === 0) return null
+  const citedCount = citations.filter((c) => citedRanks.has(c.rank)).length
+  const uncitedCount = citations.length - citedCount
+  const visible = filterMode === 'cited' ? citations.filter((c) => citedRanks.has(c.rank)) : citations
 
   return (
-    <div
-      className={
-        pending
-          ? 'mt-3 border-t border-dashed border-rule pt-2 dark:border-rule-dark'
-          : 'mt-3 border-t border-rule pt-2 dark:border-rule-dark'
-      }
+    <section
+      aria-label="Retrieved document passages"
+      className="mb-4 rounded-md border border-rule bg-parchment p-4"
     >
-      {pending ? (
-        <p className="font-mono text-[12px] tracking-wide text-ink-muted italic dark:text-ink-muted-dark">
-          assembling sources…
-        </p>
-      ) : (
-        <ol className="space-y-1">
-          {citations.map((citation) => {
-            const wasCited = citedRanks?.has(citation.rank) ?? true
-            return (
-              <li
-                key={citation.rank}
-                id={footnoteAnchorId(messageId, citation.rank)}
-                className="footnote-entry scroll-mt-6 px-1 font-mono text-[12px]"
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-rule pb-3">
+        <div className="font-mono text-xs tabular-nums text-ink-secondary">
+          <span className="font-semibold text-ink">{citations.length} Passages Retrieved</span>
+          <span aria-hidden="true"> &middot; </span>
+          <span className="font-medium text-accent">{citedCount} Cited</span>
+          <span aria-hidden="true"> &middot; </span>
+          <span>{uncitedCount} Retrieved, not cited</span>
+        </div>
+        <div className="flex items-center gap-1 rounded-sm bg-stone p-0.5">
+          <button
+            type="button"
+            onClick={() => onChangeFilterMode('all')}
+            className={`cursor-pointer rounded-xs px-2 py-0.5 text-[11px] font-medium transition-colors ${
+              filterMode === 'all' ? 'bg-paper text-ink' : 'text-ink-secondary hover:text-ink'
+            }`}
+          >
+            All ({citations.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeFilterMode('cited')}
+            className={`cursor-pointer rounded-xs px-2 py-0.5 text-[11px] font-medium transition-colors ${
+              filterMode === 'cited' ? 'bg-paper text-accent' : 'text-ink-secondary hover:text-ink'
+            }`}
+          >
+            Cited Only ({citedCount})
+          </button>
+        </div>
+      </div>
+      <div className="divide-y divide-rule/60">
+        {visible.map((citation) => {
+          const isCited = citedRanks.has(citation.rank)
+          const isActive =
+            activeCitation?.messageId === messageId && activeCitation.rank === citation.rank
+          return (
+            <button
+              key={citation.rank}
+              type="button"
+              onClick={() => onSelect(citation.rank)}
+              className={`-mx-2 flex w-full cursor-pointer items-baseline gap-3 rounded-sm px-2 py-2 text-left font-mono text-xs transition-colors ${
+                isActive ? 'bg-accent/10' : 'hover:bg-stone/60'
+              }`}
+            >
+              <span
+                className={`w-4 shrink-0 tabular-nums font-semibold ${
+                  isCited ? 'text-accent' : 'text-ink-muted italic'
+                }`}
               >
-                {/* A real footnote can be opened to read in full — this is
-                    the source-passage view (docs/plan.md §4.6): the actual
-                    chunk text for a lookup citation, or the actual summary
-                    text for a survey one, collapsed by default. */}
-                <details>
-                  <summary
-                    className={`flex cursor-pointer gap-2 ${
-                      wasCited
-                        ? 'text-ink-muted dark:text-ink-muted-dark'
-                        : 'text-ink-muted/55 italic dark:text-ink-muted-dark/55'
-                    }`}
-                  >
-                    <span
-                      className={
-                        wasCited
-                          ? 'tabular-nums text-accent dark:text-accent-dark'
-                          : 'tabular-nums text-ink-muted/55 dark:text-ink-muted-dark/55'
-                      }
+                {citation.rank}
+              </span>
+              <span className={`flex-1 leading-relaxed ${isCited ? 'text-ink' : 'text-ink-muted italic'}`}>
+                {citation.is_summary && <span className="text-accent not-italic">(summary) </span>}
+                {citation.document_title} &ndash; {citation.display_path}
+                {!isCited && <span className="ml-1.5 text-ink-muted">(retrieved, not cited)</span>}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// The signature moment: a dedicated right-hand column holding the full
+// verbatim text (or, labelled as such, the summary — CLAUDE.md invariant
+// 6) of whichever source is currently under inspection, rather than an
+// inline expand buried in the transcript.
+function PassageInspector({
+  message,
+  citedRanks,
+  activeCitation,
+  onSelect,
+  onManageDocuments,
+}: {
+  message: MessageRead | undefined
+  citedRanks: Set<number>
+  activeCitation: ActiveCitation | null
+  onSelect: (rank: number) => void
+  onManageDocuments: () => void
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const citations = message?.citations ?? []
+  const inspected =
+    (activeCitation && citations.find((c) => c.rank === activeCitation.rank)) ||
+    citations.find((c) => citedRanks.has(c.rank)) ||
+    citations[0]
+
+  function handleCopy() {
+    if (!inspected) return
+    void navigator.clipboard?.writeText(
+      `"${inspected.text}" — ${inspected.document_title} (${inspected.display_path})`,
+    )
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+
+  return (
+    <aside
+      aria-label="Marginalia passage inspector"
+      className="flex flex-col justify-between overflow-y-auto border-t border-rule bg-parchment p-5 lg:col-span-3 lg:border-t-0 lg:border-l"
+    >
+      {inspected ? (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between border-b border-rule pb-3">
+            <span className="text-xs font-semibold text-ink">Marginalia Passage Inspector</span>
+            <span className="font-mono text-xs font-semibold tabular-nums text-accent">
+              Source #{inspected.rank}
+            </span>
+          </div>
+
+          {citations.length > 1 && (
+            <div>
+              <div className="mb-1.5 font-mono text-[11px] text-ink-muted">
+                Jump to retrieved passage:
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {citations.map((c) => {
+                  const isCited = citedRanks.has(c.rank)
+                  const isActive = c.rank === inspected.rank
+                  return (
+                    <button
+                      key={c.rank}
+                      type="button"
+                      onClick={() => onSelect(c.rank)}
+                      title={isCited ? `Source ${c.rank} (cited)` : `Source ${c.rank} (retrieved, not cited)`}
+                      className={`h-7 w-7 cursor-pointer rounded-sm border font-mono text-xs font-semibold tabular-nums transition-colors ${
+                        isActive
+                          ? 'border-accent bg-accent text-paper'
+                          : isCited
+                            ? 'border-rule-strong bg-paper text-accent hover:border-accent'
+                            : 'border-rule bg-stone/60 text-ink-muted italic'
+                      }`}
                     >
-                      {citation.rank}
-                    </span>
-                    <span>
-                      {citation.is_summary && (
-                        // CLAUDE.md invariant 6 — a survey citation points
-                        // at a summary, never rendered as if it were a
-                        // passage the model actually read. Visible, not
-                        // just implied.
-                        <span className="text-accent dark:text-accent-dark">(summary) </span>
-                      )}
-                      {citation.document_title} &mdash; {citation.display_path}
-                      {!wasCited && ' (retrieved, not cited)'}
-                    </span>
-                  </summary>
-                  <blockquote className="mt-1 ml-[1.6em] max-w-[65ch] border-l-2 border-rule pl-3 font-serif text-sm text-ink-muted dark:border-rule-dark dark:text-ink-muted-dark">
-                    {citation.text}
-                  </blockquote>
-                </details>
-              </li>
-            )
-          })}
-        </ol>
+                      {c.rank}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1.5 rounded-md border border-rule bg-paper p-3.5">
+            <h2 className="text-sm leading-snug font-semibold text-ink">
+              {inspected.document_title}
+            </h2>
+            <p className="font-mono text-xs leading-relaxed text-ink-secondary">
+              {inspected.display_path}
+            </p>
+            <div className="pt-1 font-mono text-[11px]">
+              {citedRanks.has(inspected.rank) ? (
+                <span className="font-medium text-status-ready">
+                  &#9679; Directly cited in reply synthesis
+                </span>
+              ) : (
+                <span className="text-ink-muted italic">
+                  &#9675; Retrieved, not cited in reply
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-ink">
+                {/* CLAUDE.md invariant 6 — a survey citation's source is a
+                    summary, never presented as a passage the model read. */}
+                {inspected.is_summary ? 'Summary' : 'Verbatim Document Excerpt'}
+              </span>
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="cursor-pointer text-xs font-medium text-accent hover:underline"
+              >
+                {copied ? 'Copied' : 'Copy Quote'}
+              </button>
+            </div>
+            <blockquote className="rounded-r-md border-y border-r border-l-2 border-rule border-l-accent bg-paper p-3.5 font-serif text-[15px] leading-[1.75] text-ink">
+              &ldquo;{inspected.text}&rdquo;
+            </blockquote>
+          </div>
+        </div>
+      ) : (
+        <p className="py-12 text-center text-xs text-ink-muted">
+          Ask a question to inspect its sources here.
+        </p>
       )}
-    </div>
+
+      <div className="mt-6 border-t border-rule pt-6">
+        <button
+          type="button"
+          onClick={onManageDocuments}
+          className="w-full cursor-pointer rounded-md border border-rule-strong bg-paper px-3.5 py-2 text-xs font-medium text-ink transition-colors hover:bg-stone"
+        >
+          Manage Project Documents
+        </button>
+      </div>
+    </aside>
   )
 }
 
@@ -177,17 +338,21 @@ function ChapterRow({ conversation, folio, isActive, onSelect, onRemove }: Chapt
         type="button"
         onClick={onSelect}
         aria-current={isActive ? 'true' : undefined}
-        className={`w-full border-l-2 py-2 pr-14 pl-3 text-left transition-colors ${
-          isActive
-            ? 'border-accent bg-rail dark:border-accent-dark dark:bg-rail-dark'
-            : 'border-transparent hover:bg-rail/60 dark:hover:bg-rail-dark/60'
+        className={`w-full cursor-pointer border-l-[3px] py-3 pr-14 pl-4 text-left transition-colors ${
+          isActive ? 'border-accent bg-paper' : 'border-transparent hover:bg-stone/60'
         }`}
       >
-        <div className="flex items-baseline justify-between gap-2 font-mono text-[12px] text-ink-muted tabular-nums dark:text-ink-muted-dark">
-          <span>No. {folio}</span>
+        <div className="mb-1 flex items-center justify-between font-mono text-[11px] tabular-nums text-ink-muted">
+          <span className={isActive ? 'font-semibold text-accent' : ''}>No. {folio}</span>
           <span>{formatFolioDate(conversation.created_at)}</span>
         </div>
-        <p className="mt-0.5 truncate font-serif text-sm text-ink dark:text-ink-dark">{preview}</p>
+        <p
+          className={`truncate font-serif text-[15px] leading-snug ${
+            isActive ? 'font-medium text-ink' : 'text-ink-secondary'
+          }`}
+        >
+          {preview}
+        </p>
       </button>
       <button
         type="button"
@@ -196,7 +361,8 @@ function ChapterRow({ conversation, folio, isActive, onSelect, onRemove }: Chapt
           onRemove()
         }}
         aria-label="Remove chapter"
-        className="absolute top-1.5 right-2.5 rounded-sm px-1.5 py-0.5 font-mono text-[11px] tracking-wide text-ink-muted uppercase opacity-0 transition-opacity hover:bg-accent/10 hover:text-accent group-hover:opacity-100 group-focus-within:opacity-100 dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
+        title="Move chapter to Deleted"
+        className="absolute top-3 right-3 cursor-pointer font-mono text-[10px] text-ink-muted opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 hover:text-danger"
       >
         Remove
       </button>
@@ -227,6 +393,9 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
   const [isSending, setIsSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
   const [mode, setMode] = useState<ChatMode>('lookup')
+  const [activeCitation, setActiveCitation] = useState<ActiveCitation | null>(null)
+  const [passageFilterMode, setPassageFilterMode] = useState<'all' | 'cited'>('all')
+  const [showDeletedDrawer, setShowDeletedDrawer] = useState(false)
 
   useEffect(() => {
     setMessages(history.data ?? [])
@@ -238,6 +407,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
     setIsSending(false)
     setStreamingText('')
     setSendError(null)
+    setActiveCitation(null)
   }
 
   function handleNewConversation() {
@@ -273,6 +443,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
     const activeConversationId = conversationId
     setDraft('')
     setSendError(null)
+    setActiveCitation(null)
     setMessages((prev) => [
       ...prev,
       {
@@ -325,28 +496,42 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
 
   const documentCount = projectDocuments.data?.length ?? 0
   const chapters = conversations.data ?? []
+  const deletedChapters = deletedConversations.data ?? []
+
+  const assistantMessages = messages.filter((m) => m.role === 'assistant')
+  const lastAssistantMessage = assistantMessages[assistantMessages.length - 1]
+  const inspectorMessage = activeCitation
+    ? messages.find((m) => m.id === activeCitation.messageId)
+    : lastAssistantMessage
+  const inspectorCitedRanks = inspectorMessage ? extractCitedRanks(inspectorMessage.content) : new Set<number>()
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl">
-      <aside className="flex w-64 shrink-0 flex-col border-r border-rule dark:border-rule-dark">
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-rule px-4 py-3 dark:border-rule-dark">
+    <div className="grid h-full grid-cols-1 lg:grid-cols-12 lg:overflow-hidden">
+      {/* ===================================================================
+          COLUMN 1: CHAPTER RAIL
+         =================================================================== */}
+      <aside
+        aria-label="Inquiry chapters"
+        className="flex max-h-[50vh] flex-col border-b border-rule bg-parchment lg:col-span-3 lg:max-h-none lg:border-r lg:border-b-0"
+      >
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-rule p-4">
           <button
             type="button"
             onClick={onBack}
-            className="font-mono text-[12px] tracking-wide text-ink-muted uppercase hover:text-accent dark:text-ink-muted-dark dark:hover:text-accent-dark"
+            className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-ink-secondary transition-colors hover:text-ink"
           >
             &larr; Back
           </button>
           <button
             type="button"
             onClick={handleNewConversation}
-            className="border border-rule px-2 py-1 font-mono text-[12px] tracking-wide text-ink uppercase hover:border-accent hover:text-accent dark:border-rule-dark dark:text-ink-dark dark:hover:border-accent-dark dark:hover:text-accent-dark"
+            className="cursor-pointer rounded-md border border-rule-strong bg-paper px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-stone"
           >
             New chapter
           </button>
         </div>
         {(conversations.isError || createConversation.isError || deleteConversation.isError) && (
-          <p className="shrink-0 border-b border-rule px-4 py-2 font-mono text-[11px] text-red-700 dark:border-rule-dark dark:text-red-400">
+          <p className="shrink-0 border-b border-rule px-4 py-2 font-mono text-[11px] text-danger">
             {(
               (conversations.error ?? createConversation.error ?? deleteConversation.error) as Error
             ).message}
@@ -366,169 +551,202 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
         </ul>
 
         {deletedConversations.isError && (
-          <p className="shrink-0 border-t border-rule px-4 py-2 font-mono text-[11px] text-red-700 dark:border-rule-dark dark:text-red-400">
+          <p className="shrink-0 border-t border-rule px-4 py-2 font-mono text-[11px] text-danger">
             {(deletedConversations.error as Error).message}
           </p>
         )}
-        {(deletedConversations.data?.length ?? 0) > 0 && (
-          <details className="shrink-0 border-t border-rule dark:border-rule-dark">
-            <summary className="cursor-pointer px-4 py-2 font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
-              Deleted ({deletedConversations.data?.length})
-            </summary>
-            {restoreConversation.isError && (
-              <p className="px-4 py-1.5 font-mono text-[11px] text-red-700 dark:text-red-400">
-                {(restoreConversation.error as Error).message}
-              </p>
+        {deletedChapters.length > 0 && (
+          <div className="shrink-0 border-t border-rule-strong bg-stone/60">
+            <button
+              type="button"
+              onClick={() => setShowDeletedDrawer((prev) => !prev)}
+              className="flex w-full cursor-pointer items-center justify-between px-4 py-2.5 font-mono text-xs text-ink-secondary hover:text-ink"
+            >
+              <span>Deleted ({deletedChapters.length})</span>
+              <span aria-hidden="true">{showDeletedDrawer ? '⌄' : '›'}</span>
+            </button>
+            {showDeletedDrawer && (
+              <div className="max-h-36 space-y-2 overflow-y-auto border-t border-rule px-4 pt-2 pb-3">
+                {restoreConversation.isError && (
+                  <p className="font-mono text-[11px] text-danger">
+                    {(restoreConversation.error as Error).message}
+                  </p>
+                )}
+                {deletedChapters.map((conversation) => (
+                  <div key={conversation.id} className="flex items-center justify-between gap-2 py-1 text-xs">
+                    <span className="truncate font-serif text-ink-muted italic">
+                      {conversation.title ?? 'New chapter'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => restoreConversation.mutate(conversation.id)}
+                      className="shrink-0 cursor-pointer text-[11px] font-medium text-accent hover:underline"
+                    >
+                      Restore
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
-            <ul className="max-h-40 overflow-y-auto">
-              {deletedConversations.data?.map((conversation) => (
-                <li
-                  key={conversation.id}
-                  className="flex items-center justify-between gap-2 px-4 py-1.5"
-                >
-                  <span className="truncate font-serif text-sm text-ink-muted italic dark:text-ink-muted-dark">
-                    {conversation.title ?? 'New chapter'}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => restoreConversation.mutate(conversation.id)}
-                    className="shrink-0 rounded-sm px-1.5 py-0.5 font-mono text-[11px] tracking-wide text-ink-muted uppercase hover:bg-accent/10 hover:text-accent dark:text-ink-muted-dark dark:hover:bg-accent-dark/10 dark:hover:text-accent-dark"
-                  >
-                    Restore
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </details>
+          </div>
         )}
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="shrink-0 border-b border-rule px-6 py-3 dark:border-rule-dark">
-          <h1 className="font-serif text-lg text-ink italic dark:text-ink-dark">
+      {/* ===================================================================
+          COLUMN 2: READING & INQUIRY STREAM
+         =================================================================== */}
+      <main className="flex min-h-0 min-w-0 flex-col lg:col-span-6">
+        <header className="shrink-0 border-b border-rule px-6 py-4">
+          <h1 className="font-serif text-2xl font-normal text-ink italic">
             {project.data?.name ?? '…'}
           </h1>
-          <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
-            {documentCount} document{documentCount === 1 ? '' : 's'}
+          <p className="mt-0.5 font-mono text-xs tabular-nums text-ink-muted">
+            {documentCount} {documentCount === 1 ? 'Document' : 'Documents'}
           </p>
           {(project.isError || projectDocuments.isError) && (
-            <p className="mt-1 text-sm text-red-700 dark:text-red-400">
+            <p className="mt-1 text-sm text-danger">
               {((project.error ?? projectDocuments.error) as Error).message}
             </p>
           )}
-        </div>
+        </header>
 
         {conversationId === null ? (
-          <p className="px-6 py-6 font-serif text-sm text-ink-muted dark:text-ink-muted-dark">
+          <p className="px-6 py-6 font-serif text-sm text-ink-muted">
             Select a chapter, or begin a new one.
           </p>
         ) : (
           <>
-            <div className="min-h-0 max-w-[75ch] flex-1 space-y-6 overflow-y-auto px-6 py-6">
+            <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 py-8 md:px-10">
               {history.isError && (
-                <p className="font-serif text-sm text-red-700 dark:text-red-400">
+                <p className="font-serif text-sm text-danger">
                   Couldn&rsquo;t load this chapter&rsquo;s messages: {(history.error as Error).message}
                 </p>
               )}
               {messages.map((message) => (
-                <div key={message.id}>
-                  <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
-                    {message.role === 'user' ? 'You asked' : 'Reply'}
-                  </p>
+                <div key={message.id} className="mx-auto max-w-[68ch] space-y-3">
                   {message.role === 'user' ? (
-                    <p className="mt-1 font-serif text-sm text-ink dark:text-ink-dark">
-                      {message.content}
-                    </p>
+                    <div className="space-y-1.5 border-l-2 border-rule-strong pl-4">
+                      <p className="font-mono text-xs text-ink-muted">You Asked</p>
+                      <p className="font-serif text-xl text-ink">{message.content}</p>
+                    </div>
                   ) : (
-                    <>
-                      <MarkdownMessage content={message.content} messageId={message.id} />
-                      <Footnotes
+                    <div className="space-y-4 border-t border-rule pt-4">
+                      <RetrievedLedger
                         citations={message.citations}
-                        pending={false}
-                        messageId={message.id}
                         citedRanks={extractCitedRanks(message.content)}
+                        messageId={message.id}
+                        activeCitation={activeCitation}
+                        filterMode={passageFilterMode}
+                        onChangeFilterMode={setPassageFilterMode}
+                        onSelect={(rank) => setActiveCitation({ messageId: message.id, rank })}
                       />
-                    </>
+                      <p className="font-mono text-xs text-ink-muted">Reply</p>
+                      <MarkdownMessage
+                        content={message.content}
+                        onSelectCitation={(rank) => setActiveCitation({ messageId: message.id, rank })}
+                      />
+                    </div>
                   )}
                 </div>
               ))}
 
               {isSending && (
-                <div>
+                <div className="mx-auto max-w-[68ch] space-y-4 border-t border-rule pt-4">
+                  {streamingText === '' && (
+                    <div className="rounded-md border border-dashed border-rule-strong bg-parchment p-4">
+                      <p className="font-mono text-xs text-ink-muted italic">assembling sources&hellip;</p>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2">
-                    <p className="font-mono text-[12px] tracking-wide text-ink-muted uppercase dark:text-ink-muted-dark">
-                      Reply
-                    </p>
+                    <p className="font-mono text-xs text-ink-muted">Reply</p>
                     <span
                       aria-hidden="true"
-                      className="relative h-px w-[7.5rem] shrink-0 overflow-hidden bg-rule dark:bg-rule-dark"
+                      className="relative h-px w-[7.5rem] shrink-0 overflow-hidden bg-rule"
                     >
-                      <span className="absolute inset-y-0 left-0 h-full w-10 bg-accent motion-safe:animate-[ink-scan_1.1s_linear_infinite] dark:bg-accent-dark" />
+                      <span className="absolute inset-y-0 left-0 h-full w-10 bg-accent motion-safe:animate-[ink-scan_1.1s_linear_infinite]" />
                     </span>
                     <span className="sr-only" role="status">
                       Composing a reply&hellip;
                     </span>
                   </div>
-                  <MarkdownMessage content={streamingText} messageId="streaming" />
-                  <Footnotes citations={[]} pending={true} messageId="streaming" />
+                  <MarkdownMessage content={streamingText} />
                 </div>
               )}
             </div>
 
-            {sendError && (
-              <p className="shrink-0 px-6 text-sm text-red-700 dark:text-red-400">{sendError}</p>
-            )}
+            {sendError && <p className="shrink-0 px-6 pb-2 text-sm text-danger">{sendError}</p>}
 
-            <div className="shrink-0 border-t border-rule px-6 pt-3 dark:border-rule-dark">
-              <div className="flex gap-2" role="radiogroup" aria-label="Question mode">
-                {(['lookup', 'survey'] as const).map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    role="radio"
-                    aria-checked={mode === option}
-                    onClick={() => setMode(option)}
-                    className={`border px-2 py-1 font-mono text-[12px] tracking-wide uppercase ${
-                      mode === option
-                        ? 'border-accent text-accent dark:border-accent-dark dark:text-accent-dark'
-                        : 'border-rule text-ink-muted hover:border-accent hover:text-accent dark:border-rule-dark dark:text-ink-muted-dark dark:hover:border-accent-dark dark:hover:text-accent-dark'
-                    }`}
+            <footer className="shrink-0 border-t border-rule bg-parchment p-4 md:px-8 md:py-4">
+              <div className="mx-auto max-w-[68ch] space-y-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div
+                    className="inline-flex items-center gap-1 self-start rounded-md border border-rule-strong bg-stone p-1"
+                    role="radiogroup"
+                    aria-label="Question mode"
                   >
-                    {option === 'lookup' ? 'Lookup' : 'Survey'}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-1.5 font-serif text-xs text-ink-muted italic dark:text-ink-muted-dark">
-                {mode === 'lookup'
-                  ? 'Finds specific passages that answer this question directly.'
-                  : 'Summarises broad topics by drawing on several sections at once.'}
-              </p>
-            </div>
+                    {(['lookup', 'survey'] as const).map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        role="radio"
+                        aria-checked={mode === option}
+                        onClick={() => setMode(option)}
+                        className={`cursor-pointer rounded-sm px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors ${
+                          mode === option
+                            ? 'border border-accent/30 bg-paper text-accent'
+                            : 'text-ink-secondary hover:text-ink'
+                        }`}
+                      >
+                        {option === 'lookup' ? 'Lookup' : 'Survey'}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="font-serif text-xs text-ink-secondary italic">
+                    {mode === 'lookup'
+                      ? 'Finds specific passages that answer this question directly.'
+                      : 'Synthesizes overarching themes across summarized document sections.'}
+                  </p>
+                </div>
 
-            <div className="flex shrink-0 gap-2 px-6 pt-3 pb-4">
-              <input
-                type="text"
-                placeholder="Ask a question…"
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') handleSend()
-                }}
-                disabled={isSending}
-                className="flex-1 border border-rule bg-transparent px-3 py-2 font-serif text-sm text-ink placeholder:text-ink-muted disabled:opacity-50 dark:border-rule-dark dark:text-ink-dark dark:placeholder:text-ink-muted-dark"
-              />
-              <button
-                type="button"
-                onClick={handleSend}
-                disabled={isSending || !draft.trim()}
-                className="border border-ink px-4 py-2 font-mono text-[12px] tracking-wide text-ink uppercase hover:border-accent hover:text-accent disabled:opacity-40 dark:border-ink-dark dark:text-ink-dark dark:hover:border-accent-dark dark:hover:text-accent-dark"
-              >
-                Send
-              </button>
-            </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Ask a question…"
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') handleSend()
+                    }}
+                    disabled={isSending}
+                    className="flex-1 rounded-md border border-rule-strong bg-paper px-4 py-2.5 font-serif text-sm text-ink placeholder-ink-muted focus:border-accent focus:outline-none disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSend}
+                    disabled={isSending || !draft.trim()}
+                    className="cursor-pointer rounded-md bg-accent px-5 py-2.5 text-xs font-semibold whitespace-nowrap text-paper transition-colors hover:bg-accent-hover disabled:pointer-events-none disabled:opacity-45"
+                  >
+                    Send
+                  </button>
+                </div>
+              </div>
+            </footer>
           </>
         )}
-      </div>
+      </main>
+
+      {/* ===================================================================
+          COLUMN 3: MARGINALIA PASSAGE INSPECTOR
+         =================================================================== */}
+      <PassageInspector
+        message={inspectorMessage}
+        citedRanks={inspectorCitedRanks}
+        activeCitation={activeCitation}
+        onSelect={(rank) =>
+          inspectorMessage && setActiveCitation({ messageId: inspectorMessage.id, rank })
+        }
+        onManageDocuments={onBack}
+      />
     </div>
   )
 }

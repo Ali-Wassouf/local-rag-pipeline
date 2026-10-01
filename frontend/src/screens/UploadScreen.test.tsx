@@ -214,7 +214,7 @@ describe('UploadScreen', () => {
     const newFile = new File(['n'], 'new.txt', { type: 'text/plain' })
     fireEvent.change(fileInput, { target: { files: [dupFile, newFile] } })
 
-    expect(await screen.findByText(/Already ingested as "dup"/)).toBeInTheDocument()
+    expect(await screen.findByText(/Already ingested as .dup./)).toBeInTheDocument()
     expect(await screen.findByText(/Job #5/)).toBeInTheDocument()
   })
 

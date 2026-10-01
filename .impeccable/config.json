@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/screens/ChatScreen.tsx"
+        ],
+        "createdAt": "2026-10-01T16:54:51.601Z",
+        "reason": "pinned reference design: literal .verbatim-quote treatment from the user-supplied docuchat-local reference, central to the Marginalia Passage Inspector's signature interaction"
+      }
+    ]
+  }
+}

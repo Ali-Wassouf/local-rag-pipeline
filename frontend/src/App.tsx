@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 
+import { useProject, useProjectDocuments } from './api/hooks'
 import { Shell } from './components/Shell'
 import { ChatScreen } from './screens/ChatScreen'
 import { ProjectDetailScreen } from './screens/ProjectDetailScreen'
@@ -17,8 +18,17 @@ type View =
   | { screen: 'upload'; projectId?: number; returnTo: View }
   | { screen: 'review'; documentId: number; returnTo: View }
 
-function App() {
+function projectIdForNav(view: View): number | null {
+  if (view.screen === 'project-detail' || view.screen === 'chat') return view.projectId
+  return null
+}
+
+function AppContent() {
   const [view, setView] = useState<View>({ screen: 'projects' })
+
+  const navProjectId = projectIdForNav(view)
+  const navProject = useProject(navProjectId)
+  const navDocuments = useProjectDocuments(navProjectId)
 
   let content: React.ReactNode
 
@@ -63,24 +73,37 @@ function App() {
   } else {
     const reviewView = view
     content = (
-      <div>
-        <div className="mx-auto max-w-4xl p-4">
-          <button
-            type="button"
-            onClick={() => setView(reviewView.returnTo)}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            &larr; Back
-          </button>
-        </div>
-        <ReviewScreen documentId={reviewView.documentId} />
-      </div>
+      <ReviewScreen documentId={reviewView.documentId} onBack={() => setView(reviewView.returnTo)} />
     )
   }
 
+  const nav =
+    navProjectId !== null && (view.screen === 'project-detail' || view.screen === 'chat')
+      ? {
+          projectName: navProject.data?.name ?? '…',
+          documentCount: navDocuments.data?.length ?? 0,
+          activeTab: (view.screen === 'chat' ? 'chat' : 'corpus') as 'corpus' | 'chat',
+          onNavigateCorpus: () => setView({ screen: 'project-detail', projectId: navProjectId }),
+          onNavigateChat: () =>
+            setView({
+              screen: 'chat',
+              projectId: navProjectId,
+              returnTo: { screen: 'project-detail', projectId: navProjectId },
+            }),
+        }
+      : undefined
+
+  return (
+    <Shell nav={nav} onNavigateHome={() => setView({ screen: 'projects' })}>
+      {content}
+    </Shell>
+  )
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Shell>{content}</Shell>
+      <AppContent />
     </QueryClientProvider>
   )
 }

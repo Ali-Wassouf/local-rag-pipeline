@@ -56,7 +56,7 @@ describe('ProjectsListScreen', () => {
 
     renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />)
 
-    const input = await screen.findByPlaceholderText('New project name')
+    const input = await screen.findByPlaceholderText(/New project name/)
     fireEvent.change(input, { target: { value: 'Chemistry' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
@@ -77,7 +77,7 @@ describe('ProjectsListScreen', () => {
 
     renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />)
 
-    const input = await screen.findByPlaceholderText('New project name')
+    const input = await screen.findByPlaceholderText(/New project name/)
     fireEvent.change(input, { target: { value: 'Chemistry' } })
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 

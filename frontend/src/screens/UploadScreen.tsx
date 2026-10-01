@@ -42,33 +42,31 @@ function FileUploadRow({ file, projectId, generateSummary, onReviewDocument }: F
   const stageIndex = job.data ? STAGES.indexOf(job.data.stage) : -1
 
   return (
-    <div className="mt-4 rounded-md border border-gray-200 p-3 dark:border-gray-700">
-      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{file.name}</p>
+    <div className="mt-4 rounded-md border border-rule bg-parchment p-4">
+      <p className="font-serif text-sm text-ink">{file.name}</p>
 
-      {upload.isError && (
-        <p className="mt-1 text-sm text-red-600">{(upload.error as Error).message}</p>
-      )}
+      {upload.isError && <p className="mt-1 text-sm text-danger">{(upload.error as Error).message}</p>}
 
       {jobId !== null && job.isError && (
-        <p className="mt-1 text-sm text-red-600">
+        <p className="mt-1 text-sm text-danger">
           Couldn&rsquo;t check on the job&rsquo;s progress: {(job.error as Error).message}
         </p>
       )}
 
       {upload.data?.deduped && (
-        <p className="mt-1 text-sm text-gray-500">
-          Already ingested as "{upload.data.document.title}" — no new job started.
+        <p className="mt-1 text-sm text-ink-muted italic">
+          Already ingested as &ldquo;{upload.data.document.title}&rdquo; — no new job started.
         </p>
       )}
 
       {jobId !== null && job.data && (
         <div className="mt-2">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-            Job #{jobId} — stage: <strong>{job.data.stage}</strong>
+          <p className="font-mono text-xs tabular-nums text-ink-secondary">
+            Job #{jobId} &middot; stage: <strong className="text-ink">{job.data.stage}</strong>
           </p>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded bg-gray-200 dark:bg-gray-700">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-stone">
             <div
-              className="h-full bg-blue-600 transition-all"
+              className="h-full bg-accent transition-all"
               style={{
                 width: `${Math.min(
                   100,
@@ -78,14 +76,14 @@ function FileUploadRow({ file, projectId, generateSummary, onReviewDocument }: F
               }}
             />
           </div>
-          {job.data.error && <p className="mt-2 text-sm text-red-600">{job.data.error}</p>}
+          {job.data.error && <p className="mt-2 text-sm text-danger">{job.data.error}</p>}
           {job.data.stage === 'done' && upload.data && (
             <div className="mt-2 flex items-center gap-3">
-              <p className="text-sm text-green-600">Done.</p>
+              <p className="text-sm font-medium text-status-ready">Done.</p>
               <button
                 type="button"
                 onClick={() => onReviewDocument(upload.data.document.id)}
-                className="text-sm text-blue-600 hover:underline"
+                className="cursor-pointer text-sm font-medium text-accent underline-offset-4 hover:underline"
               >
                 Review structure
               </button>
@@ -113,34 +111,34 @@ export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScre
   }
 
   return (
-    <div className="mx-auto max-w-xl p-8">
+    <div className="mx-auto max-w-xl px-6 py-10">
       {onBack && (
         <button
           type="button"
           onClick={onBack}
-          className="mb-4 text-sm text-blue-600 hover:underline"
+          className="mb-4 cursor-pointer text-xs font-medium text-ink-secondary transition-colors hover:text-ink"
         >
           &larr; Back
         </button>
       )}
-      <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+      <h1 className="font-serif text-3xl font-normal tracking-tight text-ink">
         Upload documents
       </h1>
 
-      <div className="mt-4 flex items-start gap-2">
+      <div className="mt-5 flex items-start gap-2">
         <input
           id="generate-summary"
           type="checkbox"
           checked={generateSummary}
           onChange={(event) => setGenerateSummary(event.target.checked)}
           disabled={selectedFiles.length > 0}
-          className="mt-0.5"
+          className="mt-0.5 accent-accent"
         />
-        <label htmlFor="generate-summary" className="text-sm text-gray-700 dark:text-gray-300">
+        <label htmlFor="generate-summary" className="text-sm text-ink-secondary">
           Generate a summary for these documents
         </label>
       </div>
-      <p className="mt-2 rounded-md bg-blue-50 p-3 text-xs text-blue-800 dark:bg-blue-950 dark:text-blue-200">
+      <p className="mt-2 rounded-md border border-rule bg-parchment p-3 text-xs text-ink-secondary">
         Generating a summary takes extra time and compute — it runs one AI generation call for
         every long section once a document finishes indexing. You can leave this unchecked and
         generate a summary for a document later from its project page.
@@ -158,10 +156,11 @@ export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScre
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="cursor-pointer rounded-md bg-accent px-4 py-2 text-xs font-semibold text-paper transition-colors hover:bg-accent-hover"
         >
-          Choose files
+          Choose Files…
         </button>
+        <span className="font-mono text-xs text-ink-muted">PDF &middot; DOCX &middot; PPTX &middot; TXT</span>
       </div>
 
       {selectedFiles.map((file, index) => (

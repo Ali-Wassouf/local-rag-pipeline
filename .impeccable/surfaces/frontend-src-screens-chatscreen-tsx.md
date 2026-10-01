@@ -2,88 +2,99 @@
 version: 1
 slug: "frontend-src-screens-chatscreen-tsx"
 primary_target: "frontend/src/screens/ChatScreen.tsx"
-related_targets: ["frontend/src/App.tsx"]
+related_targets: ["frontend/src/App.tsx","frontend/src/components/Shell.tsx","frontend/src/screens/ProjectsListScreen.tsx","frontend/src/screens/ProjectDetailScreen.tsx","frontend/src/screens/UploadScreen.tsx","frontend/src/screens/ReviewScreen.tsx"]
 ---
 
 ## Scope and visitor mode
 
-Operate. Chat screen (`frontend/src/screens/ChatScreen.tsx`) plus a new persistent
-shared shell (`frontend/src/App.tsx` and a new `Shell` wrapper) as seen from
-Chat. `ProjectsListScreen`, `ProjectDetailScreen`, `UploadScreen`,
-`ReviewScreen` keep their current plain content — only the shell chrome
-around them changes for consistency. No DB/API changes; no change to SSE
-streaming, project scoping, citation data, or Markdown rendering behavior.
+Operate. Full visual world replacement across every screen: `ChatScreen.tsx`
+(the Reading Room), `ProjectsListScreen.tsx`, `ProjectDetailScreen.tsx`,
+`UploadScreen.tsx`, `ReviewScreen.tsx`, the shared `Shell.tsx` and `App.tsx`.
+No DB/API changes beyond what was already shipped (source-passage view,
+document removal/re-index, multi-file upload); no change to SSE streaming,
+project scoping, citation data, or retrieval behavior. Dark mode dropped by
+explicit user decision — the world is light-only, deliberately.
 
 ## Audience, job, proof
 
 Solo local researcher asking grounded questions over their own document
-corpus, needing to read a long answer and trust/verify its citations without
-re-reading source material. Real proof on screen: actual `CitationRead[]`
-(chunk_id, rank, document_title, display_path) already returned by the API
-— nothing invented. Correction made during build: `CitationRead` carries no
-summary/passage flag on this screen (that distinction belongs to a
-not-yet-built survey feature per CLAUDE.md invariant 6) — every citation
-here is already a real retrieved passage, so the footnote treatment below
-does not fabricate a summary/passage split.
+corpus, managing projects and a document corpus, needing to read a long
+answer and verify its citations without re-reading source material. Real
+proof on screen: actual `CitationRead[]` (rank, document_title,
+display_path, is_summary, text) and `DocumentRead` (section_count,
+summary_count, status) already returned by the API — nothing invented. No
+document-scope retrieval filter and no per-document "unassigned vault" were
+added (explicit user decision to keep this a pure visual/layout port, not a
+feature expansion) — the chat screen omits the reference's document-scope
+dropdown, and the Projects list omits its unassigned-documents section.
 
 ## Chosen direction and memorable moment
 
-**The Bibliography** — a scholarly monograph's footnote apparatus, warm
-paper world. Memorable moment: the footnote rail fixed at the bottom of the
-transcript fills in live, in real time, as the answer streams — the reader
-watches the evidence assemble under the claim it supports, in the same
-motion as the prose itself.
+**Marginalia** — an archival paper reading room, adopted wholesale from a
+complete, finished reference implementation the user supplied
+(`~/Downloads/docuchat-local`, itself already named "Marginalia"). This is
+not a generated direction: the user pinned the exact visual world, so no
+concept-seed roll or direction tournament ran — the brief IS the comp.
+Memorable moment: the Reading Room's right-hand Marginalia Passage
+Inspector — clicking any citation marker, in the prose or in a reply's
+retrieved-passages ledger, opens that source's full verbatim text (or,
+visibly labelled, its summary — CLAUDE.md invariant 6) in a dedicated
+column that persists across the whole chapter, replacing the prior
+build's inline expand-per-footnote pattern.
 
 ## Unresolved decisions carried to the build
 
-- Exact accent reuse for destructive/error states elsewhere in the app is
-  not decided here (flagged for the documenter).
-- Only the shell chrome (running head / chapter list) is restyled on other
-  screens; their content stays in the incumbent plain look until a future
-  round.
+- The detector flags the Passage Inspector's quote blockquote
+  (`border-l-2 border-l-accent`) as the "side-tab accent border" slop
+  pattern. Kept deliberately: it is a named, literal element of the pinned
+  reference (`.verbatim-quote { border-left: 2px solid var(--accent-oxblood) }`)
+  central to the signature interaction, not an unconsidered default.
+- Project `description`, per-project document/chapter counts on the
+  Projects list, and project deletion all exist in the reference's mock
+  data/UI but have no backend counterpart here and were not added — the
+  Projects list shows only what `ProjectRead` actually carries
+  (name, created_at).
 
 ## Direction contract
 
 THESIS: A grounded answer is a claim standing on evidence, and the two
-must never separate — this surface refuses the chat product's default of
-burying sources behind a collapsed "Sources" toggle nobody opens.
+must never separate — this world refuses the chat product's default of
+burying sources behind a collapsed toggle, going further than the prior
+build by giving evidence its own permanent column rather than an
+inline expand.
 
-OWN-WORLD: Warm cream paper (`--color-paper` #F7F1E6, dark: #17140F), near-
-black warm ink for prose (`--color-ink` #221D16, dark: #EDE6D8), a single
-restrained oxblood accent (`--color-accent` #7C2D2D, dark: #D47971) reserved
-for citation numerals, active states, and rule weight. Two workhorse type
-families only: a text-optimized book serif (Source Serif 4) for prose, a
-true tabular mono (IBM Plex Mono) for section paths, dates, and folio
-numbers — no display face. Hairline rules (`--color-rule` #DED2B8, dark:
-#362E22) throughout; no shadows, no rounded chat bubbles, no card
-containers.
+OWN-WORLD: Archival paper palette, light only — `--color-paper` #FBF9F5,
+`--color-parchment` #F3EFE6, `--color-stone` #EBE5D8, hairline rules
+`--color-rule` #E2D9C8 / `--color-rule-strong` #C8BCA6, ink hierarchy
+`--color-ink` #1C1917 / `--color-ink-secondary` #57534E / `--color-ink-muted`
+#78716C, a single oxblood accent `--color-accent` #9A3412 (hover #7C2D12),
+status green #15803D, danger red #DC2626. Three type families: Newsreader
+(serif, prose and headings), Plus Jakarta Sans (sans, UI chrome), JetBrains
+Mono (tabular data — dates, folio numbers, section paths, counts). No
+shadows, no rounded chat bubbles; flat parchment panels and hairline rules
+throughout.
 
-STORY: The reader opens a conversation (a "chapter" in a running list, dated
-and numbered, with a real first-question preview fetched from that
-conversation's own messages, not a bare title); asks a question; watches
-the answer set in book prose with superscript citation numerals. Each
-answer carries its own footnote block directly beneath it — the page a real
-footnote lives on is the one that cites it, not a rail shared across the
-whole book — showing rank, document title, and section path for every
-retrieved source. While an answer is still streaming its footnote block
-shows a dormant "assembling sources…" placeholder (dashed rule) that
-resolves to the real entries (solid rule) the instant the stream's `done`
-event delivers them, since the SSE protocol only carries citations at
-completion, never token-by-token.
+STORY: A persistent top bar (brand — project-scoped tabs — nothing else)
+replaces full-screen navigation jumps. The Reading Room is a 3-column
+workbench: a numbered chapter rail (soft-delete/restore preserved) on the
+left, the inquiry stream in the center (each reply prefaced by a retrieved-
+passages ledger distinguishing cited from retrieved-but-uncited sources,
+with an All/Cited Only filter), and the Marginalia Passage Inspector fixed
+on the right, always showing the currently-selected source's full text.
+Project Corpus (`ProjectDetailScreen`) keeps every existing action —
+attach, upload, rename, generate-summary, re-index, type-to-confirm
+delete — restyled into dual ingestion panels and a document ledger with
+real summarization progress bars.
 
-FIRST VIEWPORT: A running head across the top of the app names the app
-("Local RAG") in small tracked caps mono, thin rule beneath (built as the
-shared `Shell`). Below it, this screen's own running head names the open
-project. Left: the chapter list (conversations), each row showing a folio
-number (its position in the list), a date, and a one-line first-question
-preview. Right, filling the remaining width: the transcript in serif prose,
-comfortable measure (65-75ch), each answer's footnote block attached
-directly beneath it, composer fixed at the bottom of the column.
+FIRST VIEWPORT: Reading Room, chapter selected: top bar (brand + "Project
+Corpus (N)" / "Reading Room (Chat)" tabs) across the full width; below it,
+three columns — chapter rail (fixed width), reading stream (flexible,
+68ch measure), Marginalia Passage Inspector (fixed width) — each
+independently scrollable, composer fixed at the stream's bottom.
 
-FORM: The Bibliography. Rank 1 of 7 on my own ordered list (own top pick;
-the roll's dealt assignment was a different direction, "The Ledger",
-declined by the user in favor of this pick). Seed key: 6ae98cb0.
+FORM: Marginalia (adopted from a user-supplied finished reference, not
+rolled). No seed key — direction pinned by brief, not generated.
 
-FINISH: unreviewed and undocumented is unfinished; this build ends with the
-finish review, the verdict, DESIGN.md, and every shipping raster carrying
-its provenance.
+FINISH: unreviewed and undocumented is unfinished; this build ends with
+the finish review, the verdict, DESIGN.md, and every shipping raster
+carrying its provenance.

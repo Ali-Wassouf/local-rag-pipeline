@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -74,7 +74,7 @@ describe('ChatScreen', () => {
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
 
     expect(await screen.findByText('Physics')).toBeInTheDocument()
-    expect(await screen.findByText('1 document')).toBeInTheDocument()
+    expect(await screen.findByText('1 Document')).toBeInTheDocument()
   })
 
   it('selecting a past conversation loads its messages', async () => {
@@ -150,7 +150,7 @@ describe('ChatScreen', () => {
         (_content, element) => element?.tagName === 'P' && element.textContent === 'The answer is 42 1.',
       ),
     ).toBeInTheDocument()
-    expect(await screen.findByText(/Ch\. 2/)).toBeInTheDocument()
+    expect((await screen.findAllByText(/Ch\. 2/)).length).toBeGreaterThan(0)
   })
 
   it('renders Markdown formatting instead of literal syntax characters', async () => {
@@ -230,27 +230,27 @@ describe('ChatScreen', () => {
 
     expect((await screen.findByText('grounded')).tagName).toBe('STRONG')
 
-    // The inline markers in the prose are real same-page links inside a
-    // <sup>; the always-visible footnote block beneath the answer repeats
-    // the same ranks as its own <span> entries — both are expected now that
-    // sources are never collapsed.
-    const markers = await screen.findAllByText(/^[12]$/)
-    expect(markers.map((el) => el.tagName).sort()).toEqual(['A', 'A', 'SPAN', 'SPAN'])
+    // The inline markers in the prose are real clickable <button>s inside a
+    // <sup>, styled distinctly from plain text.
+    const reply = (await screen.findByText(/Answers should be/)).closest('.prose') as HTMLElement
+    const inlineMarkers = within(reply).getAllByRole('button')
+    expect(inlineMarkers.map((el) => el.textContent)).toEqual(['1', '2'])
 
-    expect(await screen.findByText(/Doc A/)).toBeInTheDocument()
-    expect(await screen.findByText(/Doc B/)).toBeInTheDocument()
+    expect((await screen.findAllByText(/Doc A/)).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText(/Doc B/)).length).toBeGreaterThan(0)
   })
 
-  it('clicking a citation marker links to its own footnote line', async () => {
+  it('clicking a citation marker opens it in the passage inspector', async () => {
     const markdownMessages: MessageRead[] = [
       {
         id: 42,
         conversation_id: 5,
         role: 'assistant',
-        content: 'A transaction groups operations into one unit [1].',
+        content: 'A transaction groups operations into one unit [1]. See also [2].',
         created_at: '2026-01-01T00:00:00Z',
         citations: [
-          { chunk_id: 1, rank: 1, document_title: 'DDIA', display_path: 'Ch. 7', is_summary: false, text: 'Passage text.' },
+          { chunk_id: 1, rank: 1, document_title: 'DDIA', display_path: 'Ch. 7', is_summary: false, text: 'First passage text.' },
+          { chunk_id: 2, rank: 2, document_title: 'Raft Paper', display_path: 'Sec. 3', is_summary: false, text: 'Second passage text.' },
         ],
       },
     ]
@@ -260,15 +260,18 @@ describe('ChatScreen', () => {
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
     fireEvent.click(await screen.findByText('Old chat about forces'))
 
-    const marker = await screen.findByRole('link', { name: '1' })
-    expect(marker).toHaveAttribute('href', '#fn-42-1')
+    const inspector = await screen.findByLabelText('Marginalia passage inspector')
+    // Defaults to the cited source for the latest reply.
+    expect(within(inspector).getByText('DDIA')).toBeInTheDocument()
 
-    const footnoteLine = await screen.findByText(/DDIA/)
-    expect(footnoteLine.closest('li')).toHaveAttribute('id', 'fn-42-1')
-    expect(footnoteLine.closest('li')).toHaveClass('footnote-entry')
+    const reply = (await screen.findByText(/A transaction groups/)).closest('.prose') as HTMLElement
+    fireEvent.click(within(reply).getByRole('button', { name: '2' }))
+
+    expect(within(inspector).getByText('Raft Paper')).toBeInTheDocument()
+    expect(within(inspector).getByText(/Second passage text\./)).toBeInTheDocument()
   })
 
-  it('reveals the real passage text when a footnote entry is expanded', async () => {
+  it('the passage inspector shows the full source text, not just its citation', async () => {
     const passageText = 'Transactions group one or more operations into a single logical unit.'
     const markdownMessages: MessageRead[] = [
       {
@@ -295,18 +298,7 @@ describe('ChatScreen', () => {
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
     fireEvent.click(await screen.findByText('Old chat about forces'))
 
-    // Collapsed by default — the source-passage view is opt-in per entry.
-    // (jsdom doesn't apply the browser's UA stylesheet that hides a closed
-    // <details>'s content, so `open` is the real, meaningful assertion
-    // here rather than DOM presence of the text.)
-    const footnoteLine = await screen.findByText(/DDIA/)
-    const details = footnoteLine.closest('details') as HTMLDetailsElement
-    expect(details.open).toBe(false)
-
-    fireEvent.click(footnoteLine)
-
-    expect(details.open).toBe(true)
-    expect(await screen.findByText(passageText)).toBeInTheDocument()
+    expect(await screen.findByText(new RegExp(passageText.replace('.', '\\.')))).toBeInTheDocument()
   })
 
   it('visually distinguishes a retrieved source the answer never actually cited', async () => {
@@ -332,8 +324,9 @@ describe('ChatScreen', () => {
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
     fireEvent.click(await screen.findByText('Old chat about forces'))
 
-    const citedLine = (await screen.findByText(/Slide 16/)).closest('li')
-    const uncitedLine = (await screen.findByText(/Slide 5/)).closest('li')
+    const ledger = await screen.findByLabelText('Retrieved document passages')
+    const citedLine = within(ledger).getByText(/Slide 16/).closest('button')
+    const uncitedLine = within(ledger).getByText(/Slide 5/).closest('button')
 
     expect(citedLine).not.toHaveTextContent('not cited')
     expect(uncitedLine).toHaveTextContent('(retrieved, not cited)')
@@ -467,8 +460,13 @@ describe('ChatScreen', () => {
     renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
     fireEvent.click(await screen.findByText('Old chat about forces'))
 
-    const footnoteLine = (await screen.findByText(/Part II/)).closest('li')
-    expect(footnoteLine).toHaveTextContent('(summary)')
+    const ledger = await screen.findByLabelText('Retrieved document passages')
+    const ledgerRow = within(ledger).getByText(/Part II/).closest('button')
+    expect(ledgerRow).toHaveTextContent('(summary)')
+
+    const inspector = await screen.findByLabelText('Marginalia passage inspector')
+    expect(within(inspector).getByText('Summary')).toBeInTheDocument()
+    expect(within(inspector).queryByText('Verbatim Document Excerpt')).not.toBeInTheDocument()
   })
 
   it('shows an error if the chapter list fails to load', async () => {
