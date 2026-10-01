@@ -12,9 +12,9 @@ from app.models.conversation import Conversation, Message, MessageCitation
 from app.models.document import Document
 from app.models.project import Project
 from app.models.section import Section
-from app.retrieval.generate import GenerationError, stream_generate
+from app.retrieval.generate import GenerationError, rewrite_query, stream_generate
+from app.retrieval.pipeline import retrieve
 from app.retrieval.prompt import build_prompt
-from app.retrieval.search import vector_search
 from app.schemas.conversation import CitationRead, ConversationRead, MessageCreate, MessageRead
 
 router = APIRouter(tags=["conversations"])
@@ -111,9 +111,12 @@ async def send_message(
     db.add(user_message)
     await db.commit()
 
-    query_embedding = (await embed_batch([payload.content]))[0]
-    results = await vector_search(db, conversation.project_id, query_embedding)
-    prompt = build_prompt([chunk.embed_text for chunk, _s, _d in results], history, payload.content)
+    standalone_question = await rewrite_query(payload.content, history)
+    query_embedding = (await embed_batch([standalone_question]))[0]
+    results = await retrieve(db, conversation.project_id, query_embedding, standalone_question)
+    prompt = build_prompt(
+        [chunk.embed_text for chunk, _s, _d in results], history, standalone_question
+    )
 
     async def event_stream() -> AsyncIterator[str]:
         collected: list[str] = []

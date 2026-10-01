@@ -1,9 +1,11 @@
 """Assembles the prompt sent to the generator: system instructions, numbered
 sources, conversation history, then the current question.
 
-No query rewriting for follow-ups here — that's Phase 6. Sources are
-expected to already be breadcrumb-prefixed (chunks.embed_text), so they're
-inserted verbatim rather than reassembled.
+Query rewriting for follow-ups happens before this, in
+app/retrieval/generate.py's rewrite_query (docs/plan.md §4.2) — by the time
+`question` gets here it's already standalone. Sources are expected to
+already be breadcrumb-prefixed (chunks.embed_text), so they're inserted
+verbatim rather than reassembled.
 """
 
 SYSTEM_PROMPT = (

@@ -6,7 +6,9 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ingest.embed import embed_batch
 from app.models.chunk import Chunk
+from app.models.conversation import Message
 from app.models.document import DocFormat, Document, ProjectDocument
 from app.models.project import Project
 from app.models.section import Section
@@ -202,3 +204,86 @@ async def test_chat_never_cites_another_projects_chunks(
     final = next(e for e in events if e.get("done"))
     cited_ids = [c["chunk_id"] for c in final["citations"]]
     assert chunk_b.id not in cited_ids
+
+
+# --- Phase 4: query rewriting for follow-ups (docs/build-phases.md) -------
+
+
+async def test_followup_question_retrieves_the_chunk_it_actually_refers_to(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """The literal Phase 4 'Done when': a follow-up like 'what about the
+    second one?' must retrieve correctly, not garbage.
+
+    History is seeded directly (not via a real first round-trip) so the
+    scenario is deterministic: we control exactly what "the second one"
+    refers to, rather than depending on how the real model happens to phrase
+    its own first answer.
+    """
+    if not await _ollama_is_running():
+        pytest.skip("Ollama is not running locally")
+
+    project_id = await _create_project(client, "Isolation Levels")
+
+    read_committed_embedding, serializable_embedding = await embed_batch(
+        [
+            "Read Committed isolation only prevents dirty reads.",
+            "Serializable isolation is the strongest level and prevents phantom reads.",
+        ]
+    )
+    read_committed_chunk = await _seed_embedded_chunk(
+        db_session,
+        project_id,
+        "Read Committed isolation only prevents dirty reads.",
+        read_committed_embedding,
+    )
+    serializable_chunk = await _seed_embedded_chunk(
+        db_session,
+        project_id,
+        "Serializable isolation is the strongest level and prevents phantom reads.",
+        serializable_embedding,
+    )
+    await db_session.commit()
+
+    created = await client.post(f"/projects/{project_id}/conversations")
+    conversation_id = created.json()["id"]
+
+    db_session.add_all(
+        [
+            Message(
+                conversation_id=conversation_id,
+                role="user",
+                content="Name two transaction isolation levels.",
+            ),
+            Message(
+                conversation_id=conversation_id,
+                role="assistant",
+                content="Two common ones are Read Committed and Serializable.",
+            ),
+        ]
+    )
+    await db_session.commit()
+
+    response = await client.post(
+        f"/conversations/{conversation_id}/messages",
+        json={"content": "What about the second one?"},
+    )
+    assert response.status_code == 200
+    events = _parse_sse_events(response.text)
+    final = next(e for e in events if e.get("done"))
+
+    # Both chunks are genuinely about isolation levels, so both legitimately
+    # surface with only 2 candidates total in the project — the real signal
+    # that the follow-up was resolved correctly is that the reranker puts
+    # the one "the second one" actually refers to *first*, not that the
+    # other is excluded outright.
+    cited_ids = [c["chunk_id"] for c in final["citations"]]
+    assert serializable_chunk.id in cited_ids
+    assert read_committed_chunk.id in cited_ids
+    assert cited_ids.index(serializable_chunk.id) < cited_ids.index(read_committed_chunk.id)
+
+    # The persisted user message keeps exactly what was typed — rewriting is
+    # an internal retrieval step, never a rewrite of the visible transcript.
+    history = await client.get(f"/conversations/{conversation_id}/messages")
+    messages = history.json()
+    assert messages[-2]["content"] == "What about the second one?"
