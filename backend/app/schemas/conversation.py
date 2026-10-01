@@ -28,6 +28,10 @@ class CitationRead(BaseModel):
     document_title: str
     display_path: str
     is_summary: bool = False
+    # chunks.text for a lookup citation, section_summaries.summary for a
+    # survey one — never chunks.embed_text (CLAUDE.md invariant 5: embed_text
+    # is embedded, text is displayed). This is the source-passage view.
+    text: str
 
 
 class MessageRead(BaseModel):

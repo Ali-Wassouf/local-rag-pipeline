@@ -49,45 +49,49 @@ async def _load_citations(
     message_citations = list(citations_result.scalars().all())
 
     chunk_ids = [mc.chunk_id for mc in message_citations if mc.chunk_id is not None]
-    chunk_info: dict[int, tuple[str, str]] = {}
+    chunk_info: dict[int, tuple[str, str, str]] = {}
     if chunk_ids:
         rows = await db.execute(
-            select(Chunk.id, Document.title, Section.display_path)
+            select(Chunk.id, Document.title, Section.display_path, Chunk.text)
             .join(Section, Section.id == Chunk.section_id)
             .join(Document, Document.id == Chunk.document_id)
             .where(Chunk.id.in_(chunk_ids))
         )
-        chunk_info = {row[0]: (row[1], row[2]) for row in rows.all()}
+        chunk_info = {row[0]: (row[1], row[2], row[3]) for row in rows.all()}
 
     summary_ids = [
         mc.section_summary_id for mc in message_citations if mc.section_summary_id is not None
     ]
-    summary_info: dict[int, tuple[str, str]] = {}
+    summary_info: dict[int, tuple[str, str, str]] = {}
     if summary_ids:
         rows = await db.execute(
-            select(SectionSummary.id, Document.title, Section.display_path)
+            select(
+                SectionSummary.id, Document.title, Section.display_path, SectionSummary.summary
+            )
             .join(Section, Section.id == SectionSummary.section_id)
             .join(Document, Document.id == SectionSummary.document_id)
             .where(SectionSummary.id.in_(summary_ids))
         )
-        summary_info = {row[0]: (row[1], row[2]) for row in rows.all()}
+        summary_info = {row[0]: (row[1], row[2], row[3]) for row in rows.all()}
 
     citations_by_message: dict[int, list[CitationRead]] = {}
     for mc in message_citations:
         if mc.chunk_id is not None:
-            title, display_path = chunk_info[mc.chunk_id]
+            title, display_path, text = chunk_info[mc.chunk_id]
             citation = CitationRead(
                 chunk_id=mc.chunk_id,
                 rank=mc.rank,
                 document_title=title,
                 display_path=display_path,
                 is_summary=False,
+                text=text,
             )
         else:
             assert mc.section_summary_id is not None  # CHECK constraint guarantees this
-            title, display_path = summary_info[mc.section_summary_id]
+            title, display_path, text = summary_info[mc.section_summary_id]
             citation = CitationRead(
                 chunk_id=None,
+                text=text,
                 rank=mc.rank,
                 document_title=title,
                 display_path=display_path,
@@ -280,6 +284,7 @@ async def send_message(
                         "document_title": document.title,
                         "display_path": section.display_path,
                         "is_summary": True,
+                        "text": summary.summary,
                     }
                 )
         else:
@@ -294,6 +299,7 @@ async def send_message(
                         "document_title": document.title,
                         "display_path": section.display_path,
                         "is_summary": False,
+                        "text": chunk.text,
                     }
                 )
         await db.commit()

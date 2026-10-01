@@ -51,7 +51,7 @@ const oldMessages: MessageRead[] = [
     role: 'assistant',
     content: 'An object in motion stays in motion [1].',
     created_at: '2026-01-01T00:00:01Z',
-    citations: [{ chunk_id: 99, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 1', is_summary: false }],
+    citations: [{ chunk_id: 99, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 1', is_summary: false, text: 'Passage text.' }],
   },
 ]
 
@@ -126,7 +126,7 @@ describe('ChatScreen', () => {
         callbacks.onToken('The answer is ')
         callbacks.onToken('42 [1].')
         callbacks.onDone([
-          { chunk_id: 7, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 2', is_summary: false },
+          { chunk_id: 7, rank: 1, document_title: 'Mechanics', display_path: 'Ch. 2', is_summary: false, text: 'Passage text.' },
         ])
       },
     )
@@ -215,8 +215,8 @@ describe('ChatScreen', () => {
         content: 'Answers should be **grounded** in sources [1] and [2].',
         created_at: '2026-01-01T00:00:00Z',
         citations: [
-          { chunk_id: 1, rank: 1, document_title: 'Doc A', display_path: 'Ch. 1', is_summary: false },
-          { chunk_id: 2, rank: 2, document_title: 'Doc B', display_path: 'Ch. 2', is_summary: false },
+          { chunk_id: 1, rank: 1, document_title: 'Doc A', display_path: 'Ch. 1', is_summary: false, text: 'Passage text.' },
+          { chunk_id: 2, rank: 2, document_title: 'Doc B', display_path: 'Ch. 2', is_summary: false, text: 'Passage text.' },
         ],
       },
     ]
@@ -248,7 +248,7 @@ describe('ChatScreen', () => {
         content: 'A transaction groups operations into one unit [1].',
         created_at: '2026-01-01T00:00:00Z',
         citations: [
-          { chunk_id: 1, rank: 1, document_title: 'DDIA', display_path: 'Ch. 7', is_summary: false },
+          { chunk_id: 1, rank: 1, document_title: 'DDIA', display_path: 'Ch. 7', is_summary: false, text: 'Passage text.' },
         ],
       },
     ]
@@ -266,6 +266,47 @@ describe('ChatScreen', () => {
     expect(footnoteLine.closest('li')).toHaveClass('footnote-entry')
   })
 
+  it('reveals the real passage text when a footnote entry is expanded', async () => {
+    const passageText = 'Transactions group one or more operations into a single logical unit.'
+    const markdownMessages: MessageRead[] = [
+      {
+        id: 43,
+        conversation_id: 5,
+        role: 'assistant',
+        content: 'A transaction groups operations into one unit [1].',
+        created_at: '2026-01-01T00:00:00Z',
+        citations: [
+          {
+            chunk_id: 1,
+            rank: 1,
+            document_title: 'DDIA',
+            display_path: 'Ch. 7',
+            is_summary: false,
+            text: passageText,
+          },
+        ],
+      },
+    ]
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue(markdownMessages)
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    // Collapsed by default — the source-passage view is opt-in per entry.
+    // (jsdom doesn't apply the browser's UA stylesheet that hides a closed
+    // <details>'s content, so `open` is the real, meaningful assertion
+    // here rather than DOM presence of the text.)
+    const footnoteLine = await screen.findByText(/DDIA/)
+    const details = footnoteLine.closest('details') as HTMLDetailsElement
+    expect(details.open).toBe(false)
+
+    fireEvent.click(footnoteLine)
+
+    expect(details.open).toBe(true)
+    expect(await screen.findByText(passageText)).toBeInTheDocument()
+  })
+
   it('visually distinguishes a retrieved source the answer never actually cited', async () => {
     // message_citations persists every retrieved chunk, not just the ones
     // the model referenced inline (docs/plan.md §4.6) — the footnote list
@@ -278,8 +319,8 @@ describe('ChatScreen', () => {
         content: 'RAID 10 is best for high availability [1].',
         created_at: '2026-01-01T00:00:00Z',
         citations: [
-          { chunk_id: 1, rank: 1, document_title: 'Storage Deck', display_path: 'Slide 16', is_summary: false },
-          { chunk_id: 2, rank: 2, document_title: 'Storage Deck', display_path: 'Slide 5', is_summary: false },
+          { chunk_id: 1, rank: 1, document_title: 'Storage Deck', display_path: 'Slide 16', is_summary: false, text: 'Passage text.' },
+          { chunk_id: 2, rank: 2, document_title: 'Storage Deck', display_path: 'Slide 5', is_summary: false, text: 'Passage text.' },
         ],
       },
     ]
@@ -413,6 +454,7 @@ describe('ChatScreen', () => {
             document_title: 'DDIA',
             display_path: 'Part II',
             is_summary: true,
+            text: 'A summary of isolation and replication across the book.',
           },
         ],
       },

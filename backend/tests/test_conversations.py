@@ -331,12 +331,17 @@ async def test_send_message_persists_and_streams(
     citations = final_events[0]["citations"]
     assert len(citations) >= 1
     assert citations[0]["chunk_id"] == chunk.id
+    # The source-passage view shows the real passage — chunk.text, never
+    # chunk.embed_text (CLAUDE.md invariant 5: embed_text is embedded, text
+    # is displayed; the breadcrumb-prefixed version must never leak here).
+    assert citations[0]["text"] == "The mitochondria is the powerhouse of the cell."
 
     history = await client.get(f"/conversations/{conversation_id}/messages")
     messages = history.json()
     assert [m["role"] for m in messages] == ["user", "assistant"]
     assert messages[0]["content"] == "What is the powerhouse of the cell?"
     assert messages[1]["citations"][0]["chunk_id"] == chunk.id
+    assert messages[1]["citations"][0]["text"] == "The mitochondria is the powerhouse of the cell."
 
 
 async def test_chat_never_cites_another_projects_chunks(
@@ -520,12 +525,15 @@ async def test_survey_mode_cites_summaries_not_passages(
     for citation in final["citations"]:
         assert citation["is_summary"] is True
         assert citation["chunk_id"] is None
+    assert any(c["text"] == summary_text for c in final["citations"])
 
     # Persisted and re-read the same way.
     history = await client.get(f"/conversations/{conversation_id}/messages")
     reread_citations = history.json()[-1]["citations"]
     assert reread_citations[0]["is_summary"] is True
     assert reread_citations[0]["display_path"] == "Cell Biology"
+    assert any(c["text"] == summary_text for c in reread_citations)
+    assert summary.id is not None  # seeded row really exists
     assert summary.id is not None  # seeded row really exists
 
 

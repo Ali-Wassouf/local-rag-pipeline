@@ -75,6 +75,7 @@ export interface CitationRead {
   document_title: string
   display_path: string
   is_summary: boolean
+  text: string
 }
 
 export type ChatMode = 'lookup' | 'survey'

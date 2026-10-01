@@ -106,31 +106,45 @@ function Footnotes({
               <li
                 key={citation.rank}
                 id={footnoteAnchorId(messageId, citation.rank)}
-                className={`footnote-entry flex scroll-mt-6 gap-2 px-1 font-mono text-[12px] ${
-                  wasCited
-                    ? 'text-ink-muted dark:text-ink-muted-dark'
-                    : 'text-ink-muted/55 italic dark:text-ink-muted-dark/55'
-                }`}
+                className="footnote-entry scroll-mt-6 px-1 font-mono text-[12px]"
               >
-                <span
-                  className={
-                    wasCited
-                      ? 'tabular-nums text-accent dark:text-accent-dark'
-                      : 'tabular-nums text-ink-muted/55 dark:text-ink-muted-dark/55'
-                  }
-                >
-                  {citation.rank}
-                </span>
-                <span>
-                  {citation.is_summary && (
-                    // CLAUDE.md invariant 6 — a survey citation points at a
-                    // summary, never rendered as if it were a passage the
-                    // model actually read. Visible, not just implied.
-                    <span className="text-accent dark:text-accent-dark">(summary) </span>
-                  )}
-                  {citation.document_title} &mdash; {citation.display_path}
-                  {!wasCited && ' (retrieved, not cited)'}
-                </span>
+                {/* A real footnote can be opened to read in full — this is
+                    the source-passage view (docs/plan.md §4.6): the actual
+                    chunk text for a lookup citation, or the actual summary
+                    text for a survey one, collapsed by default. */}
+                <details>
+                  <summary
+                    className={`flex cursor-pointer gap-2 ${
+                      wasCited
+                        ? 'text-ink-muted dark:text-ink-muted-dark'
+                        : 'text-ink-muted/55 italic dark:text-ink-muted-dark/55'
+                    }`}
+                  >
+                    <span
+                      className={
+                        wasCited
+                          ? 'tabular-nums text-accent dark:text-accent-dark'
+                          : 'tabular-nums text-ink-muted/55 dark:text-ink-muted-dark/55'
+                      }
+                    >
+                      {citation.rank}
+                    </span>
+                    <span>
+                      {citation.is_summary && (
+                        // CLAUDE.md invariant 6 — a survey citation points
+                        // at a summary, never rendered as if it were a
+                        // passage the model actually read. Visible, not
+                        // just implied.
+                        <span className="text-accent dark:text-accent-dark">(summary) </span>
+                      )}
+                      {citation.document_title} &mdash; {citation.display_path}
+                      {!wasCited && ' (retrieved, not cited)'}
+                    </span>
+                  </summary>
+                  <blockquote className="mt-1 ml-[1.6em] max-w-[65ch] border-l-2 border-rule pl-3 font-serif text-sm text-ink-muted dark:border-rule-dark dark:text-ink-muted-dark">
+                    {citation.text}
+                  </blockquote>
+                </details>
               </li>
             )
           })}
