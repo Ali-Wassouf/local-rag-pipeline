@@ -43,6 +43,25 @@ either, for a different reason: at single-user scale with `just dev` already
 giving hot-reload, containerizing them would trade away that simplicity for
 isolation this project doesn't need.
 
+### Why these specific models?
+
+Everything runs inside a hard ~8GB budget (16GB unified memory, ~11GB
+addressable — `docs/plan.md` §0/§5) with no cloud fallback, so each model is
+the best one in its slot that still leaves room for the other two to be
+resident at the same time (how that's enforced — unloading the embedder,
+running the reranker in-process, `num_ctx 8192` — is covered in "One-time
+environment setup" and "How retrieval works" below):
+
+| Slot | Model | Size | When resident |
+|---|---|---|---|
+| Embedder | Qwen3-Embedding-0.6B (1024-dim) | ~1.5GB | ingest only |
+| Reranker | bge-reranker-base | ~0.4GB | query only |
+| Generator | Qwen 3 8B @ Q4_K_M | ~5GB + ~1GB KV | query only |
+
+Chunk size and top-k (`docs/plan.md` §4.4) are tuned jointly against this
+same budget: raising top-k past 8 means either shrinking chunks or paying
+for a larger context window out of the same tight 8GB.
+
 ## 1. One-time environment setup
 
 ```bash
@@ -56,10 +75,9 @@ to re-run.
 What it does:
 
 1. Installs `ollama`, `uv`, `pnpm`, `just`, `node@22` via Homebrew and starts
-   the Ollama service. (Postgres is *not* installed here — it runs in Docker,
-   see step 2. Ollama runs natively rather than in Docker so it can use the
-   Mac's GPU; a containerized Ollama on macOS has no Metal access and would
-   fall back to CPU.)
+   the Ollama service natively, not in Docker (see "Why isn't Ollama
+   containerized too?" above). Postgres is *not* installed here — it runs in
+   Docker, see step 2.
 2. Pulls the two models the pipeline uses from Ollama's registry:
    `qwen3:8b` (generation) and `qwen3-embedding:0.6b` (embedding, 1024
    dimensions — this must match the `Vector(1024)` column in the schema).
