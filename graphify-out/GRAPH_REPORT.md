@@ -1,24 +1,24 @@
-# Graph Report - local-rag-pipeline  (2026-10-01)
+# Graph Report - local-rag-pipeline  (2026-10-03)
 
 ## Corpus Check
-- 183 files · ~138,753 words
+- 183 files · ~138,978 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 16 file(s) not represented in the graph (top: (none) 7, .pptx 4, .ini 1)
 
 ## Summary
-- 1682 nodes · 3357 edges · 117 communities (98 shown, 19 thin omitted)
+- 1683 nodes · 3358 edges · 116 communities (97 shown, 19 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 248 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0a007c20`
+- Built from commit: `fcc9c51c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - chunks table
 - Phase 4 eval — hybrid + cross-encoder reranking (full Phase 4 pipeline)
-- Section
+- test_search.py
 - package.json
 - Document
 - types.ts
@@ -36,8 +36,7 @@
 - test_text.py
 - ReviewScreen.tsx
 - Phase 4 eval — hybrid (vector + keyword RRF), no reranking
-- ingest/chunk.py
-- reciprocal_rank_fusion
+- env.py
 - Phase 3 Baseline Evals (vector-only)
 - Backend API
 - test_summarize.py
@@ -52,7 +51,7 @@
 - db service (pgvector/pgvector:pg16)
 - conftest.py
 - Lookup/Survey routing toggle
-- httpx
+- rewrite_query
 - .oxlintrc.json
 - scripts
 - Build Phases
@@ -160,7 +159,7 @@
 - **PDF heading detection fallback chain (outline -> heuristic -> root)** — backend_tests_extract_fixtures_outline, backend_tests_extract_fixtures_no_outline_with_heuristic, backend_tests_extract_fixtures_no_outline_no_heuristic, section_heading_detection [INFERRED 0.85]
 - **PDF rejection/error edge cases** — backend_tests_extract_fixtures_corrupted, backend_tests_extract_fixtures_scanned, backend_tests_extract_fixtures_mostly_text_one_scanned_page [INFERRED 0.85]
 
-## Communities (117 total, 19 thin omitted)
+## Communities (116 total, 19 thin omitted)
 
 ### Community 0 - "chunks table"
 Cohesion: 0.24
@@ -170,9 +169,9 @@ Nodes (10): Invariant: chunks never cross a section boundary, Invariant: embed_t
 Cohesion: 0.06
 Nodes (32): 10. What is the two-phase commit protocol?, 11. What is linearizability?, 12. What is the difference between REST and RPC?, 13. What is a message broker used for?, 14. What is the actor model in the context of distributed systems?, 15. What is data partitioning (sharding)?, 16. How does consistent hashing help with partitioning?, 17. What is a secondary index and why is it harder to maintain in a partitioned database? (+24 more)
 
-### Community 2 - "Section"
-Cohesion: 0.11
-Nodes (53): Chunk, Section, AsyncSession, Candidate, The needle path (docs/plan.md §4.3): vector + keyword candidates, fused by RRF,…, retrieve(), _load_reranker(), Candidate (+45 more)
+### Community 2 - "test_search.py"
+Cohesion: 0.09
+Nodes (60): Reciprocal rank fusion — combines the vector and keyword candidate lists into…, reciprocal_rank_fusion(), AsyncSession, Candidate, The needle path (docs/plan.md §4.3): vector + keyword candidates, fused by RRF,…, retrieve(), _load_reranker(), Candidate (+52 more)
 
 ### Community 3 - "package.json"
 Cohesion: 0.12
@@ -180,7 +179,7 @@ Nodes (16): name, private, type, version, jsdom, oxlint, react-dom, react-markdo
 
 ### Community 4 - "Document"
 Cohesion: 0.05
-Nodes (89): argparse, asyncio, delete_document(), _format_from_filename(), get_document(), list_documents(), DbSession, delete (+81 more)
+Nodes (96): argparse, delete_document(), _format_from_filename(), get_document(), list_documents(), DbSession, delete, get (+88 more)
 
 ### Community 5 - "types.ts"
 Cohesion: 0.08
@@ -219,8 +218,8 @@ Cohesion: 0.27
 Nodes (10): extract(), Path, test_anchor_is_sequential_block_index(), test_blank_paragraphs_are_skipped(), test_heading_styles_map_to_levels(), test_list_becomes_list_block(), test_no_heading_styles_produces_zero_headings(), test_normal_paragraphs_have_no_level() (+2 more)
 
 ### Community 14 - "test_conversations.py"
-Cohesion: 0.08
-Nodes (56): embed_batch(), EmbeddingError, get_or_create_embedding_run(), AsyncClient, AsyncSession, Exception, Async client for Ollama's embed endpoint. Calls Ollama over HTTP rather than…, Raised when Ollama's embed endpoint fails or returns something unexpected. (+48 more)
+Cohesion: 0.10
+Nodes (47): embed_batch(), EmbeddingError, AsyncClient, Exception, Raised when Ollama's embed endpoint fails or returns something unexpected., _client(), AsyncClient, test_embed_batch_empty_input_returns_empty_list() (+39 more)
 
 ### Community 15 - "frontend-src-screens-chatscreen-tsx.md"
 Cohesion: 0.33
@@ -242,13 +241,9 @@ Nodes (7): getSections(), updateSectionTitle(), useSections(), useUpdateSectionT
 Cohesion: 0.06
 Nodes (31): 10. What is the two-phase commit protocol?, 11. What is linearizability?, 12. What is the difference between REST and RPC?, 13. What is a message broker used for?, 14. What is the actor model in the context of distributed systems?, 15. What is data partitioning (sharding)?, 16. How does consistent hashing help with partitioning?, 17. What is a secondary index and why is it harder to maintain in a partitioned database? (+23 more)
 
-### Community 20 - "ingest/chunk.py"
-Cohesion: 0.15
-Nodes (24): chunk_section(), ChunkDraft, persist_chunks(), AsyncSession, Chunker: splits a section's text into overlapping token windows. A flat token-…, Slide a 700-token/100-overlap window over one section's text.…, Chunk every section and write the resulting rows. embedding and…, tokenizer() (+16 more)
-
-### Community 21 - "reciprocal_rank_fusion"
-Cohesion: 0.33
-Nodes (9): Reciprocal rank fusion — combines the vector and keyword candidate lists into…, reciprocal_rank_fusion(), test_a_chunk_in_both_lists_outranks_one_in_only_one_list(), test_both_lists_empty_returns_empty(), test_chunk_only_in_keyword_list_is_still_included(), test_chunk_only_in_vector_list_is_still_included(), test_final_order_is_by_descending_fused_score(), test_output_truncated_to_top_k() (+1 more)
+### Community 20 - "env.py"
+Cohesion: 0.20
+Nodes (11): asyncio, do_run_migrations(), Run migrations in 'offline' mode. This configures the context with just a URL…, In this scenario we need to create an Engine and associate a connection with…, Run migrations in 'online' mode., run_async_migrations(), run_migrations_offline(), run_migrations_online() (+3 more)
 
 ### Community 22 - "Phase 3 Baseline Evals (vector-only)"
 Cohesion: 0.26
@@ -259,8 +254,8 @@ Cohesion: 0.20
 Nodes (15): Local RAG Pipeline System Architecture Diagram, Backend API, Browser, Embedder (text to vector, ingest only), Frontend (SPA), Generator (writes answers, query only), Extraction -> Structuring -> Chunking -> Embedding, Ingest Worker (+7 more)
 
 ### Community 24 - "test_summarize.py"
-Cohesion: 0.13
-Nodes (25): needs_summary(), persist_section_summary(), AsyncClient, AsyncSession, Exception, Section summarisation for the survey path (docs/plan.md §2.5, §4.4, §8). Calls…, Raised when Ollama's generate endpoint fails or returns something unexpected…, Below the threshold a section is only a chunk or two, already close to being… (+17 more)
+Cohesion: 0.06
+Nodes (54): chunk_section(), ChunkDraft, Chunker: splits a section's text into overlapping token windows. A flat token-…, Slide a 700-token/100-overlap window over one section's text.…, tokenizer(), needs_summary(), persist_section_summary(), AsyncClient (+46 more)
 
 ### Community 25 - "test_project_documents.py"
 Cohesion: 0.37
@@ -280,7 +275,7 @@ Nodes (11): extract(), Path, _table_to_markdown(), test_anchor_is_sequential_blo
 
 ### Community 29 - "conversations.py"
 Cohesion: 0.05
-Nodes (85): aiofiles, do_run_migrations(), Run migrations in 'offline' mode. This configures the context with just a URL…, In this scenario we need to create an Engine and associate a connection with…, Run migrations in 'online' mode., run_async_migrations(), run_migrations_offline(), run_migrations_online() (+77 more)
+Nodes (84): aiofiles, create_conversation(), delete_conversation(), _get_active_conversation(), list_conversations(), list_deleted_conversations(), list_messages(), _load_citations() (+76 more)
 
 ### Community 30 - "Needle path (vector + keyword + RRF + rerank + generate)"
 Cohesion: 0.19
@@ -299,16 +294,16 @@ Cohesion: 0.22
 Nodes (9): just commands (dev, test, db-up, migrate, check-models), Tests use real Postgres, no DB mocks, No Redis/Celery/message queue; plain asyncio worker, db service (pgvector/pgvector:pg16), init-extensions.sql initdb mount, pgdata volume, Phase 0 — skeleton, ingest_jobs table (+1 more)
 
 ### Community 35 - "conftest.py"
-Cohesion: 0.16
-Nodes (12): alembic_config, asyncpg, client(), db_session(), _fresh_test_database(), AsyncClient, AsyncSession, Test fixtures. Runs against a real Postgres (the docker-compose `db` service) —… (+4 more)
+Cohesion: 0.15
+Nodes (13): alembic_config, asyncpg, client(), db_session(), _fresh_test_database(), AsyncClient, AsyncSession, Test fixtures. Runs against a real Postgres (the docker-compose `db` service) —… (+5 more)
 
 ### Community 37 - "Lookup/Survey routing toggle"
 Cohesion: 0.47
 Nodes (6): Phase 5 — survey path, Multi-document survey: single pass, no reduce step, Lookup/Survey routing toggle, section_summaries table, Summary threshold 1500 tokens, ~200-token target, Survey path (search section summaries)
 
-### Community 38 - "httpx"
-Cohesion: 0.05
-Nodes (51): _build_rewrite_prompt(), GenerationError, AsyncClient, Exception, Streaming client for Ollama's generate endpoint (the `rag-gen` model — qwen3:8b…, Raised when Ollama's generate endpoint fails or returns something unexpected., Turns a context-dependent follow-up ("what about the second one?") into a…, rewrite_query() (+43 more)
+### Community 38 - "rewrite_query"
+Cohesion: 0.07
+Nodes (40): _build_rewrite_prompt(), GenerationError, AsyncClient, Exception, Streaming client for Ollama's generate endpoint (the `rag-gen` model — qwen3:8b…, Raised when Ollama's generate endpoint fails or returns something unexpected., Turns a context-dependent follow-up ("what about the second one?") into a…, rewrite_query() (+32 more)
 
 ### Community 40 - ".oxlintrc.json"
 Cohesion: 0.33
@@ -561,8 +556,8 @@ Nodes (4): Heuristics Scoring Guide, Issue Severity (P0–P3), Reference Materia
   docs/plan.md · relation: references
 
 ## Knowledge Gaps
-- **611 isolated node(s):** `rag-backend`, `$schema`, `plugins`, `react/rules-of-hooks`, `react/only-export-components` (+606 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 823 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **612 isolated node(s):** `rag-backend`, `$schema`, `plugins`, `react/rules-of-hooks`, `react/only-export-components` (+607 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 824 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
@@ -572,10 +567,10 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `Phase 6 — polish` and `Query rewriting for follow-ups`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `rewrite_query()` connect `httpx` to `Document`, `conversations.py`?**
+- **Why does `rewrite_query()` connect `rewrite_query` to `Document`, `conversations.py`?**
   _High betweenness centrality (0.044) - this node is a cross-community bridge._
-- **Why does `Local RAG Pipeline` connect `httpx` to `Build Phases`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `Local RAG Pipeline` connect `rewrite_query` to `Build Phases`?**
+  _High betweenness centrality (0.042) - this node is a cross-community bridge._
 - **Are the 32 inferred relationships involving `Document` (e.g. with `_load_citations()` and `delete_document()`) actually correct?**
   _`Document` has 32 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 18 inferred relationships involving `Section` (e.g. with `_load_citations()` and `reindex_document()`) actually correct?**
