@@ -4,6 +4,7 @@ import { useCreateProject, useProjects } from '../api/hooks'
 
 interface ProjectsListScreenProps {
   onSelectProject: (projectId: number) => void
+  onOpenChat: (projectId: number) => void
   onUploadStandalone: () => void
 }
 
@@ -13,6 +14,7 @@ function formatDate(iso: string) {
 
 export function ProjectsListScreen({
   onSelectProject,
+  onOpenChat,
   onUploadStandalone,
 }: ProjectsListScreenProps) {
   const projects = useProjects()
@@ -142,6 +144,13 @@ export function ProjectsListScreen({
                     className="cursor-pointer rounded-md border border-rule-strong bg-parchment px-3.5 py-2 text-xs font-medium whitespace-nowrap text-ink transition-colors hover:bg-stone"
                   >
                     Manage Corpus
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onOpenChat(project.id)}
+                    className="cursor-pointer rounded-md bg-accent px-4 py-2 text-xs font-semibold whitespace-nowrap text-paper transition-colors hover:bg-accent-hover"
+                  >
+                    Open Reading Room
                   </button>
                 </div>
               </article>

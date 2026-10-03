@@ -36,6 +36,9 @@ function AppContent() {
     content = (
       <ProjectsListScreen
         onSelectProject={(projectId) => setView({ screen: 'project-detail', projectId })}
+        onOpenChat={(projectId) =>
+          setView({ screen: 'chat', projectId, returnTo: { screen: 'project-detail', projectId } })
+        }
         onUploadStandalone={() => setView({ screen: 'upload', returnTo: view })}
       />
     )

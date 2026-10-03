@@ -26,7 +26,7 @@ describe('ProjectsListScreen', () => {
   it('lists existing projects', async () => {
     vi.spyOn(client, 'listProjects').mockResolvedValue(projects)
     renderWithClient(
-      <ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />,
+      <ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />,
     )
 
     expect(await screen.findByText('Physics')).toBeInTheDocument()
@@ -36,13 +36,25 @@ describe('ProjectsListScreen', () => {
     vi.spyOn(client, 'listProjects').mockResolvedValue(projects)
     const onSelectProject = vi.fn()
     renderWithClient(
-      <ProjectsListScreen onSelectProject={onSelectProject} onUploadStandalone={vi.fn()} />,
+      <ProjectsListScreen onSelectProject={onSelectProject} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />,
     )
 
     const row = await screen.findByText('Physics')
     fireEvent.click(row)
 
     expect(onSelectProject).toHaveBeenCalledWith(1)
+  })
+
+  it('opening the reading room from a project row calls onOpenChat with its id', async () => {
+    vi.spyOn(client, 'listProjects').mockResolvedValue(projects)
+    const onOpenChat = vi.fn()
+    renderWithClient(
+      <ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={onOpenChat} />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Open Reading Room' }))
+
+    expect(onOpenChat).toHaveBeenCalledWith(1)
   })
 
   it('creating a project calls the create mutation', async () => {
@@ -54,7 +66,7 @@ describe('ProjectsListScreen', () => {
       created_at: '2026-01-01T00:00:00Z',
     })
 
-    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />)
+    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />)
 
     const input = await screen.findByPlaceholderText(/New project name/)
     fireEvent.change(input, { target: { value: 'Chemistry' } })
@@ -66,7 +78,7 @@ describe('ProjectsListScreen', () => {
   it('shows an error if the project list fails to load', async () => {
     vi.spyOn(client, 'listProjects').mockRejectedValue(new Error('Network error'))
 
-    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />)
+    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />)
 
     expect(await screen.findByText('Network error')).toBeInTheDocument()
   })
@@ -75,7 +87,7 @@ describe('ProjectsListScreen', () => {
     vi.spyOn(client, 'listProjects').mockResolvedValue([])
     vi.spyOn(client, 'createProject').mockRejectedValue(new Error('Name already taken'))
 
-    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} />)
+    renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />)
 
     const input = await screen.findByPlaceholderText(/New project name/)
     fireEvent.change(input, { target: { value: 'Chemistry' } })
