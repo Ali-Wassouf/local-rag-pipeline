@@ -120,7 +120,7 @@ function PassageInspector({
   return (
     <aside
       aria-label="Marginalia passage inspector"
-      className="flex flex-col justify-between overflow-y-auto border-t border-rule bg-parchment p-5 lg:col-span-3 lg:border-t-0 lg:border-l"
+      className="flex max-h-[50vh] flex-col justify-between overflow-y-auto border-t border-rule bg-parchment p-5 lg:col-span-3 lg:max-h-none lg:min-h-0 lg:border-t-0 lg:border-l"
     >
       {inspected ? (
         <div className="space-y-5">
@@ -417,7 +417,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
          =================================================================== */}
       <aside
         aria-label="Inquiry chapters"
-        className="flex max-h-[50vh] flex-col border-b border-rule bg-parchment lg:col-span-3 lg:max-h-none lg:border-r lg:border-b-0"
+        className="flex max-h-[50vh] flex-col border-b border-rule bg-parchment lg:col-span-3 lg:max-h-none lg:min-h-0 lg:border-r lg:border-b-0"
       >
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-rule p-4">
           <button
