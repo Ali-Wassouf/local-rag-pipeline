@@ -95,4 +95,51 @@ describe('ProjectsListScreen', () => {
 
     expect(await screen.findByText('Name already taken')).toBeInTheDocument()
   })
+
+  it('deletes a project after confirming', async () => {
+    vi.spyOn(client, 'listProjects').mockResolvedValue(projects)
+    const deleteSpy = vi.spyOn(client, 'deleteProject').mockResolvedValue(undefined)
+
+    renderWithClient(
+      <ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete…' }))
+    expect(
+      screen.getByText(/Its documents are not affected/),
+    ).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete project' }))
+
+    await waitFor(() => expect(deleteSpy).toHaveBeenCalledWith(1))
+  })
+
+  it('cancels a project delete confirmation without deleting', async () => {
+    vi.spyOn(client, 'listProjects').mockResolvedValue(projects)
+    const deleteSpy = vi.spyOn(client, 'deleteProject')
+
+    renderWithClient(
+      <ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete…' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByText(/Its documents are not affected/)).not.toBeInTheDocument()
+    expect(deleteSpy).not.toHaveBeenCalled()
+  })
+
+  it('shows an error if deleting a project fails', async () => {
+    vi.spyOn(client, 'listProjects').mockResolvedValue(projects)
+    vi.spyOn(client, 'deleteProject').mockRejectedValue(new Error('Project not found'))
+
+    renderWithClient(
+      <ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete…' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete project' }))
+
+    expect(await screen.findByText('Project not found')).toBeInTheDocument()
+  })
 })

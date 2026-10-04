@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { useCreateProject, useProjects } from '../api/hooks'
+import { useCreateProject, useDeleteProject, useProjects } from '../api/hooks'
 
 interface ProjectsListScreenProps {
   onSelectProject: (projectId: number) => void
@@ -19,14 +19,22 @@ export function ProjectsListScreen({
 }: ProjectsListScreenProps) {
   const projects = useProjects()
   const createProject = useCreateProject()
+  const deleteProject = useDeleteProject()
   const [name, setName] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [deletingProjectId, setDeletingProjectId] = useState<number | null>(null)
 
   function handleCreate() {
     const trimmed = name.trim()
     if (!trimmed) return
     createProject.mutate(trimmed, {
       onSuccess: () => setName(''),
+    })
+  }
+
+  function confirmDelete(projectId: number) {
+    deleteProject.mutate(projectId, {
+      onSuccess: () => setDeletingProjectId(null),
     })
   }
 
@@ -118,41 +126,79 @@ export function ProjectsListScreen({
         ) : (
           <div className="divide-y divide-rule border-t border-b border-rule">
             {filteredProjects.map((project) => (
-              <article
-                key={project.id}
-                className="flex flex-col justify-between gap-4 py-6 lg:flex-row lg:items-center"
-              >
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2 font-mono text-xs tabular-nums text-ink-muted">
-                    <span>Created {formatDate(project.created_at)}</span>
+              <article key={project.id} className="py-6">
+                <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs tabular-nums text-ink-muted">
+                      <span>Created {formatDate(project.created_at)}</span>
+                    </div>
+                    <h3 className="font-serif text-2xl font-normal text-ink">
+                      <button
+                        type="button"
+                        onClick={() => onSelectProject(project.id)}
+                        className="cursor-pointer text-left hover:text-accent focus:outline-none"
+                      >
+                        {project.name}
+                      </button>
+                    </h3>
                   </div>
-                  <h3 className="font-serif text-2xl font-normal text-ink">
+
+                  <div className="flex shrink-0 items-center gap-2.5">
                     <button
                       type="button"
                       onClick={() => onSelectProject(project.id)}
-                      className="cursor-pointer text-left hover:text-accent focus:outline-none"
+                      className="cursor-pointer rounded-md border border-rule-strong bg-parchment px-3.5 py-2 text-xs font-medium whitespace-nowrap text-ink transition-colors hover:bg-stone"
                     >
-                      {project.name}
+                      Manage Corpus
                     </button>
-                  </h3>
+                    <button
+                      type="button"
+                      onClick={() => onOpenChat(project.id)}
+                      className="cursor-pointer rounded-md bg-accent px-4 py-2 text-xs font-semibold whitespace-nowrap text-paper transition-colors hover:bg-accent-hover"
+                    >
+                      Open Reading Room
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeletingProjectId(project.id)}
+                      className="cursor-pointer rounded-md px-3 py-2 text-xs font-medium whitespace-nowrap text-danger transition-colors hover:bg-danger/10"
+                    >
+                      Delete…
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => onSelectProject(project.id)}
-                    className="cursor-pointer rounded-md border border-rule-strong bg-parchment px-3.5 py-2 text-xs font-medium whitespace-nowrap text-ink transition-colors hover:bg-stone"
-                  >
-                    Manage Corpus
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onOpenChat(project.id)}
-                    className="cursor-pointer rounded-md bg-accent px-4 py-2 text-xs font-semibold whitespace-nowrap text-paper transition-colors hover:bg-accent-hover"
-                  >
-                    Open Reading Room
-                  </button>
-                </div>
+                {deletingProjectId === project.id && (
+                  <div className="mt-4 rounded-md border border-danger/30 bg-danger/5 p-3.5">
+                    <p className="text-xs text-ink-secondary">
+                      Delete &ldquo;{project.name}&rdquo;? Its chapters and chat history will be
+                      lost. Its documents are not affected — they stay in your library and in
+                      any other project they&rsquo;re attached to. This cannot be undone.
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => confirmDelete(project.id)}
+                        disabled={deleteProject.isPending}
+                        className="cursor-pointer rounded-md bg-danger px-3 py-1.5 text-xs font-medium text-paper disabled:opacity-50"
+                      >
+                        {deleteProject.isPending ? 'Deleting…' : 'Delete project'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeletingProjectId(null)}
+                        className="cursor-pointer text-xs text-ink-secondary hover:text-ink"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    {deleteProject.isError && deleteProject.variables === project.id && (
+                      <p className="mt-2 text-xs text-danger">
+                        {(deleteProject.error as Error).message}
+                      </p>
+                    )}
+                  </div>
+                )}
               </article>
             ))}
           </div>

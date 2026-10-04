@@ -6,6 +6,7 @@ import {
   createProject,
   deleteConversation,
   deleteDocument,
+  deleteProject,
   detachDocumentFromProject,
   getJob,
   getProject,
@@ -99,6 +100,16 @@ export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (name: string) => createProject(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+    },
+  })
+}
+
+export function useDeleteProject() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (projectId: number) => deleteProject(projectId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },

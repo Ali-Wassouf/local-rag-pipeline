@@ -138,6 +138,13 @@ export async function renameProject(projectId: number, name: string): Promise<Pr
   return parseOrThrow<ProjectRead>(response)
 }
 
+export async function deleteProject(projectId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+    method: 'DELETE',
+  })
+  return okOrThrow(response)
+}
+
 export async function listProjectDocuments(projectId: number): Promise<DocumentRead[]> {
   const response = await fetch(`${API_BASE_URL}/projects/${projectId}/documents`)
   return parseOrThrow<DocumentRead[]>(response)
