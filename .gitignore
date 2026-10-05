@@ -1,5 +1,9 @@
 .DS_Store
 
+# JetBrains IDE project config — per-machine editor state, not shared
+# project source.
+.idea/
+
 # Vendored/downloaded tool payload for the impeccable skill (compiled
 # binaries, downloaded JS/data) — not project source, regenerated on install.
 .claude/skills/*/scripts/
