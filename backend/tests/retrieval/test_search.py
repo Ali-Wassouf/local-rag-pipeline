@@ -198,6 +198,34 @@ async def test_keyword_search_returns_empty_for_project_with_no_matches(db_sessi
     assert results == []
 
 
+async def test_keyword_search_matches_a_chunk_that_lacks_some_query_words(
+    db_session: AsyncSession,
+) -> None:
+    # plainto_tsquery alone ANDs every lexeme it extracts, so a natural
+    # full-sentence question (which rarely repeats every one of its own
+    # words back) would come back empty against a chunk that's clearly
+    # relevant — exactly this chunk against this question, under plain
+    # AND semantics, matches nothing. OR-ing the lexemes (what
+    # keyword_search actually does) is what keeps it in the running.
+    project, document, section = await _make_project_with_document(db_session, "L")
+    chunk = _make_chunk(
+        document, section, 1, None, text="Serializable isolation guarantees consistency."
+    )
+    db_session.add(chunk)
+    await db_session.flush()
+
+    results = await keyword_search(
+        db_session,
+        project_id=project.id,
+        query_text=(
+            "What guarantees does serializable isolation give for an "
+            "elephant riding a bicycle?"
+        ),
+    )
+
+    assert [c.id for c, _, _ in results] == [chunk.id]
+
+
 async def test_keyword_search_respects_top_k(db_session: AsyncSession) -> None:
     project, document, section = await _make_project_with_document(db_session, "K")
     chunks = [
