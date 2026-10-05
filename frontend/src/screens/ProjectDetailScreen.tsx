@@ -245,7 +245,7 @@ export function ProjectDetailScreen({
             <h2 className="font-sans text-sm font-semibold text-ink">
               Upload New Documents Into This Project
             </h2>
-            <span className="font-mono text-xs text-ink-muted">PDF &middot; DOCX &middot; PPTX &middot; TXT</span>
+            <span className="font-mono text-xs text-ink-muted">PDF &middot; DOCX &middot; PPTX &middot; TXT &middot; EPUB</span>
           </div>
           <p className="mb-4 text-xs text-ink-secondary">
             Local parsing chunks headings, slides, and paragraphs for Lookup and Survey

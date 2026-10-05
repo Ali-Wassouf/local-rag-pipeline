@@ -24,6 +24,15 @@ async def test_upload_returns_job_and_creates_document(client: AsyncClient) -> N
     assert body["document"]["format"] == "txt"
 
 
+async def test_upload_detects_epub_format(client: AsyncClient) -> None:
+    response = await client.post(
+        "/documents",
+        files={"file": ("book.epub", b"not a real epub, just checking format detection", "application/epub+zip")},
+    )
+    assert response.status_code == 201
+    assert response.json()["document"]["format"] == "epub"
+
+
 async def test_uploading_same_content_twice_dedupes(
     client: AsyncClient, db_session
 ) -> None:

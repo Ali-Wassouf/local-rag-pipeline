@@ -10,6 +10,8 @@ dependencies = [
     "aiofiles>=25.1.0",
     "alembic>=1.19.2",
     "asyncpg>=0.31.0",
+    "beautifulsoup4>=4.15.0",
+    "ebooklib>=0.20",
     "fastapi>=0.141.1",
     "pgvector>=0.5.0",
     "pydantic>=2.13.5",
@@ -36,6 +38,11 @@ plugins = ["pydantic.mypy"]
 # signatures — disallow_untyped_calls fires on essentially every API call.
 module = "app.extract.pdf"
 disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+# ebooklib ships no stubs and no py.typed marker.
+module = "ebooklib"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

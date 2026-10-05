@@ -148,7 +148,7 @@ export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScre
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".pdf,.docx,.pptx,.txt,.md"
+        accept=".pdf,.docx,.pptx,.txt,.md,.epub"
         onChange={handleFilesChange}
         className="hidden"
       />
@@ -160,7 +160,7 @@ export function UploadScreen({ onReviewDocument, projectId, onBack }: UploadScre
         >
           Choose Files…
         </button>
-        <span className="font-mono text-xs text-ink-muted">PDF &middot; DOCX &middot; PPTX &middot; TXT</span>
+        <span className="font-mono text-xs text-ink-muted">PDF &middot; DOCX &middot; PPTX &middot; TXT &middot; EPUB</span>
       </div>
 
       {selectedFiles.map((file, index) => (

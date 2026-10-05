@@ -1,4 +1,4 @@
-export type DocFormat = 'pdf' | 'docx' | 'pptx' | 'txt' | 'md'
+export type DocFormat = 'pdf' | 'docx' | 'pptx' | 'txt' | 'md' | 'epub'
 
 export type DocStatus =
   | 'uploaded'

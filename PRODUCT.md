@@ -45,7 +45,7 @@ other documents — not limited to a single genre or single project.
 
 ## Capabilities and Constraints
 
-- Supported formats: PDF, DOCX, PPTX, TXT/MD.
+- Supported formats: PDF, DOCX, PPTX, TXT/MD, EPUB.
 - Scanned PDFs are explicitly out of scope (rejected via a character-count
   threshold); OCR will not be added.
 - Every retrieval query is scoped to a project via a join table

@@ -51,7 +51,7 @@ export function ProjectsListScreen({
             Projects &amp; Reading Rooms
           </h1>
           <p className="mt-2 text-sm text-ink-secondary">
-            Organize local PDF, DOCX, PPTX, and TXT corpora into dedicated RAG workspaces.
+            Organize local PDF, DOCX, PPTX, TXT, and EPUB corpora into dedicated RAG workspaces.
           </p>
         </div>
 
@@ -215,7 +215,7 @@ export function ProjectsListScreen({
               Upload a Document Without a Project
             </h2>
             <p className="mt-1 text-xs text-ink-secondary">
-              Pre-index standalone PDF, DOCX, PPTX, or TXT files and attach them to a project
+              Pre-index standalone PDF, DOCX, PPTX, TXT, or EPUB files and attach them to a project
               later.
             </p>
           </div>

@@ -1,7 +1,7 @@
 # Local RAG Pipeline — Design Plan
 
 Target hardware: Apple M2 Pro, 16GB unified memory (~11GB addressable, ~8GB budget for models).
-Scope: books, reports, manuals, slide decks, plain text. PDF / DOCX / PPTX / TXT / MD.
+Scope: books, reports, manuals, slide decks, plain text. PDF / DOCX / PPTX / TXT / MD / EPUB.
 Citations reference the section path, never page numbers.
 
 ---
@@ -265,6 +265,7 @@ Block = {
 | DOCX | python-docx | Heading 1/2/3 styles |
 | PPTX | python-pptx | slide titles; body + speaker notes |
 | TXT/MD | stdlib | `#` headings, or single root section |
+| EPUB | ebooklib + BeautifulSoup | `h1`-`h6` tags across the spine, reading order preserved across chapter files |
 
 Guards at this stage:
 - **Scanned PDFs are out of scope.** No OCR path. A rejection check only: if

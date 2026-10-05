@@ -15,6 +15,7 @@ class DocFormat(str, enum.Enum):
     pptx = "pptx"
     txt = "txt"
     md = "md"
+    epub = "epub"
 
 
 class DocStatus(str, enum.Enum):

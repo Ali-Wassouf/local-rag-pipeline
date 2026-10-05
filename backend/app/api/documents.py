@@ -21,6 +21,7 @@ _EXTENSION_FORMATS: dict[str, DocFormat] = {
     ".pptx": DocFormat.pptx,
     ".txt": DocFormat.txt,
     ".md": DocFormat.md,
+    ".epub": DocFormat.epub,
 }
 
 
