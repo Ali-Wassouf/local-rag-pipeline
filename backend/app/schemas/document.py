@@ -24,6 +24,20 @@ class DocumentRead(BaseModel):
     # summaries" instead of looking identical.
     section_count: int = 0
     summary_count: int = 0
+    # True while a summarise-stage job for this document is pending or
+    # actively running. Default False — only populated by endpoints that
+    # join for it (currently GET /projects/{id}/documents). Lets the UI
+    # tell "hasn't finished yet" apart from "genuinely nothing qualified"
+    # when summary_count is 0, instead of both looking identical.
+    summarizing: bool = False
+    # How many sections qualify for summarising, while summarizing=True.
+    # summary_count is already the live "done so far" count (each
+    # qualifying section's summary is persisted as soon as it's done, not
+    # batched at the end — app/ingest/worker.py's _run_summarize), so only
+    # the total needs to come from here for "N of M" progress. None before
+    # the job has determined it (its very first tick) or once summarizing
+    # is False.
+    summary_total: int | None = None
     created_at: datetime
 
 

@@ -1,6 +1,9 @@
+from datetime import UTC, datetime
+
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.job import IngestJob, JobStage
 from app.models.section import Section
 from app.models.summary import SectionSummary
 
@@ -173,3 +176,91 @@ async def test_section_and_summary_counts_are_zero_for_an_unprocessed_document(
     body = next(d for d in response.json() if d["id"] == document_id)
     assert body["section_count"] == 0
     assert body["summary_count"] == 0
+
+
+async def test_summarizing_is_true_while_a_summarise_job_is_pending_or_running(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    # summary_count==0 alone can't tell "hasn't finished yet" apart from
+    # "genuinely nothing qualified" — a document can reach status=ready
+    # (chat-usable) while summarise is still pending or actively running in
+    # the background, since embedding finishing is what makes it ready.
+    project_id = await _create_project(client)
+    document_id = await _create_document(client)
+    await client.post(f"/projects/{project_id}/documents", json={"document_id": document_id})
+    db_session.add(
+        IngestJob(document_id=document_id, stage=JobStage.summarise.value, progress=1.0)
+    )
+    await db_session.commit()
+
+    response = await client.get(f"/projects/{project_id}/documents")
+    body = next(d for d in response.json() if d["id"] == document_id)
+    assert body["summarizing"] is True
+
+
+async def test_summary_total_reflects_the_in_progress_jobs_qualifying_count(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    # summary_count (persisted rows) is already the live "done so far"
+    # number — this is the other half of "N of M" progress, the
+    # denominator the job determined on its first tick.
+    project_id = await _create_project(client)
+    document_id = await _create_document(client)
+    await client.post(f"/projects/{project_id}/documents", json={"document_id": document_id})
+    db_session.add(
+        IngestJob(
+            document_id=document_id,
+            stage=JobStage.summarise.value,
+            progress=2 / 5,
+            summary_done=2,
+            summary_total=5,
+        )
+    )
+    await db_session.commit()
+
+    response = await client.get(f"/projects/{project_id}/documents")
+    body = next(d for d in response.json() if d["id"] == document_id)
+    assert body["summary_total"] == 5
+
+
+async def test_summary_total_is_null_without_an_in_progress_job(
+    client: AsyncClient,
+) -> None:
+    project_id = await _create_project(client)
+    document_id = await _create_document(client)
+    await client.post(f"/projects/{project_id}/documents", json={"document_id": document_id})
+
+    response = await client.get(f"/projects/{project_id}/documents")
+    body = next(d for d in response.json() if d["id"] == document_id)
+    assert body["summary_total"] is None
+
+
+async def test_summarizing_is_false_once_the_job_finishes(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    project_id = await _create_project(client)
+    document_id = await _create_document(client)
+    await client.post(f"/projects/{project_id}/documents", json={"document_id": document_id})
+    db_session.add(
+        IngestJob(
+            document_id=document_id,
+            stage=JobStage.done.value,
+            progress=1.0,
+            finished_at=datetime.now(UTC),
+        )
+    )
+    await db_session.commit()
+
+    response = await client.get(f"/projects/{project_id}/documents")
+    body = next(d for d in response.json() if d["id"] == document_id)
+    assert body["summarizing"] is False
+
+
+async def test_summarizing_is_false_without_any_job(client: AsyncClient) -> None:
+    project_id = await _create_project(client)
+    document_id = await _create_document(client)
+    await client.post(f"/projects/{project_id}/documents", json={"document_id": document_id})
+
+    response = await client.get(f"/projects/{project_id}/documents")
+    body = next(d for d in response.json() if d["id"] == document_id)
+    assert body["summarizing"] is False

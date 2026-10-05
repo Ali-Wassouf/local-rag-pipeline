@@ -8,9 +8,15 @@ docs/plan.md explicitly wants to avoid); the job still passes through the
 "structure" stage value on its way to "chunk" so the stage name stays
 meaningful in `ingest_jobs`.
 
-A bad document must not kill the worker: any exception during a stage marks
-that job failed with the error message and moves on, rather than crashing
-the polling loop.
+A bad document must not kill the worker: any exception while advancing a
+job — including fetching/deserialising the document row itself, not just
+the stage's own work — marks that job failed with the error message and
+moves on, rather than crashing the polling loop. That's the primary
+guarantee, in `_advance`. `_poll_once` is a second, last-resort layer
+around it: anything that still escapes (a DB connectivity blip, a bug in
+the error-handling itself) is logged and swallowed there instead of taking
+the whole process down. The two together are belt and suspenders — the
+polling loop must never die, full stop.
 """
 
 import asyncio
@@ -24,6 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.db.session import async_session_maker
 from app.extract import docx as docx_extractor
+from app.extract import epub as epub_extractor
 from app.extract import pdf as pdf_extractor
 from app.extract import pptx as pptx_extractor
 from app.extract import text as text_extractor
@@ -36,6 +43,7 @@ from app.models.chunk import Chunk
 from app.models.document import DocFormat, DocStatus, Document
 from app.models.job import IngestJob, JobStage
 from app.models.section import Section
+from app.models.summary import SectionSummary
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +53,7 @@ _EXTRACTORS: dict[DocFormat, ExtractFn] = {
     DocFormat.pptx: pptx_extractor.extract,
     DocFormat.txt: text_extractor.extract,
     DocFormat.md: text_extractor.extract,
+    DocFormat.epub: epub_extractor.extract,
 }
 
 
@@ -104,42 +113,61 @@ async def _run_embed(db: AsyncSession, document: Document) -> None:
         chunk.embedding_run_id = run.id
 
 
-async def _run_summarize(db: AsyncSession, document: Document) -> None:
+async def _run_summarize(db: AsyncSession, document: Document) -> tuple[int, int]:
+    """Summarises at most one not-yet-summarised qualifying section, so a
+    single call is cheap, resumable, and interruption-safe — the old
+    all-sections-in-one-call version lost every bit of progress if the
+    worker died partway through a long document (not just the in-flight
+    section), and gave the UI nothing to show until the whole stage
+    finished. Returns (done_count, total_count) over the qualifying set so
+    the caller knows whether more remains and can show real progress.
+    """
     result = await db.execute(select(Section).where(Section.document_id == document.id))
     sections = list(result.scalars().all())
     raw_text = document.raw_text or ""
 
-    candidates = [
-        (section, raw_text[section.char_start : section.char_end]) for section in sections
+    qualifying = [
+        section
+        for section in sections
+        if needs_summary(raw_text[section.char_start : section.char_end])
     ]
-    to_summarize = [(section, text) for section, text in candidates if needs_summary(text)]
-    if not to_summarize:
-        return
+    if not qualifying:
+        return (0, 0)
 
-    summary_texts = [await summarize_section(text) for _section, text in to_summarize]
-    vectors = await embed_batch(summary_texts)
-
-    settings = get_settings()
-    for (section, _text), summary_text, vector in zip(
-        to_summarize, summary_texts, vectors, strict=True
-    ):
-        await persist_section_summary(
-            db, section, summary_text, vector, model=settings.generation_model
+    existing = await db.execute(
+        select(SectionSummary.section_id).where(
+            SectionSummary.section_id.in_([section.id for section in qualifying])
         )
+    )
+    done_ids = {row[0] for row in existing.all()}
+    remaining = [section for section in qualifying if section.id not in done_ids]
+    if not remaining:
+        return (len(done_ids), len(qualifying))
+
+    section = remaining[0]
+    text = raw_text[section.char_start : section.char_end]
+    summary_text = await summarize_section(text)
+    vector = (await embed_batch([summary_text]))[0]
+    settings = get_settings()
+    await persist_section_summary(
+        db, section, summary_text, vector, model=settings.generation_model
+    )
+    return (len(done_ids) + 1, len(qualifying))
 
 
 async def _advance(db: AsyncSession, job: IngestJob) -> None:
-    document = await db.get(Document, job.document_id)
-    if document is None:
-        job.error = "document not found"
-        job.finished_at = datetime.now(UTC)
-        return
-
-    if job.started_at is None:
-        job.started_at = datetime.now(UTC)
-
-    stage = JobStage(job.stage)
+    document: Document | None = None
     try:
+        document = await db.get(Document, job.document_id)
+        if document is None:
+            job.error = "document not found"
+            job.finished_at = datetime.now(UTC)
+            return
+
+        if job.started_at is None:
+            job.started_at = datetime.now(UTC)
+
+        stage = JobStage(job.stage)
         if stage is JobStage.extract:
             await _run_extract_and_structure(db, document)
             job.stage = JobStage.structure.value
@@ -158,13 +186,23 @@ async def _advance(db: AsyncSession, job: IngestJob) -> None:
             # summarised later via POST /documents/{id}/summarize, which
             # queues a fresh job at this same stage with the flag flipped.
             if document.generate_summary:
-                await _run_summarize(db, document)
+                done_count, total_count = await _run_summarize(db, document)
+                job.summary_done = done_count
+                job.summary_total = total_count
+                if done_count < total_count:
+                    # More qualifying sections remain — stay on this stage
+                    # so the next poll resumes with the next one, instead
+                    # of summarising the whole document in one call with
+                    # nothing visible until it's entirely done.
+                    job.progress = done_count / total_count
+                    return
             job.stage = JobStage.done.value
             job.finished_at = datetime.now(UTC)
     except Exception as exc:
         job.error = str(exc)
         job.finished_at = datetime.now(UTC)
-        document.status = DocStatus.failed
+        if document is not None:
+            document.status = DocStatus.failed
         return
 
     job.progress = 1.0
@@ -181,11 +219,24 @@ async def run_worker_iteration() -> bool:
         return True
 
 
+async def _poll_once() -> bool:
+    """The last-resort layer (see the module docstring): per-job failures
+    are already recorded on the job inside `_advance` and never reach here.
+    This catches whatever still escapes that — a DB connectivity blip, a
+    bug in the error handling itself — logs it, and lets the loop carry on
+    instead of taking the whole worker down with it."""
+    try:
+        return await run_worker_iteration()
+    except Exception:
+        logger.exception("worker iteration failed outside normal per-job error handling")
+        return False
+
+
 async def run_forever() -> None:
     settings = get_settings()
     logger.info("worker started, polling every %.1fs", settings.worker_poll_interval_seconds)
     while True:
-        advanced = await run_worker_iteration()
+        advanced = await _poll_once()
         await asyncio.sleep(0.5 if advanced else settings.worker_poll_interval_seconds)
 
 

@@ -140,6 +140,14 @@ export function useProjectDocuments(projectId: number | null) {
     queryKey: ['project-documents', projectId],
     queryFn: () => listProjectDocuments(projectId as number),
     enabled: projectId !== null,
+    // Summarizing runs one section at a time in the background (worker.py
+    // — resumable, so the UI can show real "N of M" progress) — poll
+    // while any document is mid-summary so that progress is actually
+    // visible without the user having to refresh, and stop otherwise.
+    refetchInterval: (query) => {
+      const docs = query.state.data
+      return docs?.some((doc) => doc.summarizing) ? 3000 : false
+    },
   })
 }
 

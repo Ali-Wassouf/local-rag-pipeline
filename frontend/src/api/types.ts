@@ -19,6 +19,8 @@ export interface DocumentRead {
   generate_summary: boolean
   section_count: number
   summary_count: number
+  summarizing: boolean
+  summary_total: number | null
   created_at: string
 }
 

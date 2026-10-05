@@ -51,8 +51,9 @@ async def test_backfill_only_processes_ready_documents(
 ) -> None:
     summarized_ids: list[int] = []
 
-    async def fake_run_summarize(db: AsyncSession, document: Document) -> None:
+    async def fake_run_summarize(db: AsyncSession, document: Document) -> tuple[int, int]:
         summarized_ids.append(document.id)
+        return (0, 0)  # nothing qualifies — one call per document, then done
 
     monkeypatch.setattr("app.ingest.backfill_summaries._run_summarize", fake_run_summarize)
     monkeypatch.setattr(
@@ -75,8 +76,9 @@ async def test_backfill_respects_the_project_filter(
 ) -> None:
     summarized_ids: list[int] = []
 
-    async def fake_run_summarize(db: AsyncSession, document: Document) -> None:
+    async def fake_run_summarize(db: AsyncSession, document: Document) -> tuple[int, int]:
         summarized_ids.append(document.id)
+        return (0, 0)
 
     monkeypatch.setattr("app.ingest.backfill_summaries._run_summarize", fake_run_summarize)
     monkeypatch.setattr(
@@ -96,3 +98,31 @@ async def test_backfill_respects_the_project_filter(
     await backfill(project_id=project_a.id)
 
     assert summarized_ids == [doc_a.id]
+
+
+async def test_backfill_calls_run_summarize_repeatedly_until_a_document_is_fully_done(
+    db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # _run_summarize does one qualifying section per call (worker.py —
+    # resumable/interruption-safe), so backfill must keep calling it for a
+    # given document until (done_count, total_count) says there's nothing
+    # left, not assume one call finishes the whole document.
+    calls: list[int] = []
+
+    async def fake_run_summarize(db: AsyncSession, document: Document) -> tuple[int, int]:
+        calls.append(document.id)
+        done_so_far = calls.count(document.id)
+        return (done_so_far, 3)
+
+    monkeypatch.setattr("app.ingest.backfill_summaries._run_summarize", fake_run_summarize)
+    monkeypatch.setattr(
+        "app.ingest.backfill_summaries.async_session_maker",
+        lambda: _NoCloseSessionContext(db_session),
+    )
+
+    document = await _make_document(db_session, "multi", DocStatus.ready)
+    await db_session.commit()
+
+    await backfill()
+
+    assert calls == [document.id, document.id, document.id]

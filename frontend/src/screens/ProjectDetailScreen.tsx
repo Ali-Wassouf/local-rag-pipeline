@@ -22,9 +22,28 @@ const IN_PROGRESS_STATUSES = new Set(['uploaded', 'extracting', 'awaiting_review
 // (docs/plan.md §8) ends up with zero real summaries despite opting in.
 // Surfacing the real counts is what lets someone tell that apart from
 // "has real summaries", instead of both looking identical in the UI.
+//
+// summary_count==0 is also ambiguous on its own: a document reaches
+// status=ready (chat-usable) as soon as embedding finishes, so summarising
+// can still be pending or actively running in the background at that
+// point — "none were long enough to qualify" would be actively wrong to
+// show then, not just incomplete. `summarizing` is what disambiguates it.
+//
+// While summarizing, summary_count is already the live "done so far"
+// count (each qualifying section is persisted as soon as it's done, not
+// batched at the end — app/ingest/worker.py's _run_summarize), and
+// summary_total is the qualifying count the job determined on its first
+// tick — together they're real "N of M" progress, not just a spinner.
+// summary_total is null for the brief window before that first tick.
 function summaryStatusText(doc: DocumentRead): string | null {
   if (doc.section_count === 0) return null
   if (!doc.generate_summary) return 'Not summarized'
+  if (doc.summarizing) {
+    if (doc.summary_total) {
+      return `Summarizing: ${doc.summary_count} of ${doc.summary_total} sections`
+    }
+    return 'Summarizing…'
+  }
   if (doc.summary_count === 0) {
     return `0 of ${doc.section_count} sections summarized — none were long enough to qualify`
   }

@@ -25,6 +25,8 @@ const attachedDoc: DocumentRead = {
   generate_summary: true,
   section_count: 0,
   summary_count: 0,
+  summarizing: false,
+  summary_total: null,
   created_at: '2026-01-01T00:00:00Z',
 }
 
@@ -39,6 +41,8 @@ const unattachedDoc: DocumentRead = {
   generate_summary: true,
   section_count: 0,
   summary_count: 0,
+  summarizing: false,
+  summary_total: null,
   created_at: '2026-01-01T00:00:00Z',
 }
 
@@ -238,6 +242,70 @@ describe('ProjectDetailScreen', () => {
     ).toBeInTheDocument()
     // Re-running summarization wouldn't change this outcome, so no button.
     expect(screen.queryByRole('button', { name: 'Generate summary' })).not.toBeInTheDocument()
+  })
+
+  it('shows "Summarizing…" instead of "none were long enough to qualify" while a summarise job is still running', async () => {
+    // A document reaches status=ready (chat-usable) as soon as embedding
+    // finishes, so summarize_count can still legitimately be 0 while
+    // summarization is pending or actively running in the background —
+    // claiming "none were long enough to qualify" at that point would be
+    // actively wrong, not just incomplete.
+    const stillSummarizing: DocumentRead = {
+      ...attachedDoc,
+      generate_summary: true,
+      section_count: 17,
+      summary_count: 0,
+      summarizing: true,
+    }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([stillSummarizing])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([stillSummarizing])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('Summarizing…')).toBeInTheDocument()
+    expect(
+      screen.queryByText('0 of 17 sections summarized — none were long enough to qualify'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows real "N of M" progress once the job has determined the qualifying count', async () => {
+    // summary_count is already the live "done so far" number (each
+    // qualifying section is persisted as soon as it's done, not batched
+    // at the end) — summary_total is the denominator the job determined
+    // on its first tick. Together they're real progress, not a spinner.
+    const partwaySummarizing: DocumentRead = {
+      ...attachedDoc,
+      generate_summary: true,
+      section_count: 211,
+      summary_count: 3,
+      summarizing: true,
+      summary_total: 8,
+    }
+    vi.spyOn(client, 'getProject').mockResolvedValue(project)
+    vi.spyOn(client, 'listProjectDocuments').mockResolvedValue([partwaySummarizing])
+    vi.spyOn(client, 'listAllDocuments').mockResolvedValue([partwaySummarizing])
+
+    renderWithClient(
+      <ProjectDetailScreen
+        projectId={1}
+        onReviewDocument={vi.fn()}
+        onUploadHere={vi.fn()}
+        onOpenChat={vi.fn()}
+        onBack={vi.fn()}
+      />,
+    )
+
+    expect(await screen.findByText('Summarizing: 3 of 8 sections')).toBeInTheDocument()
+    expect(screen.queryByText('Summarizing…')).not.toBeInTheDocument()
   })
 
   it('shows "Not summarized" for an opted-out document that has sections', async () => {

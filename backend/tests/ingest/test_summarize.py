@@ -4,7 +4,11 @@ import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.ingest.chunk import tokenizer
 from app.ingest.summarize import (
+    MAP_OUTPUT_TOKENS,
+    MAX_SUMMARY_INPUT_TOKENS,
+    SUMMARY_OUTPUT_TOKENS,
     SummarizationError,
     needs_summary,
     persist_section_summary,
@@ -66,6 +70,138 @@ def test_needs_summary_is_false_below_the_threshold() -> None:
 def test_needs_summary_is_true_above_the_threshold() -> None:
     long_text = "word " * 2000  # comfortably over 1500 tokens
     assert needs_summary(long_text) is True
+
+
+# --- summarize_section's map/reduce windowing (mocked Ollama) -----------
+
+
+async def test_summarize_section_makes_a_single_call_for_text_within_budget() -> None:
+    short_text = "a normal section, well within budget."
+    captured_prompts: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_prompts.append(json.loads(request.content)["prompt"])
+        return httpx.Response(200, content=json.dumps({"response": "A summary."}))
+
+    client = _client(handler)
+    try:
+        await summarize_section(short_text, client=client)
+    finally:
+        await client.aclose()
+
+    assert len(captured_prompts) == 1
+    assert short_text in captured_prompts[0]
+
+
+async def test_summarize_section_splits_oversized_text_into_multiple_windowed_calls() -> None:
+    # A real book chapter routinely clears MAX_SUMMARY_INPUT_TOKENS (well
+    # above the needs_summary qualify gate) — map/reduce is what covers
+    # all of it instead of one oversized call.
+    oversized_text = "word " * (MAX_SUMMARY_INPUT_TOKENS * 3)
+    assert len(tokenizer().encode(oversized_text, add_special_tokens=False).ids) > (
+        MAX_SUMMARY_INPUT_TOKENS * 2
+    )
+
+    captured_prompts: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_prompts.append(json.loads(request.content)["prompt"])
+        return httpx.Response(200, content=json.dumps({"response": "A summary."}))
+
+    client = _client(handler)
+    try:
+        await summarize_section(oversized_text, client=client)
+    finally:
+        await client.aclose()
+
+    # Multiple map calls (one per window) plus one final reduce call.
+    assert len(captured_prompts) > 2
+    for map_prompt in captured_prompts[:-1]:
+        token_count = len(tokenizer().encode(map_prompt, add_special_tokens=False).ids)
+        assert token_count < MAX_SUMMARY_INPUT_TOKENS + 100  # template text adds a little
+    assert "part 1 of" in captured_prompts[0].lower()
+    # The reduce call's input is the map calls' outputs, not the raw text.
+    assert "A summary." in captured_prompts[-1]
+
+
+async def test_summarize_section_covers_the_whole_section_not_just_the_beginning() -> None:
+    # The naive fix (truncate to budget) would silently drop everything
+    # past the cutoff. Map/reduce must see all of it instead.
+    filler = "filler " * MAX_SUMMARY_INPUT_TOKENS
+    text = f"begin-marker {filler} middle-marker {filler} end-marker"
+
+    captured_prompts: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_prompts.append(json.loads(request.content)["prompt"])
+        return httpx.Response(200, content=json.dumps({"response": "A summary."}))
+
+    client = _client(handler)
+    try:
+        await summarize_section(text, client=client)
+    finally:
+        await client.aclose()
+
+    all_map_text = " ".join(captured_prompts[:-1])
+    assert "begin-marker" in all_map_text
+    assert "middle-marker" in all_map_text
+    assert "end-marker" in all_map_text
+
+
+async def test_summarize_section_disables_thinking() -> None:
+    # rag-gen is a thinking model — with num_predict capped, a long enough
+    # hidden thinking block can consume the whole budget before any answer
+    # text is generated, leaving the response empty (a real incident: see
+    # the "Ollama returned an empty summary" failures this caused in
+    # production). think:false avoids that by skipping thinking outright.
+    captured_bodies: list[dict[str, object]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_bodies.append(json.loads(request.content))
+        return httpx.Response(200, content=json.dumps({"response": "A summary."}))
+
+    client = _client(handler)
+    try:
+        await summarize_section("some text", client=client)
+    finally:
+        await client.aclose()
+
+    assert captured_bodies[0]["think"] is False
+
+
+async def test_summarize_section_caps_output_length_for_a_single_window() -> None:
+    captured_options: dict[str, object] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal captured_options
+        captured_options = json.loads(request.content)["options"]
+        return httpx.Response(200, content=json.dumps({"response": "A summary."}))
+
+    client = _client(handler)
+    try:
+        await summarize_section("some text", client=client)
+    finally:
+        await client.aclose()
+
+    assert captured_options == {"num_predict": SUMMARY_OUTPUT_TOKENS}
+
+
+async def test_summarize_section_caps_map_and_reduce_output_lengths_differently() -> None:
+    oversized_text = "word " * (MAX_SUMMARY_INPUT_TOKENS * 3)
+    captured_options: list[dict[str, object]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_options.append(json.loads(request.content)["options"])
+        return httpx.Response(200, content=json.dumps({"response": "A summary."}))
+
+    client = _client(handler)
+    try:
+        await summarize_section(oversized_text, client=client)
+    finally:
+        await client.aclose()
+
+    assert all(options == {"num_predict": MAP_OUTPUT_TOKENS} for options in captured_options[:-1])
+    assert captured_options[-1] == {"num_predict": SUMMARY_OUTPUT_TOKENS}
 
 
 # --- summarize_section (mocked Ollama) ----------------------------------
@@ -136,6 +272,30 @@ async def test_real_ollama_summarizes_a_section() -> None:
     summary = await summarize_section(text)
     assert len(summary) > 0
     assert len(summary) < len(text) / 2  # a real compression, not a restatement
+
+
+async def test_real_ollama_summarizes_a_section_that_needs_multiple_windows() -> None:
+    if not await _ollama_is_running():
+        pytest.skip("Ollama is not running locally")
+
+    paragraph = (
+        "Serializable isolation is the strongest isolation level. It "
+        "guarantees that even though transactions may execute in parallel, "
+        "the result is the same as if they had executed one at a time, "
+        "serially, without any concurrency. Databases implement it with "
+        "techniques such as actual serial execution, two-phase locking, or "
+        "serializable snapshot isolation. "
+    )
+    # ~141 repeats lands just over 2x MAX_SUMMARY_INPUT_TOKENS, forcing the
+    # map/reduce path (2 windows) rather than the single-call path that
+    # the other real-Ollama test already covers.
+    text = paragraph * 141
+    token_count = len(tokenizer().encode(text, add_special_tokens=False).ids)
+    assert token_count > MAX_SUMMARY_INPUT_TOKENS
+
+    summary = await summarize_section(text)
+    assert len(summary) > 0
+    assert len(summary) < len(text) / 2
 
 
 # --- persist_section_summary (real DB) ----------------------------------

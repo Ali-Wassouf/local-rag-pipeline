@@ -34,8 +34,14 @@ async def backfill(project_id: int | None = None) -> None:
         logger.info("backfilling summaries for %d document(s)", len(documents))
         for document in documents:
             logger.info("summarising %r (id=%s)", document.title, document.id)
-            await _run_summarize(db, document)
-            await db.commit()
+            # _run_summarize does one qualifying section per call (worker.py
+            # — resumable/interruption-safe), so this loops until nothing
+            # is left, committing after each one just like the worker does.
+            while True:
+                done_count, total_count = await _run_summarize(db, document)
+                await db.commit()
+                if done_count >= total_count:
+                    break
         logger.info("backfill complete")
 
 

@@ -4,6 +4,7 @@ from sqlalchemy import func, select
 from app.api.deps import DbSession
 from app.api.documents import _link_to_project
 from app.models.document import Document, ProjectDocument
+from app.models.job import IngestJob, JobStage
 from app.models.project import Project
 from app.models.section import Section
 from app.models.summary import SectionSummary
@@ -73,16 +74,33 @@ async def list_project_documents(project_id: int, db: DbSession) -> list[Documen
         .group_by(Section.document_id)
         .subquery()
     )
+    # A document reaches "ready" as soon as embedding finishes (chat-usable
+    # immediately — docs/plan.md §3 step 7), so summarise can still be
+    # pending or actively running in the background at that point.
+    # summary_count==0 alone can't tell "hasn't finished yet" apart from
+    # "genuinely nothing qualified" — this does.
+    summarizing_jobs = (
+        select(IngestJob.document_id, IngestJob.summary_total)
+        .where(
+            IngestJob.stage == JobStage.summarise.value,
+            IngestJob.error.is_(None),
+            IngestJob.finished_at.is_(None),
+        )
+        .subquery()
+    )
 
     result = await db.execute(
         select(
             Document,
             func.coalesce(section_counts.c.section_count, 0),
             func.coalesce(summary_counts.c.summary_count, 0),
+            summarizing_jobs.c.document_id.is_not(None),
+            summarizing_jobs.c.summary_total,
         )
         .join(ProjectDocument, ProjectDocument.document_id == Document.id)
         .outerjoin(section_counts, section_counts.c.document_id == Document.id)
         .outerjoin(summary_counts, summary_counts.c.document_id == Document.id)
+        .outerjoin(summarizing_jobs, summarizing_jobs.c.document_id == Document.id)
         .where(ProjectDocument.project_id == project_id)
         .order_by(Document.created_at.desc())
     )
@@ -99,9 +117,15 @@ async def list_project_documents(project_id: int, db: DbSession) -> list[Documen
             generate_summary=document.generate_summary,
             section_count=section_count,
             summary_count=summary_count,
+            summarizing=summarizing,
+            # summary_count (persisted rows) is already the live "done so
+            # far" number — only the qualifying total needs to come from
+            # the job, and only while it's actually known (the job hasn't
+            # determined it yet on its very first tick).
+            summary_total=summary_total,
             created_at=document.created_at,
         )
-        for document, section_count, summary_count in result.all()
+        for document, section_count, summary_count, summarizing, summary_total in result.all()
     ]
 
 

@@ -26,6 +26,8 @@ const doc: DocumentRead = {
   generate_summary: true,
   section_count: 0,
   summary_count: 0,
+  summarizing: false,
+  summary_total: null,
   created_at: '2026-01-01T00:00:00Z',
 }
 

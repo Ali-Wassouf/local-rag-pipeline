@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import select
 
 from app.db.session import async_session_maker
-from app.ingest.worker import _run_embed, _run_summarize, run_worker_iteration
+from app.ingest.worker import _poll_once, _run_embed, _run_summarize, run_worker_iteration
 from app.models.chunk import Chunk
 from app.models.document import DocFormat, DocStatus, Document
 from app.models.job import IngestJob, JobStage
@@ -234,6 +234,78 @@ async def test_embed_stage_does_not_recall_the_embedder_for_already_embedded_chu
                 await db.commit()
 
 
+async def test_an_error_fetching_the_document_fails_the_job_not_the_worker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Mirrors a real incident: a long-running worker process had a stale
+    # DocFormat enum in memory and crashed deserialising a document row
+    # whose format value was added after the process started — the
+    # failure happened before any per-stage work even began. _advance must
+    # record that on the job rather than let it propagate and kill the
+    # whole polling loop.
+    async with async_session_maker() as db:
+        document = Document(
+            sha256="4" * 64,
+            title="Doc",
+            format=DocFormat.txt,
+            original_name="d.txt",
+            storage_path="/tmp/d.txt",
+        )
+        db.add(document)
+        await db.flush()
+        job = IngestJob(document_id=document.id, stage=JobStage.extract.value, progress=0.0)
+        db.add(job)
+        await db.commit()
+        document_id = document.id
+        job_id = job.id
+
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    original_get = AsyncSession.get
+    already_raised = False
+
+    async def failing_get(self, entity, ident, *args, **kwargs):  # type: ignore[no-untyped-def]
+        nonlocal already_raised
+        if entity is Document and ident == document_id and not already_raised:
+            already_raised = True
+            raise LookupError("simulated stale-enum deserialization failure")
+        return await original_get(self, entity, ident, *args, **kwargs)
+
+    monkeypatch.setattr(AsyncSession, "get", failing_get)
+
+    try:
+        advanced = await run_worker_iteration()
+        assert advanced is True
+
+        async with async_session_maker() as db:
+            job = await db.get(IngestJob, job_id)
+            assert job is not None
+            assert job.error is not None
+            assert "simulated stale-enum" in job.error
+            assert job.finished_at is not None
+    finally:
+        async with async_session_maker() as db:
+            document = await db.get(Document, document_id)
+            if document is not None:
+                await db.delete(document)
+                await db.commit()
+
+
+async def test_poll_once_swallows_exceptions_and_keeps_the_loop_alive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The last-resort layer around run_worker_iteration — anything that
+    # still escapes _advance's own per-job handling must not propagate out
+    # of a single poll, or the worker process dies with it.
+    async def boom() -> bool:
+        raise RuntimeError("simulated connectivity blip")
+
+    monkeypatch.setattr("app.ingest.worker.run_worker_iteration", boom)
+
+    result = await _poll_once()
+    assert result is False
+
+
 async def test_worker_returns_false_when_no_jobs_pending() -> None:
     advanced = await run_worker_iteration()
     assert advanced is False
@@ -358,8 +430,12 @@ async def test_summarize_stage_only_summarizes_sections_above_the_threshold() ->
         async with async_session_maker() as db:
             document = await db.get(Document, document_id)
             assert document is not None
-            await _run_summarize(db, document)
+            done_count, total_count = await _run_summarize(db, document)
             await db.commit()
+            # Only the long section qualifies, so one call finishes it —
+            # the short one is excluded from the qualifying count entirely,
+            # not left pending.
+            assert (done_count, total_count) == (1, 1)
 
         async with async_session_maker() as db:
             summaries = (
@@ -379,6 +455,103 @@ async def test_summarize_stage_only_summarizes_sections_above_the_threshold() ->
             assert summary.document_id == document_id
             assert len(summary.embedding) == 1024
             assert summary.model != ""
+    finally:
+        async with async_session_maker() as db:
+            document = await db.get(Document, document_id)
+            if document is not None:
+                await db.delete(document)
+                await db.commit()
+
+
+async def test_summarise_stage_resumes_one_qualifying_section_at_a_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The old all-in-one-call version gave the UI nothing to show until
+    # the whole stage finished, and lost all progress if the worker died
+    # partway through a long document. One call must now do exactly one
+    # qualifying section, report real "N of M" progress on the job, and
+    # leave the job resumable at this same stage until all of them are done.
+    long_paragraph = (
+        "Serializable isolation is the strongest isolation level, preventing "
+        "dirty reads, non-repeatable reads, and phantom reads by ensuring "
+        "transactions behave as if executed one at a time. "
+    ) * 50
+
+    call_count = 0
+
+    async def fake_summarize_section(text: str, client: object = None) -> str:
+        nonlocal call_count
+        call_count += 1
+        return f"summary {call_count}"
+
+    async def fake_embed_batch(texts: list[str]) -> list[list[float]]:
+        return [[0.1] * 1024 for _ in texts]
+
+    monkeypatch.setattr("app.ingest.worker.summarize_section", fake_summarize_section)
+    monkeypatch.setattr("app.ingest.worker.embed_batch", fake_embed_batch)
+
+    raw_text = long_paragraph * 3
+    boundaries = [(i * len(long_paragraph), (i + 1) * len(long_paragraph)) for i in range(3)]
+
+    async with async_session_maker() as db:
+        document = Document(
+            sha256="7" * 64,
+            title="Multi-Section Doc",
+            format=DocFormat.txt,
+            original_name="multi.txt",
+            storage_path="/tmp/multi.txt",
+            raw_text=raw_text,
+        )
+        db.add(document)
+        await db.flush()
+        for i, (start, end) in enumerate(boundaries, start=1):
+            db.add(
+                Section(
+                    document_id=document.id,
+                    path=f"n{i}",
+                    title=f"Section {i}",
+                    display_path=f"Section {i}",
+                    depth=1,
+                    ordinal=i,
+                    char_start=start,
+                    char_end=end,
+                )
+            )
+        job = IngestJob(document_id=document.id, stage=JobStage.summarise.value, progress=0.0)
+        db.add(job)
+        await db.commit()
+        document_id = document.id
+        job_id = job.id
+
+    try:
+        advanced = await run_worker_iteration()
+        assert advanced is True
+        async with async_session_maker() as db:
+            job = await db.get(IngestJob, job_id)
+            assert job is not None
+            assert job.stage == JobStage.summarise.value  # not done — resumable
+            assert job.summary_done == 1
+            assert job.summary_total == 3
+            assert job.progress == pytest.approx(1 / 3)
+            assert job.error is None
+
+        await run_worker_iteration()
+        async with async_session_maker() as db:
+            job = await db.get(IngestJob, job_id)
+            assert job is not None
+            assert job.stage == JobStage.summarise.value
+            assert job.summary_done == 2
+
+        await run_worker_iteration()
+        async with async_session_maker() as db:
+            job = await db.get(IngestJob, job_id)
+            assert job is not None
+            assert job.stage == JobStage.done.value
+            assert job.summary_done == 3
+            assert job.summary_total == 3
+            assert job.finished_at is not None
+
+        assert call_count == 3
     finally:
         async with async_session_maker() as db:
             document = await db.get(Document, document_id)
