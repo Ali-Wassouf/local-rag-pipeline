@@ -19,9 +19,9 @@ dev:
     #!/usr/bin/env bash
     set -euo pipefail
     trap 'kill 0' EXIT
-    (cd backend && uv run uvicorn app.main:app --reload --port 8000) &
-    (cd backend && uv run python -m app.ingest.worker) &
-    (cd frontend && PATH="{{node_bin}}:$PATH" pnpm dev) &
+    (cd backend && uv run uvicorn app.main:app --reload --port 8000 2>&1 | sed -l 's/^/[backend]  /') &
+    (cd backend && uv run python -m app.ingest.worker 2>&1 | sed -l 's/^/[worker]   /') &
+    (cd frontend && PATH="{{node_bin}}:$PATH" pnpm dev 2>&1 | sed -l 's/^/[frontend] /') &
     wait
 
 test:
