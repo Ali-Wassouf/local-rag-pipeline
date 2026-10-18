@@ -10,7 +10,12 @@ import type {
   SectionRead,
 } from './types'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+// Defaults to whatever host the page itself was loaded from (so a phone on
+// the same network, hitting the dev server by LAN IP, talks to the backend
+// on that same IP instead of its own "localhost") rather than a hardcoded
+// host that only works from the machine running the dev server.
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? `http://${window.location.hostname}:8000`
 
 // FastAPI error bodies are usually {"detail": "a message"}, or, for a 422
 // validation error, {"detail": [{"msg": "...", ...}, ...]}. Surfacing just
