@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-10-01T16:54:51.601Z",
         "reason": "pinned reference design: literal .verbatim-quote treatment from the user-supplied docuchat-local reference, central to the Marginalia Passage Inspector's signature interaction"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/screens/ChatScreen.tsx"
+        ],
+        "createdAt": "2026-10-08T21:42:07.111Z",
+        "reason": "blockquote left accent border is the standard editorial convention for a quoted excerpt, not a dashboard-card tell; matches this app's deliberate archival/print design system"
       }
     ]
   }
