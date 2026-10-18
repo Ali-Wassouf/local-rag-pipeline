@@ -292,6 +292,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
   // a late callback from an abandoned conversation can't leave this one's
   // UI stuck, and switching itself resets the UI immediately.
   const currentConversationIdRef = useRef<number | null>(null)
+  const draftRef = useRef<HTMLTextAreaElement>(null)
   const history = useMessages(conversationId)
   const [messages, setMessages] = useState<MessageRead[]>([])
   const [draft, setDraft] = useState('')
@@ -305,6 +306,16 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
   useEffect(() => {
     setMessages(history.data ?? [])
   }, [history.data])
+
+  // Grows the draft box with its content instead of scrolling text
+  // sideways in a fixed-height box — reset to 'auto' first so it also
+  // shrinks back down (e.g. after sending clears the draft), not just grows.
+  useEffect(() => {
+    const el = draftRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [draft])
 
   function switchConversation(id: number) {
     currentConversationIdRef.current = id
@@ -500,7 +511,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
       {/* ===================================================================
           COLUMN 2: READING & INQUIRY STREAM
          =================================================================== */}
-      <main className="flex min-h-0 min-w-0 flex-col lg:col-span-6">
+      <main className="flex min-w-0 flex-col lg:col-span-6 lg:min-h-0">
         <header className="shrink-0 border-b border-rule px-6 py-4">
           <h1 className="font-serif text-2xl font-normal text-ink italic">
             {project.data?.name ?? '…'}
@@ -521,7 +532,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
           </p>
         ) : (
           <>
-            <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 py-8 md:px-10">
+            <div className="space-y-8 px-6 py-8 md:px-10 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
               {history.isError && (
                 <p className="font-serif text-sm text-danger">
                   Couldn&rsquo;t load this chapter&rsquo;s messages: {(history.error as Error).message}
@@ -572,7 +583,7 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
 
             {sendError && <p className="shrink-0 px-6 pb-2 text-sm text-danger">{sendError}</p>}
 
-            <footer className="shrink-0 border-t border-rule bg-parchment p-4 md:px-8 md:py-4">
+            <footer className="sticky bottom-0 z-10 shrink-0 border-t border-rule bg-parchment p-4 md:px-8 md:py-4">
               <div className="mx-auto max-w-[68ch] space-y-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div
@@ -604,17 +615,21 @@ export function ChatScreen({ projectId, onBack }: ChatScreenProps) {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
+                <div className="flex items-end gap-2">
+                  <textarea
+                    ref={draftRef}
+                    rows={1}
                     placeholder="Ask a question…"
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     onKeyDown={(event) => {
-                      if (event.key === 'Enter') handleSend()
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault()
+                        handleSend()
+                      }
                     }}
                     disabled={isSending}
-                    className="flex-1 rounded-md border border-rule-strong bg-paper px-4 py-2.5 font-serif text-sm text-ink placeholder-ink-muted focus:border-accent focus:outline-none disabled:opacity-50"
+                    className="max-h-40 flex-1 resize-none overflow-y-auto rounded-md border border-rule-strong bg-paper px-4 py-2.5 font-serif text-sm text-ink placeholder-ink-muted focus:border-accent focus:outline-none disabled:opacity-50"
                   />
                   <button
                     type="button"

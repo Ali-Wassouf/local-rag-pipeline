@@ -155,6 +155,42 @@ describe('ChatScreen', () => {
     expect((await screen.findAllByText(/Ch\. 2/)).length).toBeGreaterThan(0)
   })
 
+  it('pressing Enter sends the draft', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+    const sendSpy = vi.spyOn(client, 'sendMessage').mockImplementation(
+      async (_conversationId: number, _content: string, callbacks: SendMessageCallbacks) => {
+        callbacks.onDone([])
+      },
+    )
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const input = await screen.findByPlaceholderText('Ask a question…')
+    fireEvent.change(input, { target: { value: 'What is the answer?' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+
+    await waitFor(() => expect(sendSpy).toHaveBeenCalled())
+    expect(sendSpy.mock.calls[0][1]).toBe('What is the answer?')
+  })
+
+  it('pressing Shift+Enter inserts a newline instead of sending', async () => {
+    vi.spyOn(client, 'listConversations').mockResolvedValue([oldConversation])
+    vi.spyOn(client, 'listMessages').mockResolvedValue([])
+    const sendSpy = vi.spyOn(client, 'sendMessage')
+
+    renderWithClient(<ChatScreen projectId={1} onBack={vi.fn()} />)
+    fireEvent.click(await screen.findByText('Old chat about forces'))
+
+    const input = await screen.findByPlaceholderText('Ask a question…')
+    fireEvent.change(input, { target: { value: 'line one' } })
+    fireEvent.keyDown(input, { key: 'Enter', shiftKey: true })
+
+    expect(sendSpy).not.toHaveBeenCalled()
+    expect(input).toHaveValue('line one')
+  })
+
   it('renders Markdown formatting instead of literal syntax characters', async () => {
     const markdownMessages: MessageRead[] = [
       {

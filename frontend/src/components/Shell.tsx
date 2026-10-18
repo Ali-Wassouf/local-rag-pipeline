@@ -46,7 +46,7 @@ function NavLink({
  */
 export function Shell({ children, nav, onNavigateHome }: ShellProps) {
   return (
-    <div className="flex h-screen flex-col bg-paper text-ink">
+    <div className="flex h-dvh flex-col bg-paper text-ink">
       <header className="z-30 flex h-[60px] shrink-0 items-center justify-between gap-6 border-b border-rule bg-paper px-6">
         <button
           type="button"
