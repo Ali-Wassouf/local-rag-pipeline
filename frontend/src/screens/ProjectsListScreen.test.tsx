@@ -81,6 +81,11 @@ describe('ProjectsListScreen', () => {
     renderWithClient(<ProjectsListScreen onSelectProject={vi.fn()} onUploadStandalone={vi.fn()} onOpenChat={vi.fn()} />)
 
     expect(await screen.findByText('Network error')).toBeInTheDocument()
+    // A failed fetch and a genuinely empty project list both leave
+    // filteredProjects at [] — without also checking isError, this empty
+    // state read as "there are no projects" on top of (or instead of
+    // someone noticing) the real connectivity error above it.
+    expect(screen.queryByText(/No projects yet/)).not.toBeInTheDocument()
   })
 
   it('shows an error if creating a project fails', async () => {

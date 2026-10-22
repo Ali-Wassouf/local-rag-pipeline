@@ -115,7 +115,7 @@ export function ProjectsListScreen({
       )}
 
       <section aria-label="Project list" className="mb-14">
-        {filteredProjects.length === 0 && !projects.isLoading ? (
+        {filteredProjects.length === 0 && !projects.isLoading && !projects.isError ? (
           <div className="border-t border-b border-rule py-12 text-center">
             <p className="font-serif text-lg text-ink-secondary">
               {allProjects.length === 0
